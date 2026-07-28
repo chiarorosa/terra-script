@@ -16,7 +16,8 @@ export const CHANGELOG_HISTORY: ChangelogRelease[] = [
       'Nova funcionalidade de rastreamento "Seguir ON/OFF" na janela de Informações do Bloco (INFO) do visualizador 3D.',
       'Acompanhamento em tempo real do bloco e estatísticas do solo onde o Drone Principal está localizado.',
       'Alternância minimalista e discreta: verde ativado ("Seguir ON") e apagado/cinza desativado ("Seguir OFF").',
-      'Seleção de bloco via clique em qualquer célula do mapa para fixar o inspetor e desativar o rastreamento automático.'
+      'Seleção de bloco via clique em qualquer célula do mapa para fixar o inspetor e desativar o rastreamento automático.',
+      'Ajuste de persistência de umidade: plantios e colheitas agora preservam a umidade do solo (sem resetar para 75%), impedindo exploits em solos encharcados (SOAKED).'
     ]
   },
   {

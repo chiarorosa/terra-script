@@ -497,9 +497,14 @@ export class GameEngine {
   // Game API implementation
   public getTile(x: number, y: number): TileState {
     const key = `${x},${y}`;
-    return this.tiles.get(key) || {
-      x, y, ground: 'NATURAL', crop: 'NONE', growth: 0, moisture: 0.75
-    };
+    let tile = this.tiles.get(key);
+    if (!tile) {
+      tile = {
+        x, y, ground: 'NATURAL', crop: 'NONE', growth: 0, moisture: 0.75
+      };
+      this.tiles.set(key, tile);
+    }
+    return tile;
   }
 
   public canHarvestTile(x: number, y: number): boolean {
@@ -541,8 +546,6 @@ export class GameEngine {
 
     t.crop = 'NONE';
     t.growth = 0;
-    // Loss of 0.25 moisture upon harvest
-    t.moisture = Math.max(0, Math.round((t.moisture - 0.25) * 100) / 100);
     if (t.moisture <= 0.25 && t.ground === 'IRRIGATED') {
       t.ground = 'NATURAL';
     }
