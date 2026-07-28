@@ -62,7 +62,7 @@ export class GameEngine {
   private tiles: Map<string, TileState> = new Map();
   private agents: Agent[] = [];
   private resources: ResourceMap = {
-    fiber: 0,
+    fiber: 10,
     wood: 0,
     roots: 0,
     fruits: 0,
@@ -154,7 +154,13 @@ export class GameEngine {
           this.height = parsed.height;
           this.rebuildGrid(this.width, this.height);
         }
-        if (parsed.resources) this.resources = { ...this.resources, ...parsed.resources };
+        if (parsed.resources) {
+          this.resources = { ...this.resources, ...parsed.resources };
+          // Guarantee new players starting with older 0-fiber save without research get 10 starting fibers
+          if (this.resources.fiber === 0 && (!parsed.techTree || !parsed.techTree.some((t: any) => t.unlocked))) {
+            this.resources.fiber = 10;
+          }
+        }
         if (parsed.techTree) {
           parsed.techTree.forEach((savedNode: TechNode) => {
             const node = this.techTree.find(n => n.id === savedNode.id);

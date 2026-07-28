@@ -2,7 +2,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { GameEngine } from '../engine/GameEngine';
 import { CropType, GroundType, TileState } from '../types/game';
-import { RotateCw, RotateCcw, Info, Cpu, Zap, Activity, Gauge, Eye, EyeOff, HardDrive } from 'lucide-react';
+import { RotateCw, RotateCcw, Info, Zap, Activity, Gauge, Eye, EyeOff, HardDrive } from 'lucide-react';
+import { GameLogo } from './GameLogo';
 
 interface World3DCanvasProps {
   engine: GameEngine;
@@ -82,7 +83,7 @@ function dispose3DObject(obj: THREE.Object3D) {
 
 export const World3DCanvas: React.FC<World3DCanvasProps> = ({ engine }) => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [inspectedCoords, setInspectedCoords] = useState<{ x: number; y: number } | null>(null);
+  const [inspectedCoords, setInspectedCoords] = useState<{ x: number; y: number } | null>({ x: 0, y: 0 });
   const [cameraAngle, setCameraAngle] = useState<number>(45);
 
   // Permanent High-Performance Profile (Max Optimization Always Active)
@@ -522,7 +523,7 @@ export const World3DCanvas: React.FC<World3DCanvasProps> = ({ engine }) => {
       {/* Canvas Controls Header Bar */}
       <div className="h-9 bg-slate-900 border-b border-slate-800 flex items-center justify-between px-3 text-xs text-slate-300 font-mono z-10">
         <div className="flex items-center gap-2">
-          <Cpu className="w-4 h-4 text-emerald-400" />
+          <GameLogo className="w-4 h-4" />
           <span className="font-semibold text-white">Visualização 3D da Fazenda</span>
           <span className="text-[10px] bg-slate-800 px-2 py-0.5 rounded text-slate-400">
             Grade: {engine.getGridWidth()}x{engine.getGridHeight()} ({engine.getGridWidth() * engine.getGridHeight()} blocos)

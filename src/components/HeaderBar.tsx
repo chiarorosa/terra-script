@@ -22,6 +22,7 @@ import {
   VolumeX,
   Music
 } from 'lucide-react';
+import { GameLogo } from './GameLogo';
 import { GameEngine } from '../engine/GameEngine';
 import { audioManager } from '../utils/audioManager';
 
@@ -57,9 +58,9 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({ engine, activeTab, setActi
   return (
     <header className="h-14 bg-[#161b22] border-b border-[#30363d] flex items-center justify-between px-4 text-[#c9d1d9] select-none shrink-0 z-20">
       {/* App Branding */}
-      <div className="flex items-center gap-3">
-        <div className="w-8 h-8 rounded-md bg-[#238636] border border-[#2ea043]/40 flex items-center justify-center text-white shadow-sm">
-          <Cpu className="w-5 h-5 text-[#f0f6fc]" />
+      <div className="flex items-center gap-2.5">
+        <div className="w-9 h-9 rounded-lg bg-[#0d1117] border border-[#30363d] flex items-center justify-center p-1 shadow-md group hover:border-[#2ea043]/60 transition-all cursor-pointer">
+          <GameLogo className="w-7 h-7" />
         </div>
         <div>
           <div className="flex items-center gap-2">
