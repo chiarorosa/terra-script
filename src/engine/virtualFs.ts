@@ -1,151 +1,92 @@
 import { VirtualFile } from '../types/game';
 
-const VFS_STORAGE_KEY = 'terrascript_vfs_v5';
+const VFS_STORAGE_KEY = 'terrascript_vfs_v7';
 
 export const DEFAULT_FILES: VirtualFile[] = [
-  {
-    path: 'fazenda_multi_drone.py',
-    name: 'fazenda_multi_drone.py',
-    language: 'python',
-    isEntrypoint: true,
-    content: `# ============================================================
-# TERRA SCRIPT 3D - VARREDURA COMPLETA MULTI-DRONE
-# ============================================================
-# Script otimizado para os 3 Drones (Claudio, Gepeto, Gemilson)
-#
-# CARACTERISTICAS DO SCRIPT:
-# 1. Identificacao do drone via variavel DRONE_ID (1, 2 ou 3)
-# 2. Leitura dinamica das dimensoes da grade (LARGURA x ALTURA)
-# 3. Varredura por linhas e colunas com direcoes independentes
-# 4. Checagem e colheita da cultura COLHEITA_A (se pronta colhe, senao planta)
-# 5. Demonstracao de todos os operadores (+, -, *, /, %, ==, !=, <, >, <=, >=, and, or, not)
-
-# --- CONFIGURACAO DO DRONE ---
-# Mude DRONE_ID para 1 (Claudio), 2 (Gepeto) ou 3 (Gemilson)
-DRONE_ID = 1
-
-# Cultura a ser gerenciada (WOODY_BUSH, CULTIVATED_ROOT, FRUIT_COLONY, ENERGY_FLOWER)
-COLHEITA_A = "ENERGY_FLOWER"
-
-# --- DETECCAO DINAMICA DA GRADE ---
-LARGURA = world.width()
-ALTURA = world.height()
-TOTAL_TILES = LARGURA * ALTURA
-
-print("Iniciando operacao do Drone #" + str(DRONE_ID))
-print("Tamanho da matriz detectado: " + str(LARGURA) + "x" + str(ALTURA))
-
-# --- DEMONSTRACAO DE OPERADORES ARITMETICOS E LOGICOS ---
-PASSOS_TOTAL = (LARGURA + ALTURA) - 2
-METADE_GRADE = TOTAL_TILES / 2
-MODULO_X = LARGURA % 2
-FATOR_MULT = LARGURA * 2
-
-# Checagem condicional usando operadores relacionais e logicos (if, elif, else)
-if DRONE_ID == 1 and not (LARGURA <= 0 or ALTURA <= 0):
-    print("Drone Claudio ativo na rota padrao Leste/Sul")
-elif DRONE_ID == 2 and (LARGURA > 1 or ALTURA > 1):
-    print("Drone Gepeto ativo na rota em zigue-zague")
-elif DRONE_ID == 3 and (LARGURA >= 1 and ALTURA >= 1):
-    print("Drone Gemilson ativo na rota de varredura continua")
-else:
-    print("Drone em operacao padrao")
-
-# --- LACO PRINCIPAL DE VARREDURA (while e for) ---
-executando = True
-passo_atual = 0
-
-while executando:
-    # Varredura por linhas (Y) e colunas (X)
-    for y in range(0, ALTURA, 1):
-        for x in range(0, LARGURA, 1):
-            
-            # Posicao atual
-            pos_x = world.x()
-            pos_y = world.y()
-            
-            # 1. COLHEITA OU PLANTIO
-            if farm.can_harvest():
-                farm.harvest()
-                print("Colheita realizada em (" + str(pos_x) + ", " + str(pos_y) + ")")
-            elif not farm.can_harvest() or world.entity() == "EMPTY":
-                farm.plant(COLHEITA_A)
-            else:
-                farm.water()
-
-            # 2. ROTAS PERSONALIZADAS POR DRONE
-            if DRONE_ID == 1:
-                # Claudio: Varredura sequencial da esquerda para direita
-                if pos_x < LARGURA - 1:
-                    world.move("EAST")
-                elif pos_y < ALTURA - 1:
-                    world.move("SOUTH")
-                    for retorno in range(0, LARGURA - 1, 1):
-                        world.move("WEST")
-            
-            elif DRONE_ID == 2:
-                # Gepeto: Varredura em zigue-zague
-                if y % 2 == 0:
-                    if pos_x < LARGURA - 1:
-                        world.move("EAST")
-                    elif pos_y < ALTURA - 1:
-                        world.move("SOUTH")
-                else:
-                    if pos_x > 0:
-                        world.move("WEST")
-                    elif pos_y < ALTURA - 1:
-                        world.move("SOUTH")
-
-            elif DRONE_ID == 3:
-                # Gemilson: Varredura continua com contorno
-                if world.can_move("EAST"):
-                    world.move("EAST")
-                elif world.can_move("SOUTH"):
-                    world.move("SOUTH")
-                else:
-                    world.move("NORTH")
-
-            passo_atual = passo_atual + 1
-
-    if passo_atual >= TOTAL_TILES or not (passo_atual != TOTAL_TILES):
-        print("Varredura finalizada!")
-        executando = False
-`
-  },
   {
     path: 'main.py',
     name: 'main.py',
     language: 'python',
-    isEntrypoint: false,
+    isEntrypoint: true,
     content: `# ============================================================
 # TERRA SCRIPT 3D - SCRIPT PRINCIPAL (PYTHON)
 # ============================================================
-# TAREFA INICIAL:
+# SUA PRIMEIRA TAREFA:
 # 1. Colha a Fibra Selvagem no terreno chamando farm.harvest().
-# 2. Clique no botão de Play na barra superior para executar.
-# 3. Junte Fibras para desbloquear Tecnologias na aba 'Pesquisa'.
+# 2. Clique no botão de Play (►) na barra superior para executar.
+# 3. Junte 20 Fibras para desbloquear sua 1ª Tecnologia
+#    na aba 'Pesquisa' (ex: Expansão de Terreno 1x3).
+#
+# A cada ciclo, o script é executado do início ao fim do arquivo!
+# LEIA COM ATENÇÃO a aba GUIA
 
 farm.harvest()
-world.move("EAST")
+world.move("NORTH")
 `
   },
   {
     path: 'main.js',
     name: 'main.js',
     language: 'javascript',
+    isEntrypoint: false,
     content: `// ============================================================
 // TERRA SCRIPT 3D - SCRIPT PRINCIPAL (JAVASCRIPT)
 // ============================================================
-// TAREFA INICIAL:
+// SUA PRIMEIRA TAREFA:
 // 1. Colha a Fibra Selvagem no terreno chamando farm.harvest().
-// 2. Clique no botão de Play (Play) na barra superior para executar.
-// 3. Junte 20 Fibras para desbloquear sua 1a Tecnologia
-//    na aba 'Pesquisa' (ex: Expansão de Terreno 1x3 ou Variáveis).
+// 2. Clique no botão de Play (►) na barra superior para executar.
+// 3. Junte 20 Fibras para desbloquear sua 1ª Tecnologia
+//    na aba 'Pesquisa' (ex: Expansão de Terreno 1x3).
 //
-// DICA: A cada ciclo, o script é executado do início ao fim do arquivo!
+// A cada ciclo, o script é executado do início ao fim do arquivo!
+// LEIA COM ATENÇÃO a aba GUIA
 
 farm.harvest();
-world.move("EAST");
+world.move("NORTH");
+`
+  },
+  {
+    path: 'regar.py',
+    name: 'regar.py',
+    language: 'python',
+    isEntrypoint: false,
+    content: `# Irrigação
+# Comandos de fazenda:
+farm.water()
+`
+  },
+  {
+    path: 'regar.js',
+    name: 'regar.js',
+    language: 'javascript',
+    isEntrypoint: false,
+    content: `// Irrigação
+// Comandos de fazenda:
+farm.water();
+`
+  },
+  {
+    path: 'plantar.py',
+    name: 'plantar.py',
+    language: 'python',
+    isEntrypoint: false,
+    content: `# Plantação
+# Comandos de fazenda:
+
+world.clear()
+farm.plant("WILD_FIBER")
+`
+  },
+  {
+    path: 'plantar.js',
+    name: 'plantar.js',
+    language: 'javascript',
+    isEntrypoint: false,
+    content: `// Plantação
+// Comandos de fazenda:
+
+world.clear();
+farm.plant("WILD_FIBER");
 `
   }
 ];
