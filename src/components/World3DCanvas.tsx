@@ -44,6 +44,7 @@ class ThreeAssetCache {
     SOIL: new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.8, metalness: 0.1 }),
     TILLED: new THREE.MeshStandardMaterial({ color: 0x5b21b6, roughness: 0.8, metalness: 0.1 }),
     IRRIGATED: new THREE.MeshStandardMaterial({ color: 0x0284c7, roughness: 0.8, metalness: 0.1 }),
+    SOAKED: new THREE.MeshStandardMaterial({ color: 0x172554, roughness: 0.9, metalness: 0.3 }),
   };
 
   // Crop Materials
@@ -630,7 +631,9 @@ export const World3DCanvas: React.FC<World3DCanvasProps> = ({ engine }) => {
           <div className="space-y-1 text-[11px]">
             <div className="flex justify-between">
               <span className="text-slate-400">Solo:</span>
-              <span className="font-semibold text-amber-300">{inspectedTile.ground}</span>
+              <span className={`font-semibold ${inspectedTile.ground === 'SOAKED' ? 'text-blue-400 font-bold' : 'text-amber-300'}`}>
+                {inspectedTile.ground} {inspectedTile.ground === 'SOAKED' && '🌧️ (Encharcado)'}
+              </span>
             </div>
             <div className="flex justify-between">
               <span className="text-slate-400">Cultura:</span>
@@ -642,7 +645,9 @@ export const World3DCanvas: React.FC<World3DCanvasProps> = ({ engine }) => {
             </div>
             <div className="flex justify-between">
               <span className="text-slate-400">Umidade:</span>
-              <span className="font-semibold text-blue-400">{Math.round(inspectedTile.moisture * 100)}%</span>
+              <span className={`font-semibold ${inspectedTile.moisture > 1.0 ? 'text-blue-400 font-bold animate-pulse' : 'text-blue-400'}`}>
+                {Math.round(inspectedTile.moisture * 100)}%
+              </span>
             </div>
             {inspectedTile.energyValue && (
               <div className="flex justify-between">

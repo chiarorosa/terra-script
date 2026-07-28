@@ -8,15 +8,28 @@ export interface ChangelogRelease {
 
 export const CHANGELOG_HISTORY: ChangelogRelease[] = [
   {
+    version: 'v2.0.4',
+    date: '2026-07-28',
+    title: 'Mecânica de Solo Encharcado (SOAKED), Novos Sensores e Guia Atualizado',
+    isCurrent: true,
+    changes: [
+      'Nova Mecânica de Solo Encharcado (SOAKED): regar um bloco com umidade > 99% eleva a umidade a 110%, destrói a cultura atual (NONE) e bloqueia novos plantios.',
+      'Evaporação gradual do excesso de umidade até o solo retornar a ≤ 100% (IRRIGATED).',
+      'Novos sensores da API world: world.ground(), world.entity() e world.moisture() liberados na pesquisa de Sensores Básicos (SYS_2).',
+      'Atribuição e indicação com ícone ⭐ para o Drone Principal com acionamento direto via botão PLAY (►) no Explorador de Arquivos.',
+      'Manual e Guia do Jogo inteiramente atualizados com as regras de solo encharcado, novos sensores e atalhos do Drone Principal.'
+    ]
+  },
+  {
     version: 'v2.0.3',
     date: '2026-07-28',
     title: 'Execução Direta no Explorador e Seleção de Drone Principal',
-    isCurrent: true,
     changes: [
       'Substituição do botão de download individual de arquivo por um botão PLAY (►) direto na lista do Explorador.',
       'Execução forçada instantânea do script selecionado no Drone Principal (Claudio por padrão).',
       'Gerenciador de Drone Principal na aba Drones, permitindo alternar qual drone recebe o acionamento direto do Explorador.',
-      'Destaque com ícone ⭐ para o Drone Principal na barra inferior de atribuição de drones.'
+      'Destaque com ícone ⭐ para o Drone Principal na barra inferior de atribuição de drones.',
+      'Mecânica de Solo Encharcado (SOAKED): regar um bloco com umidade > 99% eleva a umidade para 110%, destrói a cultura atual (NONE) e impede novos plantios até a umidade retornar a 100% por evaporação.'
     ]
   },
   {

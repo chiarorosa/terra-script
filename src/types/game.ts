@@ -12,7 +12,7 @@ export type CropType =
   | 'MAZE_CORE'
   | 'FOSSIL_TRAIL';
 
-export type GroundType = 'NATURAL' | 'SOIL' | 'TILLED' | 'IRRIGATED';
+export type GroundType = 'NATURAL' | 'SOIL' | 'TILLED' | 'IRRIGATED' | 'SOAKED';
 
 export type Direction = 'NORTH' | 'EAST' | 'SOUTH' | 'WEST';
 

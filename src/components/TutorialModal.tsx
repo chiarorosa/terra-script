@@ -148,8 +148,15 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ engine, onNavigate
         };
       case 'SYS_2':
         return {
-          capabilities: ['Sensores de posição: world.x(), world.y()', 'Sensores de dimensão da grade: world.width(), world.height()', 'Inspeção do solo: world.ground()', 'Inspeção da cultura: world.entity()', 'Contagem de inventário: inventory.count("fiber")'],
-          snippet: 'if world.ground() == "NATURAL":\n    farm.till()'
+          capabilities: [
+            'Sensores de posição: world.x(), world.y()',
+            'Sensores de dimensão: world.width(), world.height()',
+            'Inspeção do solo: world.ground()',
+            'Inspeção da cultura: world.entity()',
+            'Inspeção da umidade: world.moisture()',
+            'Contagem de inventário: inventory.count("fiber")'
+          ],
+          snippet: 'if world.ground() == "NATURAL" and world.moisture() < 0.5:\n    farm.till()\n    farm.water()'
         };
       case 'SYS_3':
         return {
@@ -863,13 +870,28 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ engine, onNavigate
                   </p>
                 </div>
 
-                <div className="bg-[#010409] p-4 rounded-xl border border-[#30363d] space-y-2">
-                  <div className="flex items-center gap-2 font-bold text-xs text-[#3fb950]">
-                    <Zap className="w-4 h-4 text-[#3fb950]" />
-                    5. Simulação em Ticks Finitos
+                <div className="bg-[#010409] p-4 rounded-xl border border-[#388bfd]/50 space-y-2">
+                  <div className="flex items-center gap-2 font-bold text-xs text-[#58a6ff]">
+                    <Droplets className="w-4 h-4 text-[#58a6ff]" />
+                    5. Solo Encharcado (SOAKED) e Perda de Cultura
                   </div>
                   <p className="text-xs text-[#c9d1d9] leading-relaxed">
-                    A cada tick de ação ou ciclo contínuo do mundo, o mecanismo da fazenda atualiza todos os blocos simultaneamente. Variáveis de umidade e preparo do solo determinam o avanço de cada cultura a cada ciclo.
+                    🚨 <strong>Cuidado com o excesso de água!</strong> Regar um bloco que já possui <strong>&gt; 99% de umidade</strong> eleva o nível para <strong>110% (1.10)</strong> e altera o solo para <strong>Encharcado (<code className="text-[#58a6ff] font-mono">SOAKED</code>)</strong>.<br/>
+                    • <strong>Efeito Destrutivo:</strong> Destrói a cultura atual imediatamente (<code className="text-[#f85149] font-mono">crop = NONE</code>).<br/>
+                    • <strong>Bloqueio de Plantio:</strong> Tentar plantar com <code className="text-[#58a6ff] font-mono">farm.plant()</code> em solo encharcado resultará em falha.<br/>
+                    • <strong>Recuperação:</strong> É necessário aguardar a evaporação dos ticks até a umidade cair para &le; 100% (<code className="text-[#58a6ff] font-mono">IRRIGATED</code>) para voltar a cultivar.
+                  </p>
+                </div>
+
+                <div className="bg-[#010409] p-4 rounded-xl border border-[#bc8cff]/50 space-y-2">
+                  <div className="flex items-center gap-2 font-bold text-xs text-[#bc8cff]">
+                    <Bot className="w-4 h-4 text-[#bc8cff]" />
+                    6. Drone Principal (⭐) e Execução Instantânea
+                  </div>
+                  <p className="text-xs text-[#c9d1d9] leading-relaxed">
+                    ⭐ <strong>Execução direta pelo Explorador:</strong> Na lista de arquivos do Explorador, o botão <strong>PLAY (►)</strong> executa o script diretamente no <strong>Drone Principal</strong>.<br/>
+                    • O Drone Principal atual é indicado com um ícone de estrela <code className="text-[#e3b341]">⭐</code>.<br/>
+                    • Alterne qual drone é o Principal na aba <strong>Drones</strong> a qualquer momento.
                   </p>
                 </div>
 

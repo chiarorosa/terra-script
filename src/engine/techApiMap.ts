@@ -307,11 +307,11 @@ export const API_CATALOG: ApiItem[] = [
     signature: 'world.ground(): string',
     pythonSnippet: 'world.ground()',
     jsSnippet: 'world.ground()',
-    description: 'Retorna o tipo de solo do bloco ("NATURAL", "SOIL", "TILLED", "IRRIGATED").',
+    description: 'Retorna o estado do solo do bloco ("NATURAL", "SOIL", "TILLED", "IRRIGATED", "SOAKED").',
     techId: 'SYS_2',
     category: 'World Sensors',
-    docDetail: 'Inspeciona o tipo de solo sob o agente.',
-    exampleCode: 'if world.ground() == "NATURAL":\n    farm.till()'
+    docDetail: 'Inspeciona o tipo de solo sob o agente (NATURAL, SOIL, TILLED, IRRIGATED, SOAKED).',
+    exampleCode: 'if world.ground() == "SOAKED":\n    # solo encharcado\n    pass'
   },
   {
     id: 'world_entity',
@@ -321,11 +321,25 @@ export const API_CATALOG: ApiItem[] = [
     signature: 'world.entity(): string',
     pythonSnippet: 'world.entity()',
     jsSnippet: 'world.entity()',
-    description: 'Retorna a entidade de cultura presente no bloco atual.',
+    description: 'Retorna a entidade de cultura presente no bloco atual ("NONE", "WILD_FIBER", "CULTIVATED_ROOT", etc.).',
     techId: 'SYS_2',
     category: 'World Sensors',
     docDetail: 'Retorna o nome da espécie da cultura ou "NONE".',
     exampleCode: 'crop = world.entity()'
+  },
+  {
+    id: 'world_moisture',
+    namespace: 'world',
+    methodName: 'moisture',
+    displayText: 'world.moisture()',
+    signature: 'world.moisture(): number',
+    pythonSnippet: 'world.moisture()',
+    jsSnippet: 'world.moisture()',
+    description: 'Retorna o nível de umidade do solo do bloco atual (0.0 a 1.10).',
+    techId: 'SYS_2',
+    category: 'World Sensors',
+    docDetail: 'Mede a umidade do solo. Umidade > 1.0 (100%) indica solo encharcado (SOAKED).',
+    exampleCode: 'if world.moisture() > 0.99:\n    # atencao: umidade maxima!\n    pass'
   },
   {
     id: 'world_measure',

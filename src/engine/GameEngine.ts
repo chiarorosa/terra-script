@@ -37,7 +37,7 @@ export const INITIAL_TECH_TREE: TechNode[] = [
 
   // SYSTEMS BRANCH
   { id: 'SYS_1', branch: 'SYSTEMS', name: 'Saída do Console print()', description: 'Exiba mensagens e dados de depuração no console stdout.', tier: 0, cost: {}, unlocked: true },
-  { id: 'SYS_2', branch: 'SYSTEMS', name: 'Sensores Básicos e Coordenadas', description: 'Acesse world.x(), world.y(), world.ground().', tier: 1, cost: { fiber: 10 }, unlocked: false, requires: ['SYS_1'] },
+  { id: 'SYS_2', branch: 'SYSTEMS', name: 'Sensores Básicos e Coordenadas', description: 'Inspecione o ambiente com os sensores world.ground(), world.entity() e world.moisture().', tier: 1, cost: { fiber: 10 }, unlocked: false, requires: ['SYS_1'] },
   { id: 'SYS_3', branch: 'SYSTEMS', name: 'Medição de Lotes', description: 'Use world.measure() para inspecionar graus de plantas e valores de energia.', tier: 3, cost: { fiber: 40, wood: 20 }, unlocked: false, requires: ['SYS_2'] },
   { id: 'SYS_4', branch: 'SYSTEMS', name: 'Debugger Passo a Passo e Breakpoints', description: 'Defina breakpoints com F9 e execute passo a passo com F10.', tier: 5, cost: { wood: 60, roots: 30 }, unlocked: false, requires: ['SYS_3'] },
   { id: 'SYS_5', branch: 'SYSTEMS', name: 'Profiler e Métricas', description: 'Rastreie rendimento, ticks e eficiência dos algoritmos.', tier: 7, cost: { roots: 80, fruits: 40 }, unlocked: false, requires: ['SYS_4'] },
@@ -370,7 +370,16 @@ export class GameEngine {
 
     // 1. Grow Crops across Grid (v2.0.1 Rules)
     this.tiles.forEach(tile => {
-      if (tile.crop !== 'NONE' && tile.growth < 100) {
+      // Overwatered / Soaked soil handling
+      if (tile.ground === 'SOAKED' || tile.moisture > 1.0) {
+        tile.crop = 'NONE';
+        tile.growth = 0;
+        // Evaporate excess moisture down to <= 1.0 (100%)
+        tile.moisture = Math.max(0, Math.round((tile.moisture - 0.005) * 1000) / 1000);
+        if (tile.moisture <= 1.0) {
+          tile.ground = 'IRRIGATED';
+        }
+      } else if (tile.crop !== 'NONE' && tile.growth < 100) {
         // Rule A: No crop grows if moisture <= 0.25
         if (tile.moisture <= 0.25) {
           return;
@@ -425,8 +434,8 @@ export class GameEngine {
         tile.ground = 'NATURAL';
       }
       
-      // Auto-grow wild fiber on any unplanted ground periodically
-      if (tile.crop === 'NONE' && Math.random() < 0.03) {
+      // Auto-grow wild fiber on any unplanted ground periodically (excluding soaked soil)
+      if (tile.crop === 'NONE' && tile.ground !== 'SOAKED' && tile.moisture <= 1.0 && Math.random() < 0.03) {
         tile.crop = 'WILD_FIBER';
         tile.growth = 20;
       }
@@ -552,18 +561,43 @@ export class GameEngine {
 
   public waterTile(agentId: number, x: number, y: number): boolean {
     const t = this.getTile(x, y);
-    if (t.ground !== 'TILLED') {
-      t.ground = 'IRRIGATED';
-    }
-    t.moisture = 1.0;
     this.totalActionsPerformed++;
     const ag = this.getAgent(agentId);
-    if (ag) ag.actionMessage = `Watered tile at (${x},${y})`;
+
+    if (t.moisture > 0.99 || t.ground === 'SOAKED') {
+      t.ground = 'SOAKED';
+      t.moisture = 1.10;
+      if (t.crop !== 'NONE') {
+        const killedCrop = t.crop;
+        t.crop = 'NONE';
+        t.growth = 0;
+        this.addLog(agentId, 'system', `🚨 SOLO ENCHARCADO! Excesso de água destruiu a cultura (${killedCrop}) em (${x},${y})!`);
+      }
+      if (ag) ag.actionMessage = `Solo encharcado em (${x},${y})!`;
+    } else {
+      if (t.ground !== 'TILLED') {
+        t.ground = 'IRRIGATED';
+      }
+      t.moisture = 1.0;
+      if (ag) ag.actionMessage = `Watered tile at (${x},${y})`;
+    }
     return true;
   }
 
   public plantCrop(agentId: number, x: number, y: number, cropStr: string): boolean {
     const t = this.getTile(x, y);
+    this.totalActionsPerformed++;
+    const ag = this.getAgent(agentId);
+
+    if (t.ground === 'SOAKED' || t.moisture > 1.0) {
+      t.crop = 'NONE';
+      t.growth = 0;
+      audioManager.playPlant();
+      if (ag) ag.actionMessage = `Solo encharcado! Falha ao plantar em (${x},${y})`;
+      this.addLog(agentId, 'system', `🚨 Falha no plantio em (${x},${y}): Solo encharcado (umidade > 100%). Cultura definhou (NONE).`);
+      return true;
+    }
+
     let crop: CropType = 'WILD_FIBER';
     const upper = cropStr.toUpperCase();
     if (upper.includes('TREE') || upper.includes('TIMBER')) {
@@ -585,8 +619,6 @@ export class GameEngine {
     t.crop = crop;
     t.growth = 0;
     audioManager.playPlant();
-    this.totalActionsPerformed++;
-    const ag = this.getAgent(agentId);
     if (ag) ag.actionMessage = `Planted ${crop} at (${x},${y})`;
     return true;
   }
@@ -873,7 +905,7 @@ export class GameEngine {
   public exportSaveData() {
     const tilesArray: TileState[] = Array.from(this.tiles.values());
     return {
-      version: '2.0.3',
+      version: '2.0.4',
       appName: 'TerraScript 3D',
       timestamp: new Date().toISOString(),
       grid: {

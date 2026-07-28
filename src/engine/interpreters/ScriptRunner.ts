@@ -863,17 +863,32 @@ export class ScriptRunner {
       }
       return this.engine.getGridWidth() * this.engine.getGridHeight();
     }
-    if (expr.includes('world.ground()')) {
+    if (
+      expr.includes('world.ground()') ||
+      expr.includes('world.get_ground()')
+    ) {
       if (!this.engine.isTechUnlocked('SYS_2')) {
         throw new Error("'Basic Sensors & Coords' is locked! Research SYS_2 in the Research Tree.");
       }
       return this.engine.getTile(agent.x, agent.y).ground;
     }
-    if (expr.includes('world.entity()')) {
+    if (
+      expr.includes('world.entity()') ||
+      expr.includes('world.get_entity()')
+    ) {
       if (!this.engine.isTechUnlocked('SYS_2')) {
         throw new Error("'Basic Sensors & Coords' is locked! Research SYS_2 in the Research Tree.");
       }
       return this.engine.getTile(agent.x, agent.y).crop;
+    }
+    if (
+      expr.includes('world.moisture()') ||
+      expr.includes('world.get_moisture()')
+    ) {
+      if (!this.engine.isTechUnlocked('SYS_2')) {
+        throw new Error("'Basic Sensors & Coords' is locked! Research SYS_2 in the Research Tree.");
+      }
+      return this.engine.getTile(agent.x, agent.y).moisture;
     }
     if (expr.includes('world.measure()')) {
       if (!this.engine.isTechUnlocked('SYS_3')) {
