@@ -764,8 +764,8 @@ export class ScriptRunner {
       return this.engine.tillTile(ctx.agentId, agent.x, agent.y);
     }
     if (expr.includes('farm.water()')) {
-      if (!this.engine.isTechUnlocked('AGRO_3')) {
-        throw new Error("'Irrigation' feature is locked! Research AGRO_3 in the Research Tree.");
+      if (!this.engine.isTechUnlocked('AGRO_1')) {
+        throw new Error("'Irrigation' feature is locked! Research AGRO_1 in the Research Tree.");
       }
       ctx.actionsPerformedInRun++;
       return this.engine.waterTile(ctx.agentId, agent.x, agent.y);
