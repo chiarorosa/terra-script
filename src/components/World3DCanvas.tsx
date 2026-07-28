@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { GameEngine } from '../engine/GameEngine';
 import { CropType, GroundType, TileState } from '../types/game';
-import { RotateCw, RotateCcw, Info, Zap, Activity, Gauge, Eye, EyeOff, HardDrive } from 'lucide-react';
+import { RotateCw, RotateCcw, Info, Zap, Activity, Gauge, Eye, EyeOff, HardDrive, Target, Star } from 'lucide-react';
 import { GameLogo } from './GameLogo';
 
 interface World3DCanvasProps {
@@ -85,7 +85,13 @@ function dispose3DObject(obj: THREE.Object3D) {
 export const World3DCanvas: React.FC<World3DCanvasProps> = ({ engine }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [inspectedCoords, setInspectedCoords] = useState<{ x: number; y: number } | null>({ x: 0, y: 0 });
+  const [followDrone, setFollowDrone] = useState<boolean>(false);
   const [cameraAngle, setCameraAngle] = useState<number>(45);
+
+  const primaryAgent = engine.getPrimaryAgent();
+  const activeCoords = (followDrone && primaryAgent)
+    ? { x: primaryAgent.x, y: primaryAgent.y }
+    : inspectedCoords;
 
   // Permanent High-Performance Profile (Max Optimization Always Active)
   const isPerfMode = true;
@@ -332,13 +338,13 @@ export const World3DCanvas: React.FC<World3DCanvasProps> = ({ engine }) => {
       selectionMeshRef.current = null;
     }
 
-    if (inspectedCoords) {
+    if (activeCoords) {
       const selectionMesh = new THREE.LineSegments(ThreeAssetCache.selectionEdgesGeo, ThreeAssetCache.selectionLineMat);
-      selectionMesh.position.set(inspectedCoords.x * 1.2, -0.05, inspectedCoords.y * 1.2);
+      selectionMesh.position.set(activeCoords.x * 1.2, -0.05, activeCoords.y * 1.2);
       scene.add(selectionMesh);
       selectionMeshRef.current = selectionMesh;
     }
-  }, [inspectedCoords, engine.getGridWidth(), engine.getGridHeight()]);
+  }, [activeCoords?.x, activeCoords?.y, engine.getGridWidth(), engine.getGridHeight()]);
 
   // Helper 3D Tile Creator (Uses Pooled Geometries/Materials)
   const create3DTileGroup = (tile: TileState, x: number, y: number): THREE.Group => {
@@ -507,6 +513,7 @@ export const World3DCanvas: React.FC<World3DCanvasProps> = ({ engine }) => {
       let curr: THREE.Object3D | null = hit.object;
       while (curr) {
         if (curr.userData && typeof curr.userData.tileX === 'number' && typeof curr.userData.tileY === 'number') {
+          setFollowDrone(false);
           setInspectedCoords({ x: curr.userData.tileX, y: curr.userData.tileY });
           return;
         }
@@ -515,8 +522,8 @@ export const World3DCanvas: React.FC<World3DCanvasProps> = ({ engine }) => {
     }
   };
 
-  const inspectedTile = inspectedCoords 
-    ? engine.getTile(inspectedCoords.x, inspectedCoords.y) 
+  const inspectedTile = activeCoords 
+    ? engine.getTile(activeCoords.x, activeCoords.y) 
     : null;
 
   return (
@@ -616,16 +623,39 @@ export const World3DCanvas: React.FC<World3DCanvasProps> = ({ engine }) => {
       {inspectedTile && (
         <div className="absolute bottom-4 right-4 bg-slate-900/95 backdrop-blur border border-slate-700 rounded-lg p-3 text-xs font-mono text-slate-200 shadow-xl w-64 z-20">
           <div className="flex items-center justify-between border-b border-slate-800 pb-2 mb-2 font-bold text-emerald-400">
-            <span className="flex items-center gap-1.5">
-              <Info className="w-4 h-4" />
+            <span className="flex items-center gap-1.5 truncate text-xs">
+              <Info className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
               Bloco ({inspectedTile.x}, {inspectedTile.y})
             </span>
-            <button 
-              onClick={() => setInspectedCoords(null)}
-              className="text-slate-500 hover:text-slate-300 text-sm font-bold"
-            >
-              ×
-            </button>
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                onClick={() => {
+                  const nextState = !followDrone;
+                  setFollowDrone(nextState);
+                  if (nextState && primaryAgent) {
+                    setInspectedCoords({ x: primaryAgent.x, y: primaryAgent.y });
+                  }
+                }}
+                className={`px-2 py-0.5 rounded text-[10px] font-mono transition-colors border ${
+                  followDrone
+                    ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/50 font-bold'
+                    : 'bg-slate-800/80 text-slate-500 border-slate-700/80 hover:text-slate-400 font-normal'
+                }`}
+                title={followDrone ? "Seguir Drone: ON (Clique para desligar)" : "Seguir Drone: OFF (Clique para ligar)"}
+              >
+                Seguir {followDrone ? 'ON' : 'OFF'}
+              </button>
+              <button 
+                onClick={() => {
+                  setFollowDrone(false);
+                  setInspectedCoords(null);
+                }}
+                className="text-slate-500 hover:text-slate-300 text-sm font-bold pl-0.5 leading-none"
+                title="Fechar"
+              >
+                ×
+              </button>
+            </div>
           </div>
 
           <div className="space-y-1 text-[11px]">

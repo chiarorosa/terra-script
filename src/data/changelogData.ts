@@ -8,10 +8,22 @@ export interface ChangelogRelease {
 
 export const CHANGELOG_HISTORY: ChangelogRelease[] = [
   {
+    version: 'v2.0.5',
+    date: '2026-07-28',
+    title: 'Rastreamento de Drone no Painel de Informações do Bloco (INFO)',
+    isCurrent: true,
+    changes: [
+      'Nova funcionalidade de rastreamento "Seguir ON/OFF" na janela de Informações do Bloco (INFO) do visualizador 3D.',
+      'Acompanhamento em tempo real do bloco e estatísticas do solo onde o Drone Principal está localizado.',
+      'Alternância minimalista e discreta: verde ativado ("Seguir ON") e apagado/cinza desativado ("Seguir OFF").',
+      'Seleção de bloco via clique em qualquer célula do mapa para fixar o inspetor e desativar o rastreamento automático.'
+    ]
+  },
+  {
     version: 'v2.0.4',
     date: '2026-07-28',
     title: 'Mecânica de Solo Encharcado (SOAKED), Novos Sensores e Guia Atualizado',
-    isCurrent: true,
+    isCurrent: false,
     changes: [
       'Nova Mecânica de Solo Encharcado (SOAKED): regar um bloco com umidade > 95% eleva a umidade a 110%, destrói a cultura atual (NONE) e bloqueia novos plantios.',
       'Evaporação gradual do excesso de umidade até o solo retornar a ≤ 100% (IRRIGATED).',

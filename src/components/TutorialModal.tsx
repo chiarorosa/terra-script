@@ -891,7 +891,8 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ engine, onNavigate
                   <p className="text-xs text-[#c9d1d9] leading-relaxed">
                     ⭐ <strong>Execução direta pelo Explorador:</strong> Na lista de arquivos do Explorador, o botão <strong>PLAY (►)</strong> executa o script diretamente no <strong>Drone Principal</strong>.<br/>
                     • O Drone Principal atual é indicado com um ícone de estrela <code className="text-[#e3b341]">⭐</code>.<br/>
-                    • Alterne qual drone é o Principal na aba <strong>Drones</strong> a qualquer momento.
+                    • Alterne qual drone é o Principal na aba <strong>Drones</strong> a qualquer momento.<br/>
+                    • <strong>Rastreamento do Drone no Painel INFO:</strong> Na janela de informações do bloco (canto inferior direito do visualizador 3D), alterne o botão <strong>Seguir: ON/OFF</strong> para que o inspetor acompanhe a posição do Drone Principal em tempo real. Clicar em qualquer bloco fixa a inspeção naquele bloco.
                   </p>
                 </div>
 
