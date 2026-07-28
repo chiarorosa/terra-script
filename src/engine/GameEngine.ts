@@ -817,7 +817,7 @@ export class GameEngine {
   public exportSaveData() {
     const tilesArray: TileState[] = Array.from(this.tiles.values());
     return {
-      version: '2.0.1',
+      version: '2.0.2',
       appName: 'TerraScript 3D',
       timestamp: new Date().toISOString(),
       grid: {

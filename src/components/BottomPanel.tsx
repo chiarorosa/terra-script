@@ -111,7 +111,7 @@ export const BottomPanel: React.FC<BottomPanelProps> = ({ engine }) => {
           </button>
 
           <span className="text-[10px] font-mono font-bold tracking-wider px-1.5 py-0.5 rounded bg-[#238636]/20 text-[#3fb950] border border-[#238636]/50 select-none ml-1">
-            v2.0.1
+            {CHANGELOG_HISTORY.find(r => r.isCurrent)?.version || 'v2.0.2'}
           </span>
         </div>
       </div>
@@ -201,7 +201,7 @@ export const BottomPanel: React.FC<BottomPanelProps> = ({ engine }) => {
             <div className="space-y-3 font-sans">
               <div className="text-[#8b949e] text-[11px] mb-2 flex items-center justify-between">
                 <span>Histórico de Atualizações de Versões (N.N.N)</span>
-                <span className="text-[#3fb950] font-mono font-semibold">Versão Atual: v2.0.1</span>
+                <span className="text-[#3fb950] font-mono font-semibold">Versão Atual: {CHANGELOG_HISTORY.find(r => r.isCurrent)?.version || 'v2.0.2'}</span>
               </div>
               
               <div className="space-y-2.5">

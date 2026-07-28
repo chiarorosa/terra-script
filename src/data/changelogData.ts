@@ -8,10 +8,21 @@ export interface ChangelogRelease {
 
 export const CHANGELOG_HISTORY: ChangelogRelease[] = [
   {
+    version: 'v2.0.2',
+    date: '2026-07-28',
+    title: 'Mecânicas de Evaporação, Consumo de Umidade e Reversão de Solo',
+    isCurrent: true,
+    changes: [
+      'Implementação do consumo gradual de umidade do solo pelas plantas durante o crescimento (-0,3%/tick).',
+      'Mecânica de evaporação natural: solos não cultivados com alta umidade (>50%) perdem água gradativamente (-0,1%/tick).',
+      'Reversão dinâmica do solo Irrigado (IRRIGATED): quando a umidade do bloco cai para 25% ou menos (por absorção, evaporação ou colheita), o solo reverte automaticamente para o estado Natural (NATURAL).',
+      'Inclusão dos detalhes de Evaporação, Consumo de Água e Reversão de Solo no Guia (Aba Mecânicas de Crescimento do Manual).'
+    ]
+  },
+  {
     version: 'v2.0.1',
     date: '2026-07-28',
     title: 'Ajuste de Rebalanceamento e Mecânicas de Umidade',
-    isCurrent: true,
     changes: [
       'Rebalanceamento global da taxa de crescimento das plantas para aumentar a durabilidade e o desafio do jogo.',
       'Crescimento bloqueado para qualquer cultura em solos com umidade igual ou menor que 25%.',

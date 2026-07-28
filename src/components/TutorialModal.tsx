@@ -18,6 +18,8 @@ import {
   Grid,
   Bot,
   Zap,
+  Droplets,
+  RefreshCw,
   HelpCircle
 } from 'lucide-react';
 import { GameEngine } from '../engine/GameEngine';
@@ -825,7 +827,7 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ engine, onNavigate
                     1. Preparo do Solo (Arado vs. Natural)
                   </div>
                   <p className="text-xs text-[#c9d1d9] leading-relaxed">
-                    Plantas em solo <strong>Arado (<code className="text-[#d29922]">farm.till()</code>)</strong> crescem significativamente mais rápido (<strong>+15% de crescimento por tick</strong>) em comparação com solo natural não preparado. Arar o solo é o fator principal para otimizar sua fazenda.
+                    Plantas em solo <strong>Arado (<code className="text-[#d29922]">farm.till()</code>)</strong> crescem significativamente mais rápido (<strong>duplica a taxa base de Raízes Cultivadas</strong>) em comparação com solo natural não preparado. Arar o solo é o fator principal para otimizar sua fazenda.
                   </p>
                 </div>
 
@@ -840,22 +842,34 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ engine, onNavigate
                 </div>
 
                 <div className="bg-[#010409] p-4 rounded-xl border border-[#30363d] space-y-2">
-                  <div className="flex items-center gap-2 font-bold text-xs text-[#bc8cff]">
-                    <TreePine className="w-4 h-4 text-[#bc8cff]" />
-                    3. Padrão Xadrez para Árvores e Plantas Grandes
+                  <div className="flex items-center gap-2 font-bold text-xs text-[#38d430]">
+                    <Droplets className="w-4 h-4 text-[#38d430]" />
+                    3. Consumo de Umidade e Evaporação Natural
                   </div>
                   <p className="text-xs text-[#c9d1d9] leading-relaxed">
-                    Árvores necessitam de espaço ao redor para expandir a copa. Plantá-las em formato de xadrez (padrão intercalado) evita competição por recursos e garante taxas de crescimento constantes.
+                    • <strong>Absorção pelas Plantas:</strong> Durante o crescimento, a cultura absorve água do bloco (-0,3% de umidade/tick).<br/>
+                    • <strong>Evaporação Natural:</strong> Solo desprovido de cultura e com alta umidade (&gt; 50%) evapora água gradualmente (-0,1%/tick).<br/>
+                    • <strong>Consumo na Colheita:</strong> Colher uma planta consume imediatamente 25% (0,25) da umidade do bloco.
+                  </p>
+                </div>
+
+                <div className="bg-[#010409] p-4 rounded-xl border border-[#30363d] space-y-2">
+                  <div className="flex items-center gap-2 font-bold text-xs text-[#e3b341]">
+                    <RefreshCw className="w-4 h-4 text-[#e3b341]" />
+                    4. Reversão Dinâmica do Solo Irrigado
+                  </div>
+                  <p className="text-xs text-[#c9d1d9] leading-relaxed">
+                    Quando a umidade de um bloco irrigado diminui para <strong>&le; 25% (0.25)</strong> — seja por absorção do crescimento, evaporação ou colheita —, o solo perde o estado Irrigado (<code className="text-[#58a6ff] font-mono">IRRIGATED</code>) e <strong>reverte automaticamente para Solo Natural (<code className="text-[#3fb950] font-mono">NATURAL</code>)</strong>. Para mantê-lo irrigado, regue periodicamente com <code className="text-[#58a6ff] font-mono">farm.water()</code>.
                   </p>
                 </div>
 
                 <div className="bg-[#010409] p-4 rounded-xl border border-[#30363d] space-y-2">
                   <div className="flex items-center gap-2 font-bold text-xs text-[#3fb950]">
                     <Zap className="w-4 h-4 text-[#3fb950]" />
-                    4. Simulação em Ticks Finitos
+                    5. Simulação em Ticks Finitos
                   </div>
                   <p className="text-xs text-[#c9d1d9] leading-relaxed">
-                    A cada tick de ação ou ciclo contínuo do mundo, o mecanismo da fazenda atualiza todos os blocos simultaneamente. Variáveis do solo determinam o avanço de cada cultura a cada ciclo.
+                    A cada tick de ação ou ciclo contínuo do mundo, o mecanismo da fazenda atualiza todos os blocos simultaneamente. Variáveis de umidade e preparo do solo determinam o avanço de cada cultura a cada ciclo.
                   </p>
                 </div>
 
@@ -979,7 +993,7 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ engine, onNavigate
                       </span>
                     </div>
                     <p className="text-xs text-[#c9d1d9] leading-relaxed">
-                      Possui regra de vizinhança: se houver outra árvore em um bloco adjacente (N, S, L, O), a taxa cai pela metade (1%/tick). Plante em <strong>padrão xadrez</strong>.
+                      Possui regra de vizinhança: se houver outra árvore em um bloco adjacente (N, S, L, O), a taxa cai pela metade (1%/tick). Plante em <strong>padrão xadrez (padrão intercalado)</strong> para evitar competição por recursos.
                     </p>
                     <div className="grid grid-cols-3 gap-2 text-[11px] font-mono bg-[#0d1117] p-2 rounded border border-[#30363d]">
                       <div>
