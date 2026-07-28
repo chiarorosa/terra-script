@@ -203,7 +203,8 @@ export class GameEngine {
         techTree: this.techTree.map(n => ({ id: n.id, unlocked: n.unlocked })),
         currentTick: this.currentTick,
         totalActions: this.totalActionsPerformed,
-        primaryAgentId: this.primaryAgentId
+        primaryAgentId: this.primaryAgentId,
+        tiles: Array.from(this.tiles.values())
       };
       const checksum = computeSyncChecksum(rawState);
       const state = { ...rawState, checksum };
@@ -249,7 +250,26 @@ export class GameEngine {
         }
         this.sanitizeTechTreePrerequisites();
 
-        // 3. Calculate max permitted grid dimension based on legitimate tech tree
+        // 3. Restore Tiles state before grid calculation
+        if (Array.isArray(parsed.tiles) && parsed.tiles.length > 0) {
+          this.tiles.clear();
+          parsed.tiles.forEach((t: TileState) => {
+            if (typeof t.x === 'number' && typeof t.y === 'number') {
+              this.tiles.set(`${t.x},${t.y}`, {
+                x: t.x,
+                y: t.y,
+                ground: t.ground || 'NATURAL',
+                crop: t.crop || 'NONE',
+                growth: typeof t.growth === 'number' && Number.isFinite(t.growth) ? t.growth : 0,
+                moisture: typeof t.moisture === 'number' && Number.isFinite(t.moisture) ? Math.max(0, Math.min(1.5, t.moisture)) : 0.75,
+                grade: typeof t.grade === 'number' ? t.grade : Math.floor(Math.random() * 9) + 1,
+                energyValue: typeof t.energyValue === 'number' ? t.energyValue : Math.floor(Math.random() * 80) + 20
+              });
+            }
+          });
+        }
+
+        // 4. Calculate max permitted grid dimension based on legitimate tech tree
         let maxAllowedW = 1;
         let maxAllowedH = 1;
         if (this.isTechUnlocked('SCALE_9')) { maxAllowedW = 12; maxAllowedH = 12; }
@@ -275,7 +295,7 @@ export class GameEngine {
           this.totalActionsPerformed = Math.floor(parsed.totalActions);
         }
 
-        // 4. Sync Agents
+        // 5. Sync Agents
         this.syncAgentsWithTechTree();
 
         // Re-save clean, signed state
@@ -633,6 +653,7 @@ export class GameEngine {
     this.totalActionsPerformed++;
     const ag = this.getAgent(agentId);
     if (ag) ag.actionMessage = `Tilled soil at (${x},${y})`;
+    this.saveEngineState();
     return true;
   }
 
@@ -658,6 +679,7 @@ export class GameEngine {
       t.moisture = 1.0;
       if (ag) ag.actionMessage = `Watered tile at (${x},${y})`;
     }
+    this.saveEngineState();
     return true;
   }
 
@@ -708,6 +730,7 @@ export class GameEngine {
       audioManager.playPlant();
       if (ag) ag.actionMessage = `Solo encharcado! Falha ao plantar em (${x},${y})`;
       this.addLog(agentId, 'system', `🚨 Falha no plantio em (${x},${y}): Solo encharcado (umidade > 100%). Cultura definhou (NONE).`);
+      this.saveEngineState();
       return true;
     }
 
@@ -715,6 +738,7 @@ export class GameEngine {
     t.growth = 0;
     audioManager.playPlant();
     if (ag) ag.actionMessage = `Planted ${crop} at (${x},${y})`;
+    this.saveEngineState();
     return true;
   }
 
@@ -744,6 +768,7 @@ export class GameEngine {
     t2.grade = tempGrade;
 
     this.totalActionsPerformed++;
+    this.saveEngineState();
     return true;
   }
 

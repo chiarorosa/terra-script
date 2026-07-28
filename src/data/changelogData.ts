@@ -10,10 +10,11 @@ export const CHANGELOG_HISTORY: ChangelogRelease[] = [
   {
     version: 'v2.0.5S',
     date: '2026-07-28',
-    title: 'Pacote de Guardrails Anti-Exploit',
+    title: 'Correção de Persistência de Umidade & Guardrails Anti-Exploit',
     isCurrent: true,
     changes: [
-      'Pacote de guardrails'
+      'Correção definitiva do estado das células (Tiles) no LocalStorage: a umidade atual é mantida intacta ao plantar (sem resetar para 75%).',
+      'Validação estrita de pré-requisitos em nós da árvore de tecnologia e sincronização automática de drones desbloqueados.'
     ]
   },
   {
