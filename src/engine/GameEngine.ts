@@ -10,8 +10,14 @@ import {
   ResourceMap, 
   TechBranch, 
   TechNode, 
-  TileState 
+  TileState,
+  PrestigeState
 } from '../types/game';
+
+export function getRequiredPrestigePointsForLevel(level: number): number {
+  if (level >= 100) return Infinity;
+  return Math.floor(100 * Math.pow(level, 2.5) + 200 * level);
+}
 import { ExecutionContext, ScriptRunner } from './interpreters/ScriptRunner';
 import { VirtualFS } from './virtualFs';
 import { audioManager } from '../utils/audioManager';
@@ -74,6 +80,12 @@ export class GameEngine {
     fossils: 0
   };
   private techTree: TechNode[] = [...INITIAL_TECH_TREE];
+  private prestige: PrestigeState = {
+    level: 1,
+    points: 0,
+    totalPoints: 0,
+    worldChangeUnlocked: false
+  };
   private logs: ConsoleLog[] = [];
   private breakpoints: Map<string, Set<number>> = new Map();
   private vfs: VirtualFS;
@@ -200,6 +212,7 @@ export class GameEngine {
         width: this.width,
         height: this.height,
         resources: this.resources,
+        prestige: this.prestige,
         techTree: this.techTree.map(n => ({ id: n.id, unlocked: n.unlocked })),
         currentTick: this.currentTick,
         totalActions: this.totalActionsPerformed,
@@ -295,8 +308,19 @@ export class GameEngine {
           this.totalActionsPerformed = Math.floor(parsed.totalActions);
         }
 
-        // 5. Sync Agents
+        // 5. Restore Prestige State
+        if (parsed.prestige && typeof parsed.prestige === 'object') {
+          this.prestige = {
+            level: typeof parsed.prestige.level === 'number' ? Math.max(1, Math.min(100, parsed.prestige.level)) : 1,
+            points: typeof parsed.prestige.points === 'number' ? Math.max(0, parsed.prestige.points) : 0,
+            totalPoints: typeof parsed.prestige.totalPoints === 'number' ? Math.max(0, parsed.prestige.totalPoints) : 0,
+            worldChangeUnlocked: Boolean(parsed.prestige.worldChangeUnlocked)
+          };
+        }
+
+        // 6. Sync Agents & World Change Trigger
         this.syncAgentsWithTechTree();
+        this.checkWorldChangeTrigger();
 
         // Re-save clean, signed state
         this.saveEngineState();
@@ -332,6 +356,10 @@ export class GameEngine {
         }
       }
     }
+
+    // Ensure strictly 1 Prestige Block exists and relocates to new center on expansion
+    this.ensurePrestigeBlock();
+
     this.saveEngineState();
     this.notify();
   }
@@ -408,6 +436,10 @@ export class GameEngine {
     for (let r = 0; r < this.height; r++) {
       for (let c = 0; c < this.width; c++) {
         const key = `${c},${r}`;
+        const existing = this.tiles.get(key);
+        if (existing && (existing.ground === 'PRESTIGE' || existing.crop === 'PRESTIGE')) {
+          continue; // PRESTIGE block is indestructible and untouched by clear()
+        }
         this.tiles.set(key, {
           x: c,
           y: r,
@@ -601,6 +633,10 @@ export class GameEngine {
 
   public harvestTile(agentId: number, x: number, y: number): boolean {
     const t = this.getTile(x, y);
+    if (t.crop === 'PRESTIGE' || t.ground === 'PRESTIGE') {
+      this.addLog(agentId, 'stderr', `🚨 O Bloco de Prestígio Dourado não pode ser colhido!`);
+      return false;
+    }
     if (t.crop === 'NONE') return false;
     if (t.growth < 100) return false;
 
@@ -641,6 +677,12 @@ export class GameEngine {
   }
 
   public tillTile(agentId: number, x: number, y: number): boolean {
+    const t = this.getTile(x, y);
+    if (t.ground === 'PRESTIGE' || t.crop === 'PRESTIGE') {
+      this.addLog(agentId, 'stderr', `🚨 O Bloco de Prestígio Dourado é sagrado e indestrutível! Não pode ser arado.`);
+      return false;
+    }
+
     if (!this.isTechUnlocked('AGRO_3')) {
       const ag = this.getAgent(agentId);
       if (ag) ag.actionMessage = 'Bloqueado: requer AGRO_3';
@@ -648,7 +690,6 @@ export class GameEngine {
       return false;
     }
 
-    const t = this.getTile(x, y);
     t.ground = 'TILLED';
     this.totalActionsPerformed++;
     const ag = this.getAgent(agentId);
@@ -659,6 +700,11 @@ export class GameEngine {
 
   public waterTile(agentId: number, x: number, y: number): boolean {
     const t = this.getTile(x, y);
+    if (t.ground === 'PRESTIGE' || t.crop === 'PRESTIGE') {
+      this.addLog(agentId, 'stderr', `🚨 O Bloco de Prestígio Dourado possui energia própria e não altera umidade.`);
+      return false;
+    }
+
     this.totalActionsPerformed++;
     const ag = this.getAgent(agentId);
 
@@ -685,6 +731,11 @@ export class GameEngine {
 
   public plantCrop(agentId: number, x: number, y: number, cropStr: string): boolean {
     const t = this.getTile(x, y);
+    if (t.ground === 'PRESTIGE' || t.crop === 'PRESTIGE') {
+      this.addLog(agentId, 'stderr', `🚨 O Bloco de Prestígio Dourado não aceita plantas normais. Use farm.prestige("recurso", qtd).`);
+      return false;
+    }
+
     this.totalActionsPerformed++;
     const ag = this.getAgent(agentId);
 
@@ -707,7 +758,7 @@ export class GameEngine {
     }
 
     // Guardrail: Research requirement check for crop
-    const cropTechReq: Record<CropType, string> = {
+    const cropTechReq: Partial<Record<CropType, string>> = {
       WILD_FIBER: 'AGRO_1',
       WOODY_BUSH: 'AGRO_2',
       CULTIVATED_ROOT: 'AGRO_3',
@@ -758,6 +809,11 @@ export class GameEngine {
 
     const t1 = this.getTile(x, y);
     const t2 = this.getTile(targetX, targetY);
+
+    if (t1.ground === 'PRESTIGE' || t1.crop === 'PRESTIGE' || t2.ground === 'PRESTIGE' || t2.crop === 'PRESTIGE') {
+      this.addLog(agentId, 'stderr', `🚨 O Bloco de Prestígio Dourado é fixo e não pode ser trocado de lugar!`);
+      return false;
+    }
 
     // Swap crops and grades
     const tempCrop = t1.crop;
@@ -867,6 +923,11 @@ export class GameEngine {
     audioManager.playResearch();
     this.addLog(1, 'system', `TECH UNLOCKED: ${node.name}!`);
 
+    // Prestige Points Source 1: Tech Unlocks
+    const tierXP = [50, 150, 450, 1200, 3000, 7500, 18000, 40000, 100000, 250000];
+    const pts = tierXP[node.tier] !== undefined ? tierXP[node.tier] : 50;
+    this.addPrestigePoints(pts);
+
     // Handle Scale expansion triggers
     if (node.id === 'SCALE_2') this.rebuildGrid(1, 3);
     else if (node.id === 'SCALE_3') this.rebuildGrid(3, 3);
@@ -880,6 +941,157 @@ export class GameEngine {
       this.syncAgentsWithTechTree();
       this.addLog(3, 'system', 'Drone Gemilson desbloqueado e juntou-se à fazenda!');
     } else if (node.id === 'SCALE_9') this.rebuildGrid(12, 12);
+
+    this.checkWorldChangeTrigger();
+    this.saveEngineState();
+    this.notify();
+    return true;
+  }
+
+  // ==========================================
+  // PRESTIGE & WORLD CHANGE SYSTEM
+  // ==========================================
+  public getPrestige(): PrestigeState {
+    return { ...this.prestige };
+  }
+
+  public getRequiredPrestigePoints(): number {
+    return getRequiredPrestigePointsForLevel(this.prestige.level);
+  }
+
+  public addPrestigePoints(pts: number) {
+    if (pts <= 0 || !Number.isFinite(pts)) return;
+    this.prestige.points += pts;
+    this.prestige.totalPoints += pts;
+
+    let req = getRequiredPrestigePointsForLevel(this.prestige.level);
+    let leveledUp = false;
+
+    while (this.prestige.points >= req && this.prestige.level < 100) {
+      this.prestige.points -= req;
+      this.prestige.level++;
+      leveledUp = true;
+      req = getRequiredPrestigePointsForLevel(this.prestige.level);
+      this.addLog(
+        this.primaryAgentId,
+        'system',
+        `🎉 NÍVEL DE PRESTÍGIO ALCANÇADO! Você avançou para o Nível ${this.prestige.level}! 🏆`
+      );
+    }
+
+    if (leveledUp) {
+      audioManager.playLevelUp();
+    }
+
+    this.saveEngineState();
+    this.notify();
+  }
+
+  public checkWorldChangeTrigger() {
+    const tier1Ids = ['AUTO_2', 'AGRO_2', 'SYS_2', 'SCALE_2'];
+    const allUnlocked = tier1Ids.every(id => this.isTechUnlocked(id));
+    if (allUnlocked && !this.prestige.worldChangeUnlocked) {
+      this.triggerWorldChange();
+    } else if (this.prestige.worldChangeUnlocked) {
+      this.ensurePrestigeBlock();
+    }
+  }
+
+  public triggerWorldChange() {
+    this.prestige.worldChangeUnlocked = true;
+    this.ensurePrestigeBlock();
+    this.addLog(
+      this.primaryAgentId,
+      'system',
+      `🌟 MUDANÇA DO MUNDO (WORLD CHANGE)! Todos os 4 pilares de Nível 1 foram dominados! O Bloco Dourado de Prestígio manifestou-se na grade.`
+    );
+    audioManager.playLevelUp();
+    this.saveEngineState();
+    this.notify();
+  }
+
+  public ensurePrestigeBlock() {
+    if (!this.prestige.worldChangeUnlocked) return;
+    
+    // Position target: center of the current grid layout
+    const targetX = Math.floor(this.width / 2);
+    const targetY = Math.floor(this.height / 2);
+    const targetKey = `${targetX},${targetY}`;
+
+    // Guarantee strictly 1 Prestige block by removing any old prestige blocks from former coordinates
+    this.tiles.forEach((tile, key) => {
+      if (key !== targetKey && (tile.ground === 'PRESTIGE' || tile.crop === 'PRESTIGE')) {
+        tile.ground = 'NATURAL';
+        tile.crop = 'NONE';
+        tile.moisture = 0.75;
+      }
+    });
+
+    const existing = this.tiles.get(targetKey);
+    if (!existing || existing.ground !== 'PRESTIGE' || existing.crop !== 'PRESTIGE') {
+      this.tiles.set(targetKey, {
+        x: targetX,
+        y: targetY,
+        ground: 'PRESTIGE',
+        crop: 'PRESTIGE',
+        growth: 0,
+        moisture: 0,
+        grade: 0,
+        energyValue: 0
+      });
+    }
+  }
+
+  public offerPrestigeResource(agentId: number, x: number, y: number, rawResource: string, amount: number): boolean {
+    if (amount <= 0 || !Number.isFinite(amount)) return false;
+
+    const t = this.getTile(x, y);
+    if (t.ground !== 'PRESTIGE' && t.crop !== 'PRESTIGE') {
+      this.addLog(agentId, 'stderr', `🚨 O comando prestige() só pode ser executado sobre o Bloco de Prestígio Dourado!`);
+      return false;
+    }
+
+    const normalized = rawResource.toLowerCase().trim();
+    let key: keyof ResourceMap = 'fiber';
+    if (['fiber', 'fibra'].includes(normalized)) key = 'fiber';
+    else if (['wood', 'madeira'].includes(normalized)) key = 'wood';
+    else if (['roots', 'root', 'raiz', 'raizes'].includes(normalized)) key = 'roots';
+    else if (['fruits', 'fruit', 'fruta', 'frutas'].includes(normalized)) key = 'fruits';
+    else if (['energy', 'energia'].includes(normalized)) key = 'energy';
+    else if (['biomass', 'biomassa'].includes(normalized)) key = 'biomass';
+    else if (['crystals', 'crystal', 'cristal', 'cristais'].includes(normalized)) key = 'crystals';
+    else if (['fossils', 'fossil', 'fosseis'].includes(normalized)) key = 'fossils';
+    else {
+      this.addLog(agentId, 'stderr', `🚨 Recurso inválido '${rawResource}' para prestígio. Use: 'fiber', 'wood', 'roots', 'fruits', 'energy', 'biomass', 'crystals' ou 'fossils'.`);
+      return false;
+    }
+
+    if ((this.resources[key] || 0) < amount) {
+      this.addLog(agentId, 'stderr', `🚨 Recurso insuficiente! Você tem ${this.resources[key] || 0}x ${key}, mas tentou entregar ${amount}x.`);
+      return false;
+    }
+
+    this.resources[key] -= amount;
+
+    const rates: Record<keyof ResourceMap, number> = {
+      fiber: 1,
+      wood: 5,
+      roots: 25,
+      fruits: 100,
+      energy: 500,
+      biomass: 2000,
+      catalyst: 5000,
+      crystals: 10000,
+      fossils: 50000
+    };
+
+    const ptsGained = amount * (rates[key] || 1);
+    this.addPrestigePoints(ptsGained);
+
+    this.totalActionsPerformed++;
+    const ag = this.getAgent(agentId);
+    if (ag) ag.actionMessage = `Prestige +${ptsGained} XP (${amount}x ${key})`;
+    this.addLog(agentId, 'action', `Upload de Prestígio: ${amount}x ${key} transmitidos para a rede (+${ptsGained} XP de Prestígio)!`);
 
     this.saveEngineState();
     this.notify();

@@ -20,7 +20,10 @@ import {
   Zap,
   Droplets,
   RefreshCw,
-  HelpCircle
+  HelpCircle,
+  Boxes,
+  Award,
+  Globe
 } from 'lucide-react';
 import { GameEngine } from '../engine/GameEngine';
 import { VirtualFS } from '../engine/virtualFs';
@@ -828,6 +831,42 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ engine, onNavigate
               {/* Grid of Mechanics Factors */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
                 
+                {/* Prestige System & World Change Card */}
+                <div className="bg-[#010409] p-4 rounded-xl border border-[#d29922]/50 space-y-3 md:col-span-2 shadow-[0_0_15px_rgba(210,153,34,0.15)]">
+                  <div className="flex items-center gap-2 font-bold text-sm text-[#e3b341]">
+                    <Sparkles className="w-4 h-4 text-[#e3b341]" />
+                    Sistema de Prestígio (Nível 1 a 100) e Mudança do Mundo (World Change)
+                  </div>
+                  <p className="text-xs text-[#c9d1d9] leading-relaxed">
+                    O <strong>Prestígio</strong> é a mecânica de engajamento e longo prazo do jogo. Ele incentiva o jogador a acumular e entregar recursos valiosos (Fibras, Madeira, Raízes, Frutas, Energia, etc.) além do limite da árvore de pesquisas.
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1 text-xs">
+                    <div className="bg-[#161b22] p-3 rounded-lg border border-[#30363d]">
+                      <span className="font-bold text-[#e3b341] flex items-center gap-1.5 mb-1">
+                        <Award className="w-3.5 h-3.5 text-[#e3b341]" />
+                        Fonte 1: Desbloqueios da Árvore
+                      </span>
+                      <span className="text-[#8b949e]">Cada nó pesquisado na Árvore de Tecnologia concede Pontos de Prestígio imediatamente (entre 50 XP e 250.000 XP dependendo do Tier).</span>
+                    </div>
+                    <div className="bg-[#161b22] p-3 rounded-lg border border-[#30363d]">
+                      <span className="font-bold text-[#e3b341] flex items-center gap-1.5 mb-1">
+                        <Boxes className="w-3.5 h-3.5 text-[#e3b341]" />
+                        Fonte 2: Upload de Recursos
+                      </span>
+                      <span className="text-[#8b949e]">Com o drone sobre o <strong>Bloco Dourado</strong>, execute <code className="text-[#e3b341] font-mono">farm.prestige("recurso", qtd)</code> para realizar o upload de itens do seu Estoque para a rede de Prestígio.</span>
+                    </div>
+                  </div>
+                  <div className="bg-[#161b22] p-3 rounded-lg border border-[#d29922]/30 text-xs text-[#c9d1d9] space-y-1">
+                    <span className="font-bold text-[#e3b341] flex items-center gap-1.5">
+                      <Globe className="w-3.5 h-3.5 text-[#e3b341]" />
+                      Mudança do Mundo (World Change): Bloco Dourado Sagrado
+                    </span>
+                    <p className="text-[#8b949e]">
+                      Ao completar os 4 nós de Nível 1 (<code className="text-[#e3b341]">AUTO_2</code>, <code className="text-[#e3b341]">AGRO_2</code>, <code className="text-[#e3b341]">SYS_2</code>, <code className="text-[#e3b341]">SCALE_2</code>), a primeira <em>World Change</em> é ativada no mundo: exatamente <strong>1 bloco da grade</strong> se torna o Bloco Dourado de Prestígio. Ele é indestrutível, imune a limpezas de mundo (<code className="text-[#e3b341]">clear()</code>) e se reposiciona automaticamente para o centro do mundo em expansões de mapa.
+                    </p>
+                  </div>
+                </div>
+
                 <div className="bg-[#010409] p-4 rounded-xl border border-[#30363d] space-y-2">
                   <div className="flex items-center gap-2 font-bold text-xs text-[#d29922]">
                     <Grid className="w-4 h-4 text-[#d29922]" />

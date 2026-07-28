@@ -806,6 +806,17 @@ export class ScriptRunner {
     ) {
       return this.engine.getTile(agent.x, agent.y).crop;
     }
+    if (expr.includes('farm.prestige(') || expr.includes('prestige(')) {
+      const match = expr.match(/(?:farm\.)?prestige\s*\((.*?)\)/);
+      if (match) {
+        const rawArgs = match[1].split(',').map(s => s.trim().replace(/['"]/g, ''));
+        const resourceArg = rawArgs[0] || 'fiber';
+        const parsedAmt = parseInt(rawArgs[1] || '1', 10);
+        const amountArg = isNaN(parsedAmt) ? 1 : parsedAmt;
+        ctx.actionsPerformedInRun++;
+        return this.engine.offerPrestigeResource(ctx.agentId, agent.x, agent.y, resourceArg, amountArg);
+      }
+    }
     if (expr.includes('farm.swap(')) {
       if (!this.engine.isTechUnlocked('AGRO_7')) {
         throw new Error("'Swap Tiles' feature is locked! Research AGRO_7 in the Research Tree.");

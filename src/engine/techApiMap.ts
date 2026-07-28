@@ -46,6 +46,20 @@ export const API_CATALOG: ApiItem[] = [
     exampleCode: 'while True:\n    if farm.can_harvest():\n        farm.harvest()\n    world.move("EAST")'
   },
   {
+    id: 'farm_prestige',
+    namespace: 'farm',
+    methodName: 'prestige',
+    displayText: 'farm.prestige(recurso, qtd)',
+    signature: 'farm.prestige(resource: string, amount: number): boolean',
+    pythonSnippet: 'farm.prestige("fiber", 10)',
+    jsSnippet: 'farm.prestige("fiber", 10)',
+    description: 'Entrega recursos ao Bloco de Prestígio Dourado para ganhar Pontos e subir o Nível de Prestígio (1 a 100).',
+    techId: 'AUTO_2',
+    category: 'Farm Commands',
+    docDetail: 'Disponível após a Mudança do Mundo (World Change) ao desbloquear os 4 nós de Nível 1. O drone deve estar sobre o Bloco Dourado.',
+    exampleCode: 'if world.ground() == "PRESTIGE":\n    farm.prestige("fiber", 50)'
+  },
+  {
     id: 'farm_plant_fiber',
     namespace: 'farm',
     methodName: 'plant("WILD_FIBER")',

@@ -10,9 +10,17 @@ export type CropType =
   | 'COMPANION_CROP'
   | 'MAZE_WALL'
   | 'MAZE_CORE'
-  | 'FOSSIL_TRAIL';
+  | 'FOSSIL_TRAIL'
+  | 'PRESTIGE';
 
-export type GroundType = 'NATURAL' | 'SOIL' | 'TILLED' | 'IRRIGATED' | 'SOAKED';
+export type GroundType = 'NATURAL' | 'SOIL' | 'TILLED' | 'IRRIGATED' | 'SOAKED' | 'PRESTIGE';
+
+export interface PrestigeState {
+  level: number; // 1 to 100
+  points: number; // current level XP
+  totalPoints: number; // cumulative total XP
+  worldChangeUnlocked: boolean; // whether World Change has been triggered
+}
 
 export type Direction = 'NORTH' | 'EAST' | 'SOUTH' | 'WEST';
 

@@ -8,11 +8,26 @@ export interface ChangelogRelease {
 
 export const CHANGELOG_HISTORY: ChangelogRelease[] = [
   {
+    version: 'v2.1.0',
+    date: '2026-07-28',
+    title: 'Grande Atualização: Sistema de Prestígio & Mudança do Mão (World Change)',
+    isCurrent: true,
+    changes: [
+      'Novo Sistema de Prestígio (Nível 1 a 100): Barra de progresso dourada e elegante abaixo dos recursos da fazenda.',
+      'Ganho de Pontos de Prestígio via Desbloqueio de Pesquisas: Cada nó desbloqueado na Árvore de Tecnologia concede XP de Prestígio de acordo com sua dificuldade.',
+      'Mecânica "Mudança do Mundo" (World Change): Após desbloquear os 4 pilares de Nível 1 (SYS_2, AGRO_2, AUTO_2, SCALE_2), manifesta-se o Bloco Dourado de Prestígio na grade.',
+      'Bloco Dourado Sagrado e Indestrutível: Resiste a rotações, troca de lugar e reinicializações de mundo (clear()).',
+      'Nova Função API farm.prestige("recurso", qtd): Permite que os drones sobre o Bloco Dourado entreguem recursos para converter em Pontos de Prestígio.',
+      'Curva de Progressão Balanceada: Ajustada para uma jornada duradoura até o Nível 100.'
+    ]
+  },
+  {
     version: 'v2.0.5S',
     date: '2026-07-28',
     title: 'Correção de Persistência de Umidade & Guardrails Anti-Exploit',
-    isCurrent: true,
+    isCurrent: false,
     changes: [
+      'Adicionado botão "Limpar Console" dedicado na barra de ferramentas e no cabeçalho do painel inferior para limpar logs de saída rapidamente.',
       'Correção definitiva do estado das células (Tiles) no LocalStorage: a umidade atual é mantida intacta ao plantar (sem resetar para 75%).',
       'Validação estrita de pré-requisitos em nós da árvore de tecnologia e sincronização automática de drones desbloqueados.'
     ]

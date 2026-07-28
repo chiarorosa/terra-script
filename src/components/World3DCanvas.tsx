@@ -26,6 +26,8 @@ class ThreeAssetCache {
   public static flowerGeo = new THREE.OctahedronGeometry(0.25, 0);
   public static gradedGeo = new THREE.BoxGeometry(0.3, 0.5, 0.3);
   public static defaultCropGeo = new THREE.BoxGeometry(0.3, 0.3, 0.3);
+  public static prestigeCropGeo = new THREE.OctahedronGeometry(0.35, 1);
+  public static prestigeCropMat = new THREE.MeshStandardMaterial({ color: 0xfef08a, emissive: 0xeab308, emissiveIntensity: 0.9, roughness: 0.1, metalness: 0.9 });
   
   public static droneBodyGeo = new THREE.BoxGeometry(0.4, 0.15, 0.4);
   public static droneEyeGeo = new THREE.SphereGeometry(0.08, 6, 6);
@@ -45,6 +47,7 @@ class ThreeAssetCache {
     TILLED: new THREE.MeshStandardMaterial({ color: 0x5b21b6, roughness: 0.8, metalness: 0.1 }),
     IRRIGATED: new THREE.MeshStandardMaterial({ color: 0x0284c7, roughness: 0.8, metalness: 0.1 }),
     SOAKED: new THREE.MeshStandardMaterial({ color: 0x172554, roughness: 0.9, metalness: 0.3 }),
+    PRESTIGE: new THREE.MeshStandardMaterial({ color: 0xf59e0b, emissive: 0xd97706, emissiveIntensity: 0.7, roughness: 0.2, metalness: 0.9 }),
   };
 
   // Crop Materials
@@ -449,6 +452,10 @@ export const World3DCanvas: React.FC<World3DCanvasProps> = ({ engine }) => {
       const p = new THREE.Mesh(ThreeAssetCache.gradedGeo, ThreeAssetCache.gradedMat);
       p.position.y = 0.25 * scale;
       cropGroup.add(p);
+    } else if (type === 'PRESTIGE') {
+      const trophy = new THREE.Mesh(ThreeAssetCache.prestigeCropGeo, ThreeAssetCache.prestigeCropMat);
+      trophy.position.y = 0.35;
+      cropGroup.add(trophy);
     } else {
       const m = new THREE.Mesh(ThreeAssetCache.defaultCropGeo, ThreeAssetCache.defaultCropMat);
       m.position.y = 0.15 * scale;

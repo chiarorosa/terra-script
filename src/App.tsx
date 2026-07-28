@@ -10,6 +10,7 @@ import { TechTreeModal } from './components/TechTreeModal';
 import { AgentsPanel } from './components/AgentsPanel';
 import { TutorialModal } from './components/TutorialModal';
 import { SaveManagerModal } from './components/SaveManagerModal';
+import { PrestigeBar } from './components/PrestigeBar';
 import { audioManager } from './utils/audioManager';
 
 export default function App() {
@@ -103,6 +104,9 @@ export default function App() {
         setActiveTab={setActiveTab}
         onOpenSaveManager={() => setIsSaveModalOpen(true)}
       />
+
+      {/* Prestige Progress Bar (v2.1.0) */}
+      <PrestigeBar engine={engine} />
 
       {/* Main Content Area */}
       <div className="flex-1 flex overflow-hidden relative">
