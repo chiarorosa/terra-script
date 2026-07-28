@@ -403,8 +403,8 @@ export class GameEngine {
         tile.growth = Math.min(100, tile.growth + effectiveRate);
       }
       
-      // Auto-grow wild fiber on unplanted natural ground periodically
-      if (tile.ground === 'NATURAL' && tile.crop === 'NONE' && Math.random() < 0.03) {
+      // Auto-grow wild fiber on any unplanted ground periodically
+      if (tile.crop === 'NONE' && Math.random() < 0.03) {
         tile.crop = 'WILD_FIBER';
         tile.growth = 20;
       }
@@ -527,7 +527,9 @@ export class GameEngine {
 
   public waterTile(agentId: number, x: number, y: number): boolean {
     const t = this.getTile(x, y);
-    t.ground = 'IRRIGATED';
+    if (t.ground !== 'TILLED') {
+      t.ground = 'IRRIGATED';
+    }
     t.moisture = 1.0;
     this.totalActionsPerformed++;
     const ag = this.getAgent(agentId);

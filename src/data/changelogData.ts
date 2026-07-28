@@ -19,6 +19,8 @@ export const CHANGELOG_HISTORY: ChangelogRelease[] = [
       'Multiplicador de crescimento baseado em umidade: umidades acima de 50% aceleram o crescimento e abaixo de 50% desaceleram.',
       'Consumo de 25% de umidade do bloco a cada colheita realizada (farm.harvest).',
       'O comando farm.water() foi promovido para o nível inicial (AGRO_1), ficando habilitado por padrão desde o início do jogo.',
+      'Correção de regerminação da Fibra Selvagem (WILD_FIBER): agora volta a germinar espontaneamente em qualquer bloco vazio, mesmo se o solo for Irrigado (IRRIGATED).',
+      'Inclusão do Guia Detalhado de Culturas, Solos, Umidades e Regras de Adjacência no Manual do Jogo.',
       'Aba de Changelog integrada ao painel inferior para histórico detalhado de versões.'
     ]
   },

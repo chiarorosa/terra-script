@@ -832,10 +832,10 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ engine, onNavigate
                 <div className="bg-[#010409] p-4 rounded-xl border border-[#30363d] space-y-2">
                   <div className="flex items-center gap-2 font-bold text-xs text-[#58a6ff]">
                     <Compass className="w-4 h-4 text-[#58a6ff]" />
-                    2. Irrigação e Umidade do Solo
+                    2. Irrigação, Umidade e Combinação com Arado (Till)
                   </div>
                   <p className="text-xs text-[#c9d1d9] leading-relaxed">
-                    A água no solo é vital: solo com umidade &le; 25% interrompe o crescimento de qualquer cultura. Culturas delicadas (Frutas, Flores e Graduadas) exigem &ge; 75% de umidade. Cada colheita reduz 25% da umidade do bloco. Use <code className="text-[#58a6ff] font-mono">farm.water()</code> para restaurar a umidade em 100%.
+                    <strong>Combinação de Arado e Irrigação:</strong> Os comandos <code className="text-[#d29922] font-mono">farm.till()</code> e <code className="text-[#58a6ff] font-mono">farm.water()</code> <strong>se combinam perfeitamente</strong>! O arado define a preparação do solo para duplicar a taxa base de crescimento de Raízes Cultivadas, enquanto a irrigação eleva a umidade do solo para 100% (<code className="text-[#58a6ff] font-mono">moisture = 1.0</code>) para aplicar o acelerador de velocidade (+60%). Um solo arado e irrigado atinge a máxima produtividade possível do jogo.
                   </p>
                 </div>
 
@@ -859,6 +859,242 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ engine, onNavigate
                   </p>
                 </div>
 
+              </div>
+
+              {/* Comprehensive Crops, Soil & Adjacency Reference Table/Cards */}
+              <div className="border-t border-[#30363d] pt-5 space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-bold text-sm text-[#f0f6fc] flex items-center gap-2">
+                    <Sprout className="w-4 h-4 text-[#3fb950]" />
+                    Guia Detalhado de Culturas, Solo, Umidade e Adjacências
+                  </h3>
+                  <span className="text-[11px] font-mono text-[#8b949e]">7 Culturas Agrícolas</span>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+
+                  {/* WILD_FIBER */}
+                  <div className="bg-[#010409] p-4 rounded-xl border border-[#30363d] space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 font-bold text-xs text-[#3fb950]">
+                        <span className="text-base">🌾</span>
+                        <span>Fibra Selvagem</span>
+                        <code className="text-[10px] text-[#8b949e] font-mono">"WILD_FIBER"</code>
+                      </div>
+                      <span className="text-[10px] bg-[#3fb950]/15 text-[#3fb950] border border-[#3fb950]/30 px-2 py-0.5 rounded font-mono font-semibold">
+                        Base: 5%/tick
+                      </span>
+                    </div>
+                    <p className="text-xs text-[#c9d1d9] leading-relaxed">
+                      Cultura silvestre inicial. Rebrota de forma espontânea e natural em qualquer solo não plantado (<code className="text-[#3fb950] font-mono">crop = "NONE"</code>).
+                    </p>
+                    <div className="grid grid-cols-3 gap-2 text-[11px] font-mono bg-[#0d1117] p-2 rounded border border-[#30363d]">
+                      <div>
+                        <span className="text-[#8b949e] block text-[9px] uppercase font-sans font-bold">Solo:</span>
+                        <span className="text-[#f0f6fc]">Qualquer</span>
+                      </div>
+                      <div>
+                        <span className="text-[#8b949e] block text-[9px] uppercase font-sans font-bold">Umidade:</span>
+                        <span className="text-[#58a6ff]">&gt; 25%</span>
+                      </div>
+                      <div>
+                        <span className="text-[#8b949e] block text-[9px] uppercase font-sans font-bold">Adjacência:</span>
+                        <span className="text-[#3fb950]">Livre</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* WOODY_BUSH */}
+                  <div className="bg-[#010409] p-4 rounded-xl border border-[#30363d] space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 font-bold text-xs text-[#d29922]">
+                        <span className="text-base">🌿</span>
+                        <span>Arbusto de Madeira</span>
+                        <code className="text-[10px] text-[#8b949e] font-mono">"WOODY_BUSH"</code>
+                      </div>
+                      <span className="text-[10px] bg-[#d29922]/15 text-[#d29922] border border-[#d29922]/30 px-2 py-0.5 rounded font-mono font-semibold">
+                        Base: 3%/tick
+                      </span>
+                    </div>
+                    <p className="text-xs text-[#c9d1d9] leading-relaxed">
+                      Planta lenhosa resistente. Excelente fonte primária de madeira para construção e pesquisas Nível 2+.
+                    </p>
+                    <div className="grid grid-cols-3 gap-2 text-[11px] font-mono bg-[#0d1117] p-2 rounded border border-[#30363d]">
+                      <div>
+                        <span className="text-[#8b949e] block text-[9px] uppercase font-sans font-bold">Solo:</span>
+                        <span className="text-[#f0f6fc]">Qualquer</span>
+                      </div>
+                      <div>
+                        <span className="text-[#8b949e] block text-[9px] uppercase font-sans font-bold">Umidade:</span>
+                        <span className="text-[#58a6ff]">&gt; 25%</span>
+                      </div>
+                      <div>
+                        <span className="text-[#8b949e] block text-[9px] uppercase font-sans font-bold">Adjacência:</span>
+                        <span className="text-[#3fb950]">Livre</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* CULTIVATED_ROOT */}
+                  <div className="bg-[#010409] p-4 rounded-xl border border-[#30363d] space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 font-bold text-xs text-[#e3b341]">
+                        <span className="text-base">🥕</span>
+                        <span>Raízes Cultivadas</span>
+                        <code className="text-[10px] text-[#8b949e] font-mono">"CULTIVATED_ROOT"</code>
+                      </div>
+                      <span className="text-[10px] bg-[#e3b341]/15 text-[#e3b341] border border-[#e3b341]/30 px-2 py-0.5 rounded font-mono font-semibold">
+                        Base: 4%/tick (Arado)
+                      </span>
+                    </div>
+                    <p className="text-xs text-[#c9d1d9] leading-relaxed">
+                      Exige preparação do terreno. Cresce <strong>duas vezes mais rápido (4%/tick)</strong> em solo Arado (<code className="text-[#d29922] font-mono">farm.till()</code>) do que em solo natural.
+                    </p>
+                    <div className="grid grid-cols-3 gap-2 text-[11px] font-mono bg-[#0d1117] p-2 rounded border border-[#30363d]">
+                      <div>
+                        <span className="text-[#8b949e] block text-[9px] uppercase font-sans font-bold">Solo Ideal:</span>
+                        <span className="text-[#d29922]">Arado (TILLED)</span>
+                      </div>
+                      <div>
+                        <span className="text-[#8b949e] block text-[9px] uppercase font-sans font-bold">Umidade:</span>
+                        <span className="text-[#58a6ff]">&gt; 25%</span>
+                      </div>
+                      <div>
+                        <span className="text-[#8b949e] block text-[9px] uppercase font-sans font-bold">Adjacência:</span>
+                        <span className="text-[#3fb950]">Livre</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* TREE */}
+                  <div className="bg-[#010409] p-4 rounded-xl border border-[#30363d] space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 font-bold text-xs text-[#bc8cff]">
+                        <span className="text-base">🌲</span>
+                        <span>Árvore (Madeira Nobre)</span>
+                        <code className="text-[10px] text-[#8b949e] font-mono">"TREE"</code>
+                      </div>
+                      <span className="text-[10px] bg-[#bc8cff]/15 text-[#bc8cff] border border-[#bc8cff]/30 px-2 py-0.5 rounded font-mono font-semibold">
+                        Base: 2%/tick (Xadrez)
+                      </span>
+                    </div>
+                    <p className="text-xs text-[#c9d1d9] leading-relaxed">
+                      Possui regra de vizinhança: se houver outra árvore em um bloco adjacente (N, S, L, O), a taxa cai pela metade (1%/tick). Plante em <strong>padrão xadrez</strong>.
+                    </p>
+                    <div className="grid grid-cols-3 gap-2 text-[11px] font-mono bg-[#0d1117] p-2 rounded border border-[#30363d]">
+                      <div>
+                        <span className="text-[#8b949e] block text-[9px] uppercase font-sans font-bold">Solo:</span>
+                        <span className="text-[#f0f6fc]">Natural / Irrigado</span>
+                      </div>
+                      <div>
+                        <span className="text-[#8b949e] block text-[9px] uppercase font-sans font-bold">Umidade:</span>
+                        <span className="text-[#58a6ff]">&gt; 25%</span>
+                      </div>
+                      <div>
+                        <span className="text-[#8b949e] block text-[9px] uppercase font-sans font-bold">Adjacência:</span>
+                        <span className="text-[#f85149]">Evitar Vizinho</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* FRUIT_COLONY */}
+                  <div className="bg-[#010409] p-4 rounded-xl border border-[#30363d] space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 font-bold text-xs text-[#f85149]">
+                        <span className="text-base">🍓</span>
+                        <span>Colônia de Frutas</span>
+                        <code className="text-[10px] text-[#8b949e] font-mono">"FRUIT_COLONY"</code>
+                      </div>
+                      <span className="text-[10px] bg-[#f85149]/15 text-[#f85149] border border-[#f85149]/30 px-2 py-0.5 rounded font-mono font-semibold">
+                        Delicada (Umidade &ge; 75%)
+                      </span>
+                    </div>
+                    <p className="text-xs text-[#c9d1d9] leading-relaxed">
+                      Cultura de alta irrigação. Requer umidade alta (&ge; 75%) para crescer. Formar agrupamentos contínuos de frutas maduras gera multiplicadores na colheita.
+                    </p>
+                    <div className="grid grid-cols-3 gap-2 text-[11px] font-mono bg-[#0d1117] p-2 rounded border border-[#30363d]">
+                      <div>
+                        <span className="text-[#8b949e] block text-[9px] uppercase font-sans font-bold">Solo:</span>
+                        <span className="text-[#58a6ff]">Irrigado (water)</span>
+                      </div>
+                      <div>
+                        <span className="text-[#8b949e] block text-[9px] uppercase font-sans font-bold">Umidade Min:</span>
+                        <span className="text-[#f85149] font-bold">&ge; 75%</span>
+                      </div>
+                      <div>
+                        <span className="text-[#8b949e] block text-[9px] uppercase font-sans font-bold">Adjacência:</span>
+                        <span className="text-[#3fb950]">Colônias</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* ENERGY_FLOWER */}
+                  <div className="bg-[#010409] p-4 rounded-xl border border-[#30363d] space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 font-bold text-[#a5d6ff] text-xs">
+                        <span className="text-base">⚡</span>
+                        <span>Flor de Energia</span>
+                        <code className="text-[10px] text-[#8b949e] font-mono">"ENERGY_FLOWER"</code>
+                      </div>
+                      <span className="text-[10px] bg-[#a5d6ff]/15 text-[#a5d6ff] border border-[#a5d6ff]/30 px-2 py-0.5 rounded font-mono font-semibold">
+                        Delicada (Umidade &ge; 75%)
+                      </span>
+                    </div>
+                    <p className="text-xs text-[#c9d1d9] leading-relaxed">
+                      Gera energia elétrica. Requer umidade alta (&ge; 75%). Utilize <code className="text-[#58a6ff] font-mono">world.measure()</code> para ler o acúmulo de energia e colher no valor de pico (&gt; 50).
+                    </p>
+                    <div className="grid grid-cols-3 gap-2 text-[11px] font-mono bg-[#0d1117] p-2 rounded border border-[#30363d]">
+                      <div>
+                        <span className="text-[#8b949e] block text-[9px] uppercase font-sans font-bold">Solo:</span>
+                        <span className="text-[#58a6ff]">Irrigado (water)</span>
+                      </div>
+                      <div>
+                        <span className="text-[#8b949e] block text-[9px] uppercase font-sans font-bold">Umidade Min:</span>
+                        <span className="text-[#f85149] font-bold">&ge; 75%</span>
+                      </div>
+                      <div>
+                        <span className="text-[#8b949e] block text-[9px] uppercase font-sans font-bold">Sensor:</span>
+                        <span className="text-[#a5d6ff]">measure()</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* GRADED_PLANT */}
+                  <div className="bg-[#010409] p-4 rounded-xl border border-[#30363d] space-y-2.5 md:col-span-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 font-bold text-xs text-[#bc8cff]">
+                        <span className="text-base">🧬</span>
+                        <span>Planta Graduada (Ordenação de Biomassa)</span>
+                        <code className="text-[10px] text-[#8b949e] font-mono">"GRADED_PLANT"</code>
+                      </div>
+                      <span className="text-[10px] bg-[#bc8cff]/15 text-[#bc8cff] border border-[#bc8cff]/30 px-2 py-0.5 rounded font-mono font-semibold">
+                        Delicada (Umidade &ge; 75%)
+                      </span>
+                    </div>
+                    <p className="text-xs text-[#c9d1d9] leading-relaxed">
+                      Cultura avançada para algoritmos de ordenação (ex: Bubble Sort). Cada planta possui um grau numérico lido via <code className="text-[#58a6ff] font-mono">world.measure()</code>. Troque posições com blocos vizinhos via <code className="text-[#bc8cff] font-mono">farm.swap("EAST")</code> para criar sequências ordenadas e maximizar a biomassa gerada.
+                    </p>
+                    <div className="grid grid-cols-4 gap-2 text-[11px] font-mono bg-[#0d1117] p-2 rounded border border-[#30363d]">
+                      <div>
+                        <span className="text-[#8b949e] block text-[9px] uppercase font-sans font-bold">Solo:</span>
+                        <span className="text-[#58a6ff]">Irrigado</span>
+                      </div>
+                      <div>
+                        <span className="text-[#8b949e] block text-[9px] uppercase font-sans font-bold">Umidade:</span>
+                        <span className="text-[#f85149] font-bold">&ge; 75%</span>
+                      </div>
+                      <div>
+                        <span className="text-[#8b949e] block text-[9px] uppercase font-sans font-bold">Troca de Posição:</span>
+                        <span className="text-[#bc8cff]">farm.swap()</span>
+                      </div>
+                      <div>
+                        <span className="text-[#8b949e] block text-[9px] uppercase font-sans font-bold">Ação Especial:</span>
+                        <span className="text-[#e3b341]">Bubble Sort</span>
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
               </div>
 
               {/* Example Python Code Snippet */}
