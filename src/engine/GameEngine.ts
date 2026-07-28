@@ -564,7 +564,7 @@ export class GameEngine {
     this.totalActionsPerformed++;
     const ag = this.getAgent(agentId);
 
-    if (t.moisture > 0.99 || t.ground === 'SOAKED') {
+    if (t.moisture > 0.95 || t.ground === 'SOAKED') {
       t.ground = 'SOAKED';
       t.moisture = 1.10;
       if (t.crop !== 'NONE') {

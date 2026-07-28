@@ -632,7 +632,7 @@ export const World3DCanvas: React.FC<World3DCanvasProps> = ({ engine }) => {
             <div className="flex justify-between">
               <span className="text-slate-400">Solo:</span>
               <span className={`font-semibold ${inspectedTile.ground === 'SOAKED' ? 'text-blue-400 font-bold' : 'text-amber-300'}`}>
-                {inspectedTile.ground} {inspectedTile.ground === 'SOAKED' && '🌧️ (Encharcado)'}
+                {inspectedTile.ground}
               </span>
             </div>
             <div className="flex justify-between">

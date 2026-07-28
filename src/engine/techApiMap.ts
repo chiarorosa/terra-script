@@ -338,8 +338,8 @@ export const API_CATALOG: ApiItem[] = [
     description: 'Retorna o nível de umidade do solo do bloco atual (0.0 a 1.10).',
     techId: 'SYS_2',
     category: 'World Sensors',
-    docDetail: 'Mede a umidade do solo. Umidade > 1.0 (100%) indica solo encharcado (SOAKED).',
-    exampleCode: 'if world.moisture() > 0.99:\n    # atencao: umidade maxima!\n    pass'
+    docDetail: 'Mede a umidade do solo. Umidade > 0.95 (95%) regada novamente torna o solo encharcado (SOAKED).',
+    exampleCode: 'if world.moisture() > 0.95:\n    # atencao: solo perto do limite de encharcar!\n    pass'
   },
   {
     id: 'world_measure',

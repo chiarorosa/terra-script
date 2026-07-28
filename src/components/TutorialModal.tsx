@@ -876,7 +876,7 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ engine, onNavigate
                     5. Solo Encharcado (SOAKED) e Perda de Cultura
                   </div>
                   <p className="text-xs text-[#c9d1d9] leading-relaxed">
-                    🚨 <strong>Cuidado com o excesso de água!</strong> Regar um bloco que já possui <strong>&gt; 99% de umidade</strong> eleva o nível para <strong>110% (1.10)</strong> e altera o solo para <strong>Encharcado (<code className="text-[#58a6ff] font-mono">SOAKED</code>)</strong>.<br/>
+                    🚨 <strong>Cuidado com o excesso de água!</strong> Regar um bloco que já possui <strong>&gt; 95% de umidade</strong> eleva o nível para <strong>110% (1.10)</strong> e altera o solo para <strong>Encharcado (<code className="text-[#58a6ff] font-mono">SOAKED</code>)</strong>.<br/>
                     • <strong>Efeito Destrutivo:</strong> Destrói a cultura atual imediatamente (<code className="text-[#f85149] font-mono">crop = NONE</code>).<br/>
                     • <strong>Bloqueio de Plantio:</strong> Tentar plantar com <code className="text-[#58a6ff] font-mono">farm.plant()</code> em solo encharcado resultará em falha.<br/>
                     • <strong>Recuperação:</strong> É necessário aguardar a evaporação dos ticks até a umidade cair para &le; 100% (<code className="text-[#58a6ff] font-mono">IRRIGATED</code>) para voltar a cultivar.

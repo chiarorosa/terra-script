@@ -13,7 +13,7 @@ export const CHANGELOG_HISTORY: ChangelogRelease[] = [
     title: 'Mecânica de Solo Encharcado (SOAKED), Novos Sensores e Guia Atualizado',
     isCurrent: true,
     changes: [
-      'Nova Mecânica de Solo Encharcado (SOAKED): regar um bloco com umidade > 99% eleva a umidade a 110%, destrói a cultura atual (NONE) e bloqueia novos plantios.',
+      'Nova Mecânica de Solo Encharcado (SOAKED): regar um bloco com umidade > 95% eleva a umidade a 110%, destrói a cultura atual (NONE) e bloqueia novos plantios.',
       'Evaporação gradual do excesso de umidade até o solo retornar a ≤ 100% (IRRIGATED).',
       'Novos sensores da API world: world.ground(), world.entity() e world.moisture() liberados na pesquisa de Sensores Básicos (SYS_2).',
       'Atribuição e indicação com ícone ⭐ para o Drone Principal com acionamento direto via botão PLAY (►) no Explorador de Arquivos.',
