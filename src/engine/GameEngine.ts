@@ -85,6 +85,7 @@ export class GameEngine {
   private totalActionsPerformed: number = 0;
   private idleTicks: number = 0;
   private messageQueue: AgentMessage[] = [];
+  private primaryAgentId: number = 1;
 
   private listeners: Array<() => void> = [];
 
@@ -136,7 +137,8 @@ export class GameEngine {
         resources: this.resources,
         techTree: this.techTree,
         currentTick: this.currentTick,
-        totalActions: this.totalActionsPerformed
+        totalActions: this.totalActionsPerformed,
+        primaryAgentId: this.primaryAgentId
       };
       localStorage.setItem(ENGINE_STORAGE_KEY, JSON.stringify(state));
     } catch (e) {
@@ -153,6 +155,9 @@ export class GameEngine {
           this.width = parsed.width;
           this.height = parsed.height;
           this.rebuildGrid(this.width, this.height);
+        }
+        if (parsed.primaryAgentId) {
+          this.primaryAgentId = parsed.primaryAgentId;
         }
         if (parsed.resources) {
           this.resources = { ...this.resources, ...parsed.resources };
@@ -815,6 +820,51 @@ export class GameEngine {
     }
   }
 
+  public getPrimaryAgentId(): number {
+    return this.primaryAgentId;
+  }
+
+  public setPrimaryAgentId(id: number) {
+    const ag = this.getAgent(id);
+    if (ag) {
+      this.primaryAgentId = id;
+      this.addLog(id, 'system', `Drone ${ag.name} definido como Drone Principal`);
+      this.saveEngineState();
+      this.notify();
+    }
+  }
+
+  public getPrimaryAgent(): Agent {
+    return this.getAgent(this.primaryAgentId) || this.agents[0];
+  }
+
+  public runScriptOnPrimaryAgent(filePath: string) {
+    const primaryAgent = this.getPrimaryAgent();
+    if (!primaryAgent) return;
+
+    // Assign file to primary agent
+    primaryAgent.assignedFile = filePath;
+
+    // Re-prepare context for primary agent to execute from beginning
+    this.prepareAgentContext(primaryAgent);
+
+    // Set primary agent state to RUNNING
+    primaryAgent.status = 'RUNNING';
+    primaryAgent.actionMessage = 'Running';
+    primaryAgent.currentLine = 1;
+
+    // Start simulation mode if not running
+    this.mode = 'RUNNING';
+    audioManager.playExecute();
+
+    this.addLog(
+      primaryAgent.id,
+      'system',
+      `Execução do script "${filePath}" iniciada no Drone Principal (${primaryAgent.name})`
+    );
+    this.notify();
+  }
+
   public clearLogs() {
     this.logs = [];
     this.notify();
@@ -823,7 +873,7 @@ export class GameEngine {
   public exportSaveData() {
     const tilesArray: TileState[] = Array.from(this.tiles.values());
     return {
-      version: '2.0.2',
+      version: '2.0.3',
       appName: 'TerraScript 3D',
       timestamp: new Date().toISOString(),
       grid: {
@@ -834,6 +884,7 @@ export class GameEngine {
       resources: { ...this.resources },
       techTree: this.techTree.map(n => ({ id: n.id, unlocked: n.unlocked })),
       agents: this.agents.map(a => ({ ...a })),
+      primaryAgentId: this.primaryAgentId,
       currentTick: this.currentTick,
       totalActionsPerformed: this.totalActionsPerformed,
       scripts: this.vfs.getFiles()
@@ -883,6 +934,9 @@ export class GameEngine {
           status: 'IDLE',
           actionMessage: 'Ready'
         }));
+      }
+      if (typeof saveObj.primaryAgentId === 'number') {
+        this.primaryAgentId = saveObj.primaryAgentId;
       }
 
       // 5. Statistics

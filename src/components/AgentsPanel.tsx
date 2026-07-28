@@ -1,5 +1,5 @@
 import React from 'react';
-import { Bot, Cpu, Play, Pause, FileCode, CheckCircle2 } from 'lucide-react';
+import { Bot, Cpu, Play, Pause, FileCode, CheckCircle2, Star } from 'lucide-react';
 import { GameEngine } from '../engine/GameEngine';
 import { VirtualFS } from '../engine/virtualFs';
 
@@ -11,6 +11,7 @@ interface AgentsPanelProps {
 export const AgentsPanel: React.FC<AgentsPanelProps> = ({ engine, vfs }) => {
   const agents = engine.getAgents();
   const files = vfs.getFiles();
+  const primaryAgentId = engine.getPrimaryAgentId();
 
   return (
     <div className="flex-1 bg-[#0d1117] p-6 overflow-y-auto font-sans text-[#c9d1d9]">
@@ -20,31 +21,55 @@ export const AgentsPanel: React.FC<AgentsPanelProps> = ({ engine, vfs }) => {
             <Bot className="w-5 h-5 text-[#bc8cff]" />
             Gerenciamento de Agentes Drones Paralelos
           </h1>
-          <p className="text-xs text-[#8b949e] mt-1">
-            Atribua arquivos de script independentes para cada drone robótico. Múltiplos agentes operam simultaneamente na fazenda 3D!
+          <p className="text-xs text-[#8b949e] mt-1 flex items-center gap-1 flex-wrap">
+            <span>Atribua scripts independentes a cada drone. O Drone Principal (marcado com</span>
+            <Star className="w-3 h-3 text-[#d29922] fill-[#d29922] inline shrink-0" />
+            <span>) é executado instantaneamente ao clicar no botão PLAY (►) ao lado de qualquer arquivo no Explorador.</span>
           </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {agents.map((ag) => (
-            <div key={ag.id} className="bg-[#161b22] border border-[#30363d] rounded-lg p-4 space-y-3 shadow-md">
-              <div className="flex items-center justify-between border-b border-[#30363d] pb-2">
-                <div className="flex items-center gap-2 font-bold text-sm text-[#f0f6fc]">
-                  <span className="w-3 h-3 rounded-full shadow" style={{ backgroundColor: ag.color }} />
-                  <span>{ag.name}</span>
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#010409] text-[#8b949e] border border-[#30363d]">
-                    ID #{ag.id}
-                  </span>
-                </div>
+          {agents.map((ag) => {
+            const isPrimary = ag.id === primaryAgentId;
 
-                <span className={`text-[10px] uppercase font-bold font-mono px-2 py-0.5 rounded ${
-                  ag.status === 'RUNNING' 
-                    ? 'bg-[#238636]/20 text-[#3fb950] border border-[#238636]/50' 
-                    : 'bg-[#010409] text-[#8b949e]'
-                }`}>
-                  {ag.status}
-                </span>
-              </div>
+            return (
+              <div key={ag.id} className="bg-[#161b22] border border-[#30363d] rounded-lg p-4 space-y-3 shadow-md relative">
+                <div className="flex items-center justify-between border-b border-[#30363d] pb-2">
+                  <div className="flex items-center gap-2 font-bold text-sm text-[#f0f6fc]">
+                    <span className="w-3 h-3 rounded-full shadow" style={{ backgroundColor: ag.color }} />
+                    <span>{ag.name}</span>
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#010409] text-[#8b949e] border border-[#30363d]">
+                      ID #{ag.id}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-1.5">
+                    {isPrimary ? (
+                      <span 
+                        className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#d29922]/20 text-[#e3b341] border border-[#d29922]/50 font-bold flex items-center gap-1"
+                        title="Drone Principal atrelado ao botão PLAY no Explorador"
+                      >
+                        <Star className="w-2.5 h-2.5 text-[#d29922] fill-[#d29922]" /> Principal
+                      </span>
+                    ) : (
+                      <button
+                        onClick={() => engine.setPrimaryAgentId(ag.id)}
+                        className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#21262d] text-[#8b949e] hover:text-[#e3b341] border border-[#30363d] hover:border-[#d29922]/60 transition-all flex items-center gap-1"
+                        title="Tornar este drone o Drone Principal do Explorador"
+                      >
+                        <Star className="w-2.5 h-2.5" /> Tornar Principal
+                      </button>
+                    )}
+
+                    <span className={`text-[10px] uppercase font-bold font-mono px-2 py-0.5 rounded ${
+                      ag.status === 'RUNNING' 
+                        ? 'bg-[#238636]/20 text-[#3fb950] border border-[#238636]/50' 
+                        : 'bg-[#010409] text-[#8b949e]'
+                    }`}>
+                      {ag.status}
+                    </span>
+                  </div>
+                </div>
 
               <div className="space-y-2 text-xs font-mono">
                 <div className="flex justify-between">
@@ -74,7 +99,8 @@ export const AgentsPanel: React.FC<AgentsPanelProps> = ({ engine, vfs }) => {
                 </select>
               </div>
             </div>
-          ))}
+          );
+        })}
         </div>
       </div>
     </div>

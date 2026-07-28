@@ -13,7 +13,8 @@ import {
   ChevronDown,
   Download,
   Upload,
-  Save
+  Save,
+  Play
 } from 'lucide-react';
 import { VirtualFS } from '../engine/virtualFs';
 import { VirtualFile } from '../types/game';
@@ -130,6 +131,7 @@ export const ExplorerPanel: React.FC<ExplorerPanelProps> = ({
   };
 
   const agents = engine.getAgents();
+  const primaryAgent = engine.getPrimaryAgent();
 
   return (
     <div className="w-64 bg-[#161b22] border-r border-[#30363d] flex flex-col h-full text-[#c9d1d9] select-none shrink-0 font-sans">
@@ -315,12 +317,13 @@ export const ExplorerPanel: React.FC<ExplorerPanelProps> = ({
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      downloadScript(file);
+                      onSelectFile(file.path);
+                      engine.runScriptOnPrimaryAgent(file.path);
                     }}
-                    className="p-1 hover:text-[#3fb950] text-[#8b949e] transition-colors"
-                    title="Baixar Script (.py/.js)"
+                    className="p-1 hover:text-[#3fb950] hover:bg-[#3fb950]/20 text-[#3fb950] transition-all rounded"
+                    title={`Executar Script no Drone Principal (${primaryAgent.name})`}
                   >
-                    <Download className="w-3 h-3" />
+                    <Play className="w-3 h-3 fill-current" />
                   </button>
 
                   <button
@@ -339,28 +342,38 @@ export const ExplorerPanel: React.FC<ExplorerPanelProps> = ({
 
       {/* Drone Assignment Quick Bar */}
       <div className="p-2 border-t border-[#30363d] bg-[#010409] text-xs">
-        <div className="text-[11px] font-semibold text-[#8b949e] mb-1 flex items-center gap-1">
-          <Bot className="w-3.5 h-3.5 text-[#bc8cff]" />
-          Atribuir ao Drone:
+        <div className="text-[11px] font-semibold text-[#8b949e] mb-1 flex items-center justify-between">
+          <span className="flex items-center gap-1">
+            <Bot className="w-3.5 h-3.5 text-[#bc8cff]" />
+            Atribuir ao Drone:
+          </span>
+          <span className="text-[10px] text-[#e3b341] font-mono flex items-center gap-1" title="Drone Principal para o botão PLAY do Explorador">
+            <Star className="w-3 h-3 text-[#d29922] fill-[#d29922]" />
+            <span>{primaryAgent.name}</span>
+          </span>
         </div>
         <div className="space-y-1">
-          {agents.map(ag => (
-            <div key={ag.id} className="flex items-center justify-between bg-[#161b22] p-1.5 rounded border border-[#30363d]">
-              <span className="text-[11px] font-mono text-[#c9d1d9] flex items-center gap-1">
-                <span className="w-2 h-2 rounded-full" style={{ backgroundColor: ag.color }} />
-                {ag.name}
-              </span>
-              <select
-                value={ag.assignedFile}
-                onChange={(e) => engine.assignAgentFile(ag.id, e.target.value)}
-                className="bg-[#0d1117] border border-[#30363d] text-[#c9d1d9] text-[10px] rounded px-1 py-0.5 font-mono"
-              >
-                {files.map(f => (
-                  <option key={f.path} value={f.path}>{f.name}</option>
-                ))}
-              </select>
-            </div>
-          ))}
+          {agents.map(ag => {
+            const isPrimary = ag.id === engine.getPrimaryAgentId();
+            return (
+              <div key={ag.id} className="flex items-center justify-between bg-[#161b22] p-1.5 rounded border border-[#30363d]">
+                <span className="text-[11px] font-mono text-[#c9d1d9] flex items-center gap-1">
+                  <span className="w-2 h-2 rounded-full" style={{ backgroundColor: ag.color }} />
+                  {ag.name}
+                  {isPrimary && <Star className="w-2.5 h-2.5 text-[#d29922] fill-[#d29922]" title="Drone Principal" />}
+                </span>
+                <select
+                  value={ag.assignedFile}
+                  onChange={(e) => engine.assignAgentFile(ag.id, e.target.value)}
+                  className="bg-[#0d1117] border border-[#30363d] text-[#c9d1d9] text-[10px] rounded px-1 py-0.5 font-mono"
+                >
+                  {files.map(f => (
+                    <option key={f.path} value={f.path}>{f.name}</option>
+                  ))}
+                </select>
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>

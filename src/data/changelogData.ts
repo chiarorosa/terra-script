@@ -8,10 +8,21 @@ export interface ChangelogRelease {
 
 export const CHANGELOG_HISTORY: ChangelogRelease[] = [
   {
+    version: 'v2.0.3',
+    date: '2026-07-28',
+    title: 'Execução Direta no Explorador e Seleção de Drone Principal',
+    isCurrent: true,
+    changes: [
+      'Substituição do botão de download individual de arquivo por um botão PLAY (►) direto na lista do Explorador.',
+      'Execução forçada instantânea do script selecionado no Drone Principal (Claudio por padrão).',
+      'Gerenciador de Drone Principal na aba Drones, permitindo alternar qual drone recebe o acionamento direto do Explorador.',
+      'Destaque com ícone ⭐ para o Drone Principal na barra inferior de atribuição de drones.'
+    ]
+  },
+  {
     version: 'v2.0.2',
     date: '2026-07-28',
     title: 'Mecânicas de Evaporação, Consumo de Umidade e Reversão de Solo',
-    isCurrent: true,
     changes: [
       'Implementação do consumo gradual de umidade do solo pelas plantas durante o crescimento (-0,3%/tick).',
       'Mecânica de evaporação natural: solos não cultivados com alta umidade (>50%) perdem água gradativamente (-0,1%/tick).',
