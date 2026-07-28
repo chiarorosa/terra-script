@@ -221,6 +221,43 @@ export class VirtualFS {
     this.saveToStorage();
   }
 
+  public renameFile(oldPath: string, newName: string): VirtualFile | false {
+    const file = this.files.get(oldPath);
+    if (!file) return false;
+
+    let cleanName = newName.trim();
+    if (!cleanName) return false;
+
+    // Infer extension if missing
+    if (!cleanName.endsWith('.py') && !cleanName.endsWith('.js')) {
+      const ext = file.path.endsWith('.js') ? '.js' : '.py';
+      cleanName += ext;
+    }
+
+    const newPath = cleanName;
+
+    if (newPath === oldPath) return file;
+
+    if (this.files.has(newPath)) {
+      return false;
+    }
+
+    const language: 'python' | 'javascript' = newPath.endsWith('.js') ? 'javascript' : 'python';
+
+    const renamedFile: VirtualFile = {
+      ...file,
+      path: newPath,
+      name: newPath,
+      language
+    };
+
+    this.files.delete(oldPath);
+    this.files.set(newPath, renamedFile);
+    this.saveToStorage();
+
+    return renamedFile;
+  }
+
   public setEntrypoint(path: string): void {
     this.files.forEach(f => {
       f.isEntrypoint = (f.path === path);

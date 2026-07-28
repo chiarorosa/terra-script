@@ -40,10 +40,41 @@ export const ExplorerPanel: React.FC<ExplorerPanelProps> = ({
   const [newFileName, setNewFileName] = useState('');
   const [newFileLang, setNewFileLang] = useState<'python' | 'javascript'>('python');
 
+  const [editingPath, setEditingPath] = useState<string | null>(null);
+  const [editingName, setEditingName] = useState<string>('');
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const refreshFiles = () => {
     setFiles(vfs.getFiles());
+  };
+
+  const handleStartRename = (e: React.MouseEvent, file: VirtualFile) => {
+    e.stopPropagation();
+    setEditingPath(file.path);
+    setEditingName(file.name);
+  };
+
+  const handleRenameSubmit = (oldPath: string) => {
+    if (!editingName.trim()) {
+      setEditingPath(null);
+      return;
+    }
+    const renamed = vfs.renameFile(oldPath, editingName);
+    if (renamed === false) {
+      alert('Não foi possível renomear o arquivo. Nome inválido ou já existente.');
+    } else {
+      engine.getAgents().forEach(ag => {
+        if (ag.assignedFile === oldPath) {
+          ag.assignedFile = renamed.path;
+        }
+      });
+      if (activeFilePath === oldPath) {
+        onSelectFile(renamed.path);
+      }
+      refreshFiles();
+    }
+    setEditingPath(null);
   };
 
   const handleCreate = (e: React.FormEvent) => {
@@ -208,24 +239,52 @@ export const ExplorerPanel: React.FC<ExplorerPanelProps> = ({
               <div
                 key={file.path}
                 onClick={() => onSelectFile(file.path)}
+                onDoubleClick={(e) => handleStartRename(e, file)}
                 className={`group flex items-center justify-between px-2.5 py-1.5 rounded text-xs font-mono cursor-pointer transition-all ${
                   isActive 
                     ? 'bg-[#21262d] text-[#f0f6fc] font-semibold border-l-2 border-[#3fb950]' 
                     : 'text-[#8b949e] hover:text-[#f0f6fc] hover:bg-[#21262d]/60'
                 }`}
+                title="Clique duplo para renomear este arquivo"
               >
-                <div className="flex items-center gap-2 truncate min-w-0 pr-1">
+                <div className="flex items-center gap-2 truncate min-w-0 pr-1 flex-1">
                   {/* Language Badge */}
-                  <span className={`text-[9px] px-1 py-0.2 font-bold rounded ${
+                  <span className={`text-[9px] px-1 py-0.2 font-bold rounded shrink-0 ${
                     isPy ? 'bg-[#388bfd]/20 text-[#58a6ff] border border-[#388bfd]/40' : 'bg-[#d29922]/20 text-[#d29922] border border-[#d29922]/40'
                   }`}>
                     {isPy ? 'PY' : 'JS'}
                   </span>
 
-                  <span className="truncate">{file.name}</span>
+                  {editingPath === file.path ? (
+                    <form
+                      onSubmit={(e) => {
+                        e.preventDefault();
+                        handleRenameSubmit(file.path);
+                      }}
+                      className="flex-1 flex items-center min-w-0"
+                      onClick={(e) => e.stopPropagation()}
+                      onDoubleClick={(e) => e.stopPropagation()}
+                    >
+                      <input
+                        type="text"
+                        value={editingName}
+                        onChange={(e) => setEditingName(e.target.value)}
+                        onBlur={() => handleRenameSubmit(file.path)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Escape') {
+                            setEditingPath(null);
+                          }
+                        }}
+                        className="w-full bg-[#0d1117] border border-[#58a6ff] rounded px-1.5 py-0.5 text-xs text-[#f0f6fc] font-mono focus:outline-none"
+                        autoFocus
+                      />
+                    </form>
+                  ) : (
+                    <span className="truncate">{file.name}</span>
+                  )}
 
                   {file.isEntrypoint && (
-                    <span title="Script de Entrada Principal">
+                    <span title="Script de Entrada Principal" className="shrink-0">
                       <Star className="w-3 h-3 text-[#d29922] fill-[#d29922]" />
                     </span>
                   )}
