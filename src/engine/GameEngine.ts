@@ -233,7 +233,7 @@ export class GameEngine {
             ground: 'NATURAL',
             crop: (c === 0 && r === 0) ? 'WILD_FIBER' : 'NONE',
             growth: (c === 0 && r === 0) ? 100 : 0,
-            moisture: 0.5,
+            moisture: 0.75,
             grade: Math.floor(Math.random() * 9) + 1,
             energyValue: Math.floor(Math.random() * 80) + 20
           });
@@ -322,7 +322,7 @@ export class GameEngine {
           ground: 'NATURAL',
           crop: 'NONE',
           growth: 0,
-          moisture: 0.5,
+          moisture: 0.75,
           grade: Math.floor(Math.random() * 9) + 1,
           energyValue: Math.floor(Math.random() * 80) + 20
         });
@@ -484,7 +484,7 @@ export class GameEngine {
   public getTile(x: number, y: number): TileState {
     const key = `${x},${y}`;
     return this.tiles.get(key) || {
-      x, y, ground: 'NATURAL', crop: 'NONE', growth: 0, moisture: 0.5
+      x, y, ground: 'NATURAL', crop: 'NONE', growth: 0, moisture: 0.75
     };
   }
 
