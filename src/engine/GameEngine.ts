@@ -401,6 +401,17 @@ export class GameEngine {
 
         const effectiveRate = baseRate * moistureFactor;
         tile.growth = Math.min(100, tile.growth + effectiveRate);
+        
+        // Crops consume moisture as they grow
+        tile.moisture = Math.max(0, Math.round((tile.moisture - 0.003) * 1000) / 1000);
+      } else if (tile.crop === 'NONE' && tile.moisture > 0.5) {
+        // Unplanted moist soil slowly evaporates
+        tile.moisture = Math.max(0, Math.round((tile.moisture - 0.001) * 1000) / 1000);
+      }
+
+      // Revert IRRIGATED ground to NATURAL when moisture drops to 25% or below
+      if (tile.moisture <= 0.25 && tile.ground === 'IRRIGATED') {
+        tile.ground = 'NATURAL';
       }
       
       // Auto-grow wild fiber on any unplanted ground periodically
@@ -512,6 +523,9 @@ export class GameEngine {
     t.growth = 0;
     // Loss of 0.25 moisture upon harvest
     t.moisture = Math.max(0, Math.round((t.moisture - 0.25) * 100) / 100);
+    if (t.moisture <= 0.25 && t.ground === 'IRRIGATED') {
+      t.ground = 'NATURAL';
+    }
     this.saveEngineState();
     return true;
   }
