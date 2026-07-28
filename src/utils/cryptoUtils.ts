@@ -1,6 +1,34 @@
 const SAVE_SECRET_KEY = 'TS3D_SECRET_INTEGRITY_SALT_#2026_@AGRO';
 
 /**
+ * Computes a fast synchronous checksum string over an object for local storage guardrails.
+ */
+export function computeSyncChecksum(payload: Record<string, any>): string {
+  if (!payload || typeof payload !== 'object') return '';
+  const { signature, checksum, ...cleanPayload } = payload;
+  const str = JSON.stringify(cleanPayload) + SAVE_SECRET_KEY;
+  let h1 = 0x811c9dc5;
+  let h2 = 0x097182a3;
+  for (let i = 0; i < str.length; i++) {
+    const ch = str.charCodeAt(i);
+    h1 = Math.imul(h1 ^ ch, 0x01000193);
+    h2 = Math.imul(h2 ^ ch, 0x050c5d17);
+  }
+  return (h1 >>> 0).toString(16) + (h2 >>> 0).toString(16);
+}
+
+/**
+ * Verifies synchronous checksum of a save or local state object.
+ */
+export function verifySyncChecksum(payload: Record<string, any>): boolean {
+  if (!payload || typeof payload !== 'object') return false;
+  const provided = payload.signature || payload.checksum;
+  if (!provided || typeof provided !== 'string') return false;
+  const expected = computeSyncChecksum(payload);
+  return provided === expected;
+}
+
+/**
  * Computes an HMAC-SHA256 signature over the clean save object.
  */
 export async function computeSaveChecksum(payload: Record<string, any>): Promise<string> {

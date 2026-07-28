@@ -158,7 +158,7 @@ export default function App() {
         {activeTab !== 'workspace' && (
           <div className="fixed bottom-3 right-4 z-30 pointer-events-none select-none">
             <span className="text-[10px] font-mono font-bold tracking-wider px-2 py-0.5 rounded bg-[#161b22]/90 text-[#3fb950] border border-[#30363d] shadow-md backdrop-blur-sm">
-              v2.0.5
+              v2.0.5S
             </span>
           </div>
         )}

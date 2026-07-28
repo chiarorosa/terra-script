@@ -15,6 +15,7 @@ import {
 import { ExecutionContext, ScriptRunner } from './interpreters/ScriptRunner';
 import { VirtualFS } from './virtualFs';
 import { audioManager } from '../utils/audioManager';
+import { computeSyncChecksum, verifySyncChecksum } from '../utils/cryptoUtils';
 
 export const INITIAL_TECH_TREE: TechNode[] = [
   // AUTOMATION BRANCH
@@ -129,17 +130,83 @@ export class GameEngine {
     this.addLog(1, 'system', 'TerraScript 3D Simulation initialized. Single 1x1 tile active.');
   }
 
+  private sanitizeTechTreePrerequisites() {
+    let changed = true;
+    while (changed) {
+      changed = false;
+      for (const node of this.techTree) {
+        if (node.unlocked && node.requires && node.requires.length > 0) {
+          const prereqsOk = node.requires.every(reqId => {
+            const reqNode = this.techTree.find(n => n.id === reqId);
+            return reqNode && reqNode.unlocked;
+          });
+          if (!prereqsOk) {
+            console.warn(`🛡️ [Guardrail] Relocking ${node.id} (${node.name}): pré-requisito não desbloqueado.`);
+            node.unlocked = false;
+            changed = true;
+          }
+        }
+      }
+    }
+  }
+
+  private syncAgentsWithTechTree() {
+    const scale5Unlocked = this.isTechUnlocked('SCALE_5');
+    const scale8Unlocked = this.isTechUnlocked('SCALE_8');
+
+    if (!this.agents.find(a => a.id === 1)) {
+      this.agents.push({
+        id: 1, name: 'Claudio', x: 0, y: 0, color: '#3b82f6',
+        assignedFile: 'main.py', status: 'IDLE', currentLine: 1, actionMessage: 'Ready'
+      });
+    }
+
+    if (scale5Unlocked) {
+      if (!this.agents.find(a => a.id === 2)) {
+        this.agents.push({
+          id: 2, name: 'Gepeto', x: Math.min(1, this.width - 1), y: Math.min(1, this.height - 1),
+          color: '#10b981', assignedFile: 'checkerboard.py', status: 'IDLE', currentLine: 1, actionMessage: 'Ready'
+        });
+      }
+    } else {
+      this.agents = this.agents.filter(a => a.id !== 2);
+    }
+
+    if (scale8Unlocked) {
+      if (!this.agents.find(a => a.id === 3)) {
+        this.agents.push({
+          id: 3, name: 'Gemilson', x: Math.min(2, this.width - 1), y: Math.min(2, this.height - 1),
+          color: '#a855f7', assignedFile: 'main.py', status: 'IDLE', currentLine: 1, actionMessage: 'Ready'
+        });
+      }
+    } else {
+      this.agents = this.agents.filter(a => a.id !== 3);
+    }
+
+    if (!this.agents.find(a => a.id === this.primaryAgentId)) {
+      this.primaryAgentId = 1;
+    }
+
+    this.agents.forEach(a => {
+      if (a.id === 1) a.name = 'Claudio';
+      if (a.id === 2) a.name = 'Gepeto';
+      if (a.id === 3) a.name = 'Gemilson';
+    });
+  }
+
   private saveEngineState() {
     try {
-      const state = {
+      const rawState = {
         width: this.width,
         height: this.height,
         resources: this.resources,
-        techTree: this.techTree,
+        techTree: this.techTree.map(n => ({ id: n.id, unlocked: n.unlocked })),
         currentTick: this.currentTick,
         totalActions: this.totalActionsPerformed,
         primaryAgentId: this.primaryAgentId
       };
+      const checksum = computeSyncChecksum(rawState);
+      const state = { ...rawState, checksum };
       localStorage.setItem(ENGINE_STORAGE_KEY, JSON.stringify(state));
     } catch (e) {
       console.warn('Failed to save engine state:', e);
@@ -151,68 +218,68 @@ export class GameEngine {
       const stored = localStorage.getItem(ENGINE_STORAGE_KEY);
       if (stored) {
         const parsed = JSON.parse(stored);
-        if (parsed.width && parsed.height) {
-          this.width = parsed.width;
-          this.height = parsed.height;
-          this.rebuildGrid(this.width, this.height);
+        const isValidSignature = verifySyncChecksum(parsed);
+
+        if (!isValidSignature && parsed && typeof parsed === 'object') {
+          console.warn('🛡️ [Guardrail] Integridade do LocalStorage alterada. Sanitizando progresso...');
+          this.addLog(1, 'system', '🛡️ [Guardrail] Alteração manual detectada no armazenamento local! Progresso sanitizado.');
         }
-        if (parsed.primaryAgentId) {
-          this.primaryAgentId = parsed.primaryAgentId;
-        }
-        if (parsed.resources) {
-          this.resources = { ...this.resources, ...parsed.resources };
-          // Guarantee new players starting with older 0-fiber save without research get 10 starting fibers
+
+        // 1. Sanitize Resources (finite non-negative numbers)
+        if (parsed.resources && typeof parsed.resources === 'object') {
+          for (const resKey of Object.keys(this.resources) as (keyof ResourceMap)[]) {
+            const val = parsed.resources[resKey];
+            if (typeof val === 'number' && Number.isFinite(val) && !Number.isNaN(val) && val >= 0) {
+              this.resources[resKey] = Math.floor(val);
+            }
+          }
           if (this.resources.fiber === 0 && (!parsed.techTree || !parsed.techTree.some((t: any) => t.unlocked))) {
             this.resources.fiber = 10;
           }
         }
-        if (parsed.techTree) {
-          parsed.techTree.forEach((savedNode: TechNode) => {
+
+        // 2. Sanitize Tech Tree
+        if (Array.isArray(parsed.techTree)) {
+          parsed.techTree.forEach((savedNode: any) => {
             const node = this.techTree.find(n => n.id === savedNode.id);
-            if (node) node.unlocked = savedNode.unlocked;
+            if (node && typeof savedNode.unlocked === 'boolean') {
+              node.unlocked = savedNode.unlocked;
+            }
           });
         }
-        if (parsed.currentTick) this.currentTick = parsed.currentTick;
-        if (parsed.totalActions) this.totalActionsPerformed = parsed.totalActions;
+        this.sanitizeTechTreePrerequisites();
 
-        // Restore Gepeto if SCALE_5 is unlocked
-        const scale5 = this.techTree.find(n => n.id === 'SCALE_5');
-        if (scale5 && scale5.unlocked && !this.agents.find(a => a.id === 2)) {
-          this.agents.push({
-            id: 2,
-            name: 'Gepeto',
-            x: 1,
-            y: 1,
-            color: '#10b981',
-            assignedFile: 'checkerboard.py',
-            status: 'IDLE',
-            currentLine: 1,
-            actionMessage: 'Ready'
-          });
+        // 3. Calculate max permitted grid dimension based on legitimate tech tree
+        let maxAllowedW = 1;
+        let maxAllowedH = 1;
+        if (this.isTechUnlocked('SCALE_9')) { maxAllowedW = 12; maxAllowedH = 12; }
+        else if (this.isTechUnlocked('SCALE_7')) { maxAllowedW = 9; maxAllowedH = 9; }
+        else if (this.isTechUnlocked('SCALE_6')) { maxAllowedW = 7; maxAllowedH = 7; }
+        else if (this.isTechUnlocked('SCALE_4')) { maxAllowedW = 5; maxAllowedH = 5; }
+        else if (this.isTechUnlocked('SCALE_3')) { maxAllowedW = 3; maxAllowedH = 3; }
+        else if (this.isTechUnlocked('SCALE_2')) { maxAllowedW = 1; maxAllowedH = 3; }
+
+        const targetW = typeof parsed.width === 'number' ? Math.min(parsed.width, maxAllowedW) : 1;
+        const targetH = typeof parsed.height === 'number' ? Math.min(parsed.height, maxAllowedH) : 1;
+        this.width = Math.max(1, targetW);
+        this.height = Math.max(1, targetH);
+        this.rebuildGrid(this.width, this.height);
+
+        if (typeof parsed.primaryAgentId === 'number') {
+          this.primaryAgentId = parsed.primaryAgentId;
+        }
+        if (typeof parsed.currentTick === 'number' && parsed.currentTick >= 0) {
+          this.currentTick = Math.floor(parsed.currentTick);
+        }
+        if (typeof parsed.totalActions === 'number' && parsed.totalActions >= 0) {
+          this.totalActionsPerformed = Math.floor(parsed.totalActions);
         }
 
-        // Restore Gemilson if SCALE_8 is unlocked
-        const scale8 = this.techTree.find(n => n.id === 'SCALE_8');
-        if (scale8 && scale8.unlocked && !this.agents.find(a => a.id === 3)) {
-          this.agents.push({
-            id: 3,
-            name: 'Gemilson',
-            x: 2,
-            y: 2,
-            color: '#a855f7',
-            assignedFile: 'main.py',
-            status: 'IDLE',
-            currentLine: 1,
-            actionMessage: 'Ready'
-          });
-        }
+        // 4. Sync Agents
+        this.syncAgentsWithTechTree();
 
-        // Migrate/sync agent names
-        this.agents.forEach(a => {
-          if (a.id === 1) a.name = 'Claudio';
-          if (a.id === 2) a.name = 'Gepeto';
-          if (a.id === 3) a.name = 'Gemilson';
-        });
+        // Re-save clean, signed state
+        this.saveEngineState();
       }
     } catch (e) {
       console.warn('Failed to load engine state:', e);
@@ -554,6 +621,13 @@ export class GameEngine {
   }
 
   public tillTile(agentId: number, x: number, y: number): boolean {
+    if (!this.isTechUnlocked('AGRO_3')) {
+      const ag = this.getAgent(agentId);
+      if (ag) ag.actionMessage = 'Bloqueado: requer AGRO_3';
+      this.addLog(agentId, 'stderr', `🚨 Guardrail de Progresso: farm.till() requer o desbloqueio de Solo Arado (AGRO_3)!`);
+      return false;
+    }
+
     const t = this.getTile(x, y);
     t.ground = 'TILLED';
     this.totalActionsPerformed++;
@@ -592,15 +666,6 @@ export class GameEngine {
     this.totalActionsPerformed++;
     const ag = this.getAgent(agentId);
 
-    if (t.ground === 'SOAKED' || t.moisture > 1.0) {
-      t.crop = 'NONE';
-      t.growth = 0;
-      audioManager.playPlant();
-      if (ag) ag.actionMessage = `Solo encharcado! Falha ao plantar em (${x},${y})`;
-      this.addLog(agentId, 'system', `🚨 Falha no plantio em (${x},${y}): Solo encharcado (umidade > 100%). Cultura definhou (NONE).`);
-      return true;
-    }
-
     let crop: CropType = 'WILD_FIBER';
     const upper = cropStr.toUpperCase();
     if (upper.includes('TREE') || upper.includes('TIMBER')) {
@@ -619,6 +684,33 @@ export class GameEngine {
       crop = 'WILD_FIBER';
     }
 
+    // Guardrail: Research requirement check for crop
+    const cropTechReq: Record<CropType, string> = {
+      WILD_FIBER: 'AGRO_1',
+      WOODY_BUSH: 'AGRO_2',
+      CULTIVATED_ROOT: 'AGRO_3',
+      TREE: 'AGRO_4',
+      FRUIT_COLONY: 'AGRO_5',
+      ENERGY_FLOWER: 'AGRO_6',
+      GRADED_PLANT: 'AGRO_7'
+    };
+
+    const reqTech = cropTechReq[crop];
+    if (reqTech && !this.isTechUnlocked(reqTech)) {
+      if (ag) ag.actionMessage = `Bloqueado: requer ${reqTech}`;
+      this.addLog(agentId, 'stderr', `🚨 Guardrail de Progresso: Não é possível plantar ${crop} sem desbloquear a pesquisa ${reqTech}!`);
+      return false;
+    }
+
+    if (t.ground === 'SOAKED' || t.moisture > 1.0) {
+      t.crop = 'NONE';
+      t.growth = 0;
+      audioManager.playPlant();
+      if (ag) ag.actionMessage = `Solo encharcado! Falha ao plantar em (${x},${y})`;
+      this.addLog(agentId, 'system', `🚨 Falha no plantio em (${x},${y}): Solo encharcado (umidade > 100%). Cultura definhou (NONE).`);
+      return true;
+    }
+
     t.crop = crop;
     t.growth = 0;
     audioManager.playPlant();
@@ -627,6 +719,11 @@ export class GameEngine {
   }
 
   public swapTiles(agentId: number, x: number, y: number, dirStr: string): boolean {
+    if (!this.isTechUnlocked('AGRO_7')) {
+      this.addLog(agentId, 'stderr', `🚨 Guardrail de Progresso: farm.swap() requer o desbloqueio de Culturas Graduadas (AGRO_7)!`);
+      return false;
+    }
+
     const dir = dirStr.toUpperCase();
     let targetX = x;
     let targetY = y;
@@ -720,6 +817,15 @@ export class GameEngine {
     const node = this.techTree.find(n => n.id === nodeId);
     if (!node || node.unlocked) return false;
 
+    // Check prerequisites
+    if (node.requires && node.requires.length > 0) {
+      const prereqsOk = node.requires.every(reqId => this.isTechUnlocked(reqId));
+      if (!prereqsOk) {
+        this.addLog(1, 'stderr', `🚨 Guardrail de Progresso: Não é possível pesquisar ${node.name} sem os pré-requisitos (${node.requires.join(', ')})!`);
+        return false;
+      }
+    }
+
     // Check costs
     for (const [res, cost] of Object.entries(node.cost)) {
       if ((this.resources[res as keyof ResourceMap] || 0) < (cost || 0)) {
@@ -741,35 +847,13 @@ export class GameEngine {
     else if (node.id === 'SCALE_3') this.rebuildGrid(3, 3);
     else if (node.id === 'SCALE_4') this.rebuildGrid(5, 5);
     else if (node.id === 'SCALE_5') {
-      this.agents.push({
-        id: 2,
-        name: 'Gepeto',
-        x: 1,
-        y: 1,
-        color: '#10b981',
-        assignedFile: 'checkerboard.py',
-        status: 'IDLE',
-        currentLine: 1,
-        actionMessage: 'Ready'
-      });
+      this.syncAgentsWithTechTree();
       this.addLog(2, 'system', 'Drone Gepeto desbloqueado e juntou-se à fazenda!');
     } else if (node.id === 'SCALE_6') this.rebuildGrid(7, 7);
     else if (node.id === 'SCALE_7') this.rebuildGrid(9, 9);
     else if (node.id === 'SCALE_8') {
-      if (!this.agents.find(a => a.id === 3)) {
-        this.agents.push({
-          id: 3,
-          name: 'Gemilson',
-          x: 2,
-          y: 2,
-          color: '#a855f7',
-          assignedFile: 'main.py',
-          status: 'IDLE',
-          currentLine: 1,
-          actionMessage: 'Ready'
-        });
-        this.addLog(3, 'system', 'Drone Gemilson desbloqueado e juntou-se à fazenda!');
-      }
+      this.syncAgentsWithTechTree();
+      this.addLog(3, 'system', 'Drone Gemilson desbloqueado e juntou-se à fazenda!');
     } else if (node.id === 'SCALE_9') this.rebuildGrid(12, 12);
 
     this.saveEngineState();
@@ -908,7 +992,7 @@ export class GameEngine {
   public exportSaveData() {
     const tilesArray: TileState[] = Array.from(this.tiles.values());
     return {
-      version: '2.0.4',
+      version: '2.0.5S',
       appName: 'TerraScript 3D',
       timestamp: new Date().toISOString(),
       grid: {
@@ -930,28 +1014,17 @@ export class GameEngine {
     try {
       if (!saveObj || typeof saveObj !== 'object') return false;
 
-      // 1. Grid & Tiles
-      if (saveObj.grid && typeof saveObj.grid.width === 'number' && typeof saveObj.grid.height === 'number') {
-        this.width = saveObj.grid.width;
-        this.height = saveObj.grid.height;
-        this.tiles.clear();
-        if (Array.isArray(saveObj.grid.tiles) && saveObj.grid.tiles.length > 0) {
-          saveObj.grid.tiles.forEach((t: TileState) => {
-            if (typeof t.x === 'number' && typeof t.y === 'number') {
-              this.tiles.set(`${t.x},${t.y}`, { ...t });
-            }
-          });
-        } else {
-          this.rebuildGrid(this.width, this.height);
+      // 1. Resources Sanitization
+      if (saveObj.resources && typeof saveObj.resources === 'object') {
+        for (const resKey of Object.keys(this.resources) as (keyof ResourceMap)[]) {
+          const val = saveObj.resources[resKey];
+          if (typeof val === 'number' && Number.isFinite(val) && !Number.isNaN(val) && val >= 0) {
+            this.resources[resKey] = Math.floor(val);
+          }
         }
       }
 
-      // 2. Resources
-      if (saveObj.resources) {
-        this.resources = { ...this.resources, ...saveObj.resources };
-      }
-
-      // 3. Tech Tree
+      // 2. Tech Tree Prerequisites Sanitization
       if (Array.isArray(saveObj.techTree)) {
         saveObj.techTree.forEach((savedNode: any) => {
           const node = this.techTree.find(n => n.id === savedNode.id);
@@ -960,23 +1033,42 @@ export class GameEngine {
           }
         });
       }
+      this.sanitizeTechTreePrerequisites();
 
-      // 4. Agents
-      if (Array.isArray(saveObj.agents) && saveObj.agents.length > 0) {
-        this.agents = saveObj.agents.map((ag: any) => ({
-          ...ag,
-          name: ag.id === 1 ? 'Claudio' : ag.id === 2 ? 'Gepeto' : ag.id === 3 ? 'Gemilson' : ag.name,
-          status: 'IDLE',
-          actionMessage: 'Ready'
-        }));
+      // 3. Grid & Tiles (Clamped to Max Allowed Dimension based on unlocked SCALE tech)
+      let maxAllowedW = 1;
+      let maxAllowedH = 1;
+      if (this.isTechUnlocked('SCALE_9')) { maxAllowedW = 12; maxAllowedH = 12; }
+      else if (this.isTechUnlocked('SCALE_7')) { maxAllowedW = 9; maxAllowedH = 9; }
+      else if (this.isTechUnlocked('SCALE_6')) { maxAllowedW = 7; maxAllowedH = 7; }
+      else if (this.isTechUnlocked('SCALE_4')) { maxAllowedW = 5; maxAllowedH = 5; }
+      else if (this.isTechUnlocked('SCALE_3')) { maxAllowedW = 3; maxAllowedH = 3; }
+      else if (this.isTechUnlocked('SCALE_2')) { maxAllowedW = 1; maxAllowedH = 3; }
+
+      if (saveObj.grid && typeof saveObj.grid.width === 'number' && typeof saveObj.grid.height === 'number') {
+        this.width = Math.max(1, Math.min(saveObj.grid.width, maxAllowedW));
+        this.height = Math.max(1, Math.min(saveObj.grid.height, maxAllowedH));
+        this.tiles.clear();
+        if (Array.isArray(saveObj.grid.tiles) && saveObj.grid.tiles.length > 0) {
+          saveObj.grid.tiles.forEach((t: TileState) => {
+            if (typeof t.x === 'number' && typeof t.y === 'number' && t.x < this.width && t.y < this.height) {
+              this.tiles.set(`${t.x},${t.y}`, { ...t });
+            }
+          });
+        } else {
+          this.rebuildGrid(this.width, this.height);
+        }
       }
+
+      // 4. Agents Sync
       if (typeof saveObj.primaryAgentId === 'number') {
         this.primaryAgentId = saveObj.primaryAgentId;
       }
+      this.syncAgentsWithTechTree();
 
       // 5. Statistics
-      if (typeof saveObj.currentTick === 'number') this.currentTick = saveObj.currentTick;
-      if (typeof saveObj.totalActionsPerformed === 'number') this.totalActionsPerformed = saveObj.totalActionsPerformed;
+      if (typeof saveObj.currentTick === 'number' && saveObj.currentTick >= 0) this.currentTick = Math.floor(saveObj.currentTick);
+      if (typeof saveObj.totalActionsPerformed === 'number' && saveObj.totalActionsPerformed >= 0) this.totalActionsPerformed = Math.floor(saveObj.totalActionsPerformed);
 
       // 6. Virtual Filesystem
       if (Array.isArray(saveObj.scripts) && saveObj.scripts.length > 0) {
@@ -984,7 +1076,7 @@ export class GameEngine {
       }
 
       this.saveEngineState();
-      this.addLog(1, 'system', 'Progresso importado com sucesso a partir do arquivo de Save!');
+      this.addLog(1, 'system', 'Progresso importado e verificado com sucesso pelo Guardrail!');
       this.notify();
       return true;
     } catch (err) {

@@ -8,10 +8,19 @@ export interface ChangelogRelease {
 
 export const CHANGELOG_HISTORY: ChangelogRelease[] = [
   {
+    version: 'v2.0.5S',
+    date: '2026-07-28',
+    title: 'Pacote de Guardrails Anti-Exploit',
+    isCurrent: true,
+    changes: [
+      'Pacote de guardrails'
+    ]
+  },
+  {
     version: 'v2.0.5',
     date: '2026-07-28',
     title: 'Rastreamento de Drone no Painel de Informações do Bloco (INFO)',
-    isCurrent: true,
+    isCurrent: false,
     changes: [
       'Nova funcionalidade de rastreamento "Seguir ON/OFF" na janela de Informações do Bloco (INFO) do visualizador 3D.',
       'Acompanhamento em tempo real do bloco e estatísticas do solo onde o Drone Principal está localizado.',
