@@ -1,0 +1,6 @@
+{
+  "name": "TerraScript 3D",
+  "description": "Incremental automation, programming, and 3D simulation game where you write code to program farm agents, harvest crops, research tech, and expand your land.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

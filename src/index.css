@@ -1,0 +1,66 @@
+@import "tailwindcss";
+
+:root {
+  --gh-bg-default: #0d1117;
+  --gh-bg-overlay: #161b22;
+  --gh-bg-inset: #010409;
+  --gh-border-default: #30363d;
+  --gh-border-muted: #21262d;
+  --gh-fg-default: #f0f6fc;
+  --gh-fg-muted: #8b949e;
+  --gh-fg-subtle: #6e7681;
+  --gh-blue: #58a6ff;
+  --gh-green: #3fb950;
+  --gh-green-btn: #238636;
+  --gh-green-btn-hover: #2ea043;
+  --gh-purple: #a371f7;
+  --gh-amber: #d29922;
+  --gh-red: #f85149;
+}
+
+body {
+  font-family: 'Mona Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background-color: #0d1117;
+  color: #c9d1d9;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+code, kbd, samp, pre {
+  font-family: 'JetBrains Mono', 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+}
+
+/* Custom GitHub Dark Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #0d1117;
+}
+::-webkit-scrollbar-thumb {
+  background: #30363d;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #484f58;
+}
+
+/* Highlight line executing in CodeMirror - GitHub Green style */
+.cm-executing-line {
+  background-color: rgba(46, 160, 67, 0.22) !important;
+  border-left: 3px solid #3fb950 !important;
+  box-shadow: inset 0 0 10px rgba(46, 160, 67, 0.15);
+  position: relative;
+  animation: cm-executing-pulse 1.4s infinite ease-in-out;
+}
+
+@keyframes cm-executing-pulse {
+  0%, 100% {
+    background-color: rgba(46, 160, 67, 0.18);
+  }
+  50% {
+    background-color: rgba(46, 160, 67, 0.35);
+  }
+}
+
