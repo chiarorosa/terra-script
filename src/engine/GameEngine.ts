@@ -345,10 +345,10 @@ export class GameEngine {
     }
   }
 
-  public rebuildGrid(width: number, height: number, shouldSave: boolean = true) {
+  public rebuildGrid(width: number, height: number, shouldSave: boolean = true, forceFreshTiles: boolean = false) {
     this.width = width;
     this.height = height;
-    const oldTiles = new Map(this.tiles);
+    const oldTiles = forceFreshTiles ? new Map() : new Map(this.tiles);
     this.tiles.clear();
 
     for (let r = 0; r < height; r++) {
@@ -529,7 +529,7 @@ export class GameEngine {
 
     // Reset Grid to 1x1 from clean state (clear existing tile states)
     this.tiles.clear();
-    this.rebuildGrid(1, 1, false);
+    this.rebuildGrid(1, 1, false, true);
 
     // Reset VirtualFS if provided or internal vfs
     const fsToReset = vfs || this.vfs;
@@ -540,6 +540,8 @@ export class GameEngine {
     // Clear localStorage
     if (typeof window !== 'undefined') {
       localStorage.removeItem(ENGINE_STORAGE_KEY);
+      localStorage.removeItem('terrascript_welcome_seen');
+      localStorage.removeItem('terrascript_programmer_name');
     }
 
     this.saveEngineState();

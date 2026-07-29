@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { GameEngine } from '../engine/GameEngine';
 import { CropType, GroundType, TileState } from '../types/game';
-import { RotateCw, RotateCcw, Info, Zap, Activity, Gauge, Eye, EyeOff, HardDrive, Target, Star, ZoomIn, ZoomOut } from 'lucide-react';
+import { RotateCw, RotateCcw, Info, Zap, Activity, Gauge, Eye, EyeOff, HardDrive, Target, Star, ZoomIn, ZoomOut, Sparkles } from 'lucide-react';
 import { GameLogo } from './GameLogo';
 
 interface World3DCanvasProps {
@@ -620,20 +620,24 @@ export const World3DCanvas: React.FC<World3DCanvasProps> = ({ engine }) => {
               <button
                 onClick={() => setZoomLevel(1.0)}
                 className="px-1.5 py-0.5 text-[10px] text-slate-400 hover:text-white bg-slate-700/60 hover:bg-slate-700 rounded transition-colors"
-                title="Resetar Zoom para 100%"
+                title="Ajustar Zoom para 100%"
               >
-                Reset
+                100%
               </button>
             )}
           </div>
 
           <button
-            onClick={() => engine.clearWorld()}
-            className="flex items-center gap-1 px-2 py-1 bg-rose-950/80 hover:bg-rose-900 border border-rose-800/60 text-rose-300 rounded text-xs transition-colors"
-            title="Limpar Terreno (clear()) - Preserva progresso, inventário e pesquisas"
+            onClick={() => {
+              if (window.confirm('Limpar plantas e solos do terreno atual?\n\n(Pesquisas, tamanho do mundo e recursos em inventário serão MANTIDOS)')) {
+                engine.clearWorld();
+              }
+            }}
+            className="flex items-center gap-1 px-2 py-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 rounded text-xs transition-colors"
+            title="Limpar plantas do lote atual (Preserva pesquisas e tamanho do mundo)"
           >
-            <RotateCcw className="w-3.5 h-3.5 text-rose-400" />
-            Limpar Mundo
+            <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+            Limpar Lote
           </button>
 
           <button

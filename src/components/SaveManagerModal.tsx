@@ -350,18 +350,7 @@ export const SaveManagerModal: React.FC<SaveManagerModalProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="px-5 py-3 bg-[#010409] border-t border-[#30363d] flex items-center justify-between">
-          <button
-            onClick={() => {
-              setResetConfirmInput('');
-              setShowResetModal(true);
-            }}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 border border-rose-800/60 rounded-lg text-xs font-semibold transition-all"
-          >
-            <RotateCcw className="w-3.5 h-3.5 text-rose-400" />
-            <span>Começar do Zero</span>
-          </button>
-
+        <div className="px-5 py-3 bg-[#010409] border-t border-[#30363d] flex items-center justify-end">
           <button
             onClick={onClose}
             className="px-4 py-2 bg-[#21262d] hover:bg-[#30363d] text-[#c9d1d9] rounded-lg text-xs font-bold transition-all"

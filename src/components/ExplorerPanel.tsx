@@ -111,7 +111,7 @@ export const ExplorerPanel: React.FC<ExplorerPanelProps> = ({
   };
 
   const handleResetDefaults = () => {
-    if (confirm('Restaurar arquivos da workspace para os scripts iniciais do jogo?')) {
+    if (confirm('Restaurar apenas os arquivos da workspace para os scripts iniciais do jogo? (Suas pesquisas e terreno serão mantidos)')) {
       vfs.resetToDefaults();
       refreshFiles();
       onSelectFile('main.py');
@@ -176,8 +176,8 @@ export const ExplorerPanel: React.FC<ExplorerPanelProps> = ({
           )}
           <button
             onClick={handleResetDefaults}
-            className="p-1 hover:bg-[#21262d] text-[#8b949e] hover:text-[#f85149] rounded transition-all"
-            title="Restaurar Arquivos Iniciais Padrão"
+            className="p-1 hover:bg-[#21262d] text-[#8b949e] hover:text-[#d29922] rounded transition-all"
+            title="Restaurar apenas os Scripts Padrão (main.py)"
           >
             <RotateCcw className="w-3.5 h-3.5" />
           </button>
