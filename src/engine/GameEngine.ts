@@ -761,6 +761,8 @@ export class GameEngine {
 
     t.crop = 'NONE';
     t.growth = 0;
+    // Consome 0.25 (25%) de umidade ao colher
+    t.moisture = Math.max(0, Math.round((t.moisture - 0.25) * 1000) / 1000);
     if (t.moisture <= 0.25 && t.ground === 'IRRIGATED') {
       t.ground = 'NATURAL';
     }
