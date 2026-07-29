@@ -20,7 +20,8 @@ import {
   Upload,
   Volume2,
   VolumeX,
-  Music
+  Music,
+  User
 } from 'lucide-react';
 import { GameLogo } from './GameLogo';
 import { GameEngine } from '../engine/GameEngine';
@@ -31,14 +32,17 @@ interface HeaderBarProps {
   activeTab: 'workspace' | 'research' | 'agents' | 'tutorial';
   setActiveTab: (tab: 'workspace' | 'research' | 'agents' | 'tutorial') => void;
   onOpenSaveManager?: () => void;
+  onOpenWelcome?: () => void;
 }
 
-export const HeaderBar: React.FC<HeaderBarProps> = ({ engine, activeTab, setActiveTab, onOpenSaveManager }) => {
+export const HeaderBar: React.FC<HeaderBarProps> = ({ engine, activeTab, setActiveTab, onOpenSaveManager, onOpenWelcome }) => {
   const resources = engine.getResources();
   const mode = engine.getMode();
   const speed = engine.getSpeed();
   const unlockableCount = engine.getUnlockableTechCount();
   const hasUpgrades = unlockableCount > 0;
+
+  const programmerName = typeof window !== 'undefined' ? (localStorage.getItem('terrascript_programmer_name') || 'Dev Master') : 'Dev Master';
 
   const [sfxMuted, setSfxMuted] = useState(audioManager.getSfxMuted());
   const [bgmMuted, setBgmMuted] = useState(audioManager.getBgmMuted());
@@ -65,6 +69,16 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({ engine, activeTab, setActi
         <div>
           <div className="flex items-center gap-2">
             <span className="font-semibold text-sm tracking-tight text-[#f0f6fc]">TerraScript <span className="text-[#3fb950] font-bold">3D</span></span>
+            {onOpenWelcome && (
+              <button
+                onClick={onOpenWelcome}
+                title="Clique para alterar seu nome de programador(a)"
+                className="hidden sm:flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#0d1117] hover:bg-[#21262d] border border-[#30363d] hover:border-[#3fb950]/50 text-[11px] text-[#3fb950] font-mono transition-all cursor-pointer shadow-sm"
+              >
+                <User className="w-3 h-3 text-[#3fb950]" />
+                <span className="font-bold truncate max-w-[120px]">{programmerName}</span>
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -157,36 +171,21 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({ engine, activeTab, setActi
 
       {/* Execution Controls */}
       <div className="flex items-center gap-2.5">
-        {/* Save / Export Manager Button */}
-        {onOpenSaveManager && (
-          <button
-            onClick={onOpenSaveManager}
-            className="flex items-center gap-1.5 px-2.5 py-1 bg-[#21262d] hover:bg-[#30363d] text-[#58a6ff] hover:text-[#79c0ff] border border-[#30363d] rounded-md text-xs font-semibold transition-all active:scale-95"
-            title="Exportar / Importar Save e Baixar Scripts"
-          >
-            <Save className="w-3.5 h-3.5 text-[#3fb950]" />
-            <span className="hidden md:inline">Save & Scripts</span>
-          </button>
-        )}
-
         {/* Speed Controls */}
-        <div className="flex items-center gap-2 bg-[#010409] px-2.5 py-1 rounded-md border border-[#30363d] text-xs">
-          <span className="text-[#8b949e] font-mono text-[11px]">Velocidade:</span>
-          <div className="flex items-center gap-1">
-            {[1, 2].map(s => (
-              <button
-                key={s}
-                onClick={() => engine.setSpeed(s)}
-                className={`px-1.5 py-0.5 rounded text-[10px] font-mono transition-all ${
-                  speed === s
-                    ? 'bg-[#238636] text-[#f0f6fc] font-bold'
-                    : 'text-[#8b949e] hover:text-[#f0f6fc] hover:bg-[#21262d]'
-                }`}
-              >
-                {s}x
-              </button>
-            ))}
-          </div>
+        <div className="flex items-center gap-1 bg-[#010409] px-2 py-1 rounded-md border border-[#30363d] text-xs">
+          {[1, 2].map(s => (
+            <button
+              key={s}
+              onClick={() => engine.setSpeed(s)}
+              className={`px-1.5 py-0.5 rounded text-[10px] font-mono transition-all ${
+                speed === s
+                  ? 'bg-[#238636] text-[#f0f6fc] font-bold'
+                  : 'text-[#8b949e] hover:text-[#f0f6fc] hover:bg-[#21262d]'
+              }`}
+            >
+              {s}x
+            </button>
+          ))}
         </div>
 
         {/* Audio Controls (SFX & Music) */}

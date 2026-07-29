@@ -10,6 +10,7 @@ import { TechTreeModal } from './components/TechTreeModal';
 import { AgentsPanel } from './components/AgentsPanel';
 import { TutorialModal } from './components/TutorialModal';
 import { SaveManagerModal } from './components/SaveManagerModal';
+import { WelcomeModal } from './components/WelcomeModal';
 import { PrestigeBar } from './components/PrestigeBar';
 import { audioManager } from './utils/audioManager';
 
@@ -21,6 +22,12 @@ export default function App() {
   const [activeFilePath, setActiveFilePath] = useState<string>('main.py');
   const [activeTab, setActiveTab] = useState<'workspace' | 'research' | 'agents' | 'tutorial'>('workspace');
   const [isSaveModalOpen, setIsSaveModalOpen] = useState<boolean>(false);
+  const [isWelcomeModalOpen, setIsWelcomeModalOpen] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('terrascript_welcome_seen') !== 'true';
+    }
+    return false;
+  });
 
   // Kickstart audio on initial user interaction
   useEffect(() => {
@@ -103,6 +110,7 @@ export default function App() {
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         onOpenSaveManager={() => setIsSaveModalOpen(true)}
+        onOpenWelcome={() => setIsWelcomeModalOpen(true)}
       />
 
       {/* Prestige Progress Bar (v2.1.0) */}
@@ -177,6 +185,21 @@ export default function App() {
           onClose={() => setIsSaveModalOpen(false)}
           onFileImported={(newPath) => {
             setActiveFilePath(newPath);
+            setRenderTick(t => t + 1);
+          }}
+          onResetGame={() => {
+            setIsWelcomeModalOpen(true);
+            setRenderTick(t => t + 1);
+          }}
+        />
+      )}
+
+      {/* Welcome & Programmer Name Modal */}
+      {isWelcomeModalOpen && (
+        <WelcomeModal
+          engine={engine}
+          onClose={() => {
+            setIsWelcomeModalOpen(false);
             setRenderTick(t => t + 1);
           }}
         />

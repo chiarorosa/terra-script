@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { GameEngine } from '../engine/GameEngine';
 import { CropType, GroundType, TileState } from '../types/game';
-import { RotateCw, RotateCcw, Info, Zap, Activity, Gauge, Eye, EyeOff, HardDrive, Target, Star } from 'lucide-react';
+import { RotateCw, RotateCcw, Info, Zap, Activity, Gauge, Eye, EyeOff, HardDrive, Target, Star, ZoomIn, ZoomOut } from 'lucide-react';
 import { GameLogo } from './GameLogo';
 
 interface World3DCanvasProps {
@@ -89,7 +89,16 @@ export const World3DCanvas: React.FC<World3DCanvasProps> = ({ engine }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [inspectedCoords, setInspectedCoords] = useState<{ x: number; y: number } | null>({ x: 0, y: 0 });
   const [followDrone, setFollowDrone] = useState<boolean>(false);
-  const [cameraAngle, setCameraAngle] = useState<number>(45);
+  const [cameraAngle, setCameraAngle] = useState<number>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('terrascript_camera_angle');
+      if (saved) {
+        const parsed = parseFloat(saved);
+        if (!isNaN(parsed)) return parsed;
+      }
+    }
+    return 15; // 15° slight tilt angle by default
+  });
 
   const primaryAgent = engine.getPrimaryAgent();
   const activeCoords = (followDrone && primaryAgent)
@@ -101,7 +110,30 @@ export const World3DCanvas: React.FC<World3DCanvasProps> = ({ engine }) => {
   const [fps, setFps] = useState<number>(60);
   const [drawCalls, setDrawCalls] = useState<number>(0);
   const [ramMb, setRamMb] = useState<number>(35);
-  const [showHud, setShowHud] = useState<boolean>(true);
+  const [showHud, setShowHud] = useState<boolean>(false);
+  const [zoomLevel, setZoomLevel] = useState<number>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('terrascript_zoom_level');
+      if (saved) {
+        const parsed = parseFloat(saved);
+        if (!isNaN(parsed)) return parsed;
+      }
+    }
+    return 1.0;
+  });
+
+  // Persist zoomLevel and cameraAngle across tab switches & sessions
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('terrascript_zoom_level', String(zoomLevel));
+    }
+  }, [zoomLevel]);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('terrascript_camera_angle', String(cameraAngle));
+    }
+  }, [cameraAngle]);
 
   const sceneRef = useRef<THREE.Scene | null>(null);
   const cameraRef = useRef<THREE.OrthographicCamera | null>(null);
@@ -111,6 +143,23 @@ export const World3DCanvas: React.FC<World3DCanvasProps> = ({ engine }) => {
   const tileMeshesRef = useRef<Map<string, THREE.Group>>(new Map());
   const agentMeshesRef = useRef<Map<number, THREE.Group>>(new Map());
   const selectionMeshRef = useRef<THREE.LineSegments | null>(null);
+
+  // Mouse wheel zoom listener
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const handleWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      const delta = e.deltaY < 0 ? 0.1 : -0.1;
+      setZoomLevel((prev) => Math.min(Math.max(parseFloat((prev + delta).toFixed(2)), 0.4), 2.5));
+    };
+
+    container.addEventListener('wheel', handleWheel, { passive: false });
+    return () => {
+      container.removeEventListener('wheel', handleWheel);
+    };
+  }, []);
 
   // FPS & Telemetry
   const frameCountRef = useRef(0);
@@ -267,16 +316,18 @@ export const World3DCanvas: React.FC<World3DCanvasProps> = ({ engine }) => {
       cameraRef.current.right = (frustumSize * aspect) / 2;
       cameraRef.current.top = frustumSize / 2;
       cameraRef.current.bottom = -frustumSize / 2;
+      cameraRef.current.zoom = zoomLevel;
       cameraRef.current.updateProjectionMatrix();
 
       const rad = (cameraAngle * Math.PI) / 180;
       const centerX = (width - 1) * 0.6;
       const centerZ = (height - 1) * 0.6;
-      const radius = maxDim * 2.2;
+      const radius = maxDim * 2.0;
 
-      cameraRef.current.position.x = centerX + radius * Math.cos(rad);
-      cameraRef.current.position.y = maxDim * 2.0;
-      cameraRef.current.position.z = centerZ + radius * Math.sin(rad);
+      // Position camera facing the player directly at 0° with slight 3D elevation
+      cameraRef.current.position.x = centerX + radius * Math.sin(rad);
+      cameraRef.current.position.y = maxDim * 1.8;
+      cameraRef.current.position.z = centerZ + radius * Math.cos(rad);
       cameraRef.current.lookAt(centerX, 0, centerZ);
     }
 
@@ -329,7 +380,7 @@ export const World3DCanvas: React.FC<World3DCanvasProps> = ({ engine }) => {
       agentMesh.position.z = targetZ;
     });
 
-  }, [engine, engine.getCurrentTick(), engine.getGridWidth(), engine.getGridHeight(), cameraAngle]);
+  }, [engine, engine.getCurrentTick(), engine.getGridWidth(), engine.getGridHeight(), cameraAngle, zoomLevel]);
 
   // Selection box overlay for inspected tile
   useEffect(() => {
@@ -546,6 +597,36 @@ export const World3DCanvas: React.FC<World3DCanvasProps> = ({ engine }) => {
         </div>
 
         <div className="flex items-center gap-2">
+          {/* Zoom Controls */}
+          <div className="flex items-center gap-1 bg-slate-800/90 border border-slate-700/80 rounded px-1 py-0.5">
+            <button
+              onClick={() => setZoomLevel((prev) => Math.max(parseFloat((prev - 0.15).toFixed(2)), 0.4))}
+              className="p-1 hover:bg-slate-700 text-slate-300 hover:text-white rounded transition-colors"
+              title="Afastar Zoom (Scroll Down / Zoom Out)"
+            >
+              <ZoomOut className="w-3.5 h-3.5" />
+            </button>
+            <span className="text-[10px] font-mono text-cyan-300 w-9 text-center select-none">
+              {Math.round(zoomLevel * 100)}%
+            </span>
+            <button
+              onClick={() => setZoomLevel((prev) => Math.min(parseFloat((prev + 0.15).toFixed(2)), 2.5))}
+              className="p-1 hover:bg-slate-700 text-slate-300 hover:text-white rounded transition-colors"
+              title="Aproximar Zoom (Scroll Up / Zoom In)"
+            >
+              <ZoomIn className="w-3.5 h-3.5" />
+            </button>
+            {zoomLevel !== 1.0 && (
+              <button
+                onClick={() => setZoomLevel(1.0)}
+                className="px-1.5 py-0.5 text-[10px] text-slate-400 hover:text-white bg-slate-700/60 hover:bg-slate-700 rounded transition-colors"
+                title="Resetar Zoom para 100%"
+              >
+                Reset
+              </button>
+            )}
+          </div>
+
           <button
             onClick={() => engine.clearWorld()}
             className="flex items-center gap-1 px-2 py-1 bg-rose-950/80 hover:bg-rose-900 border border-rose-800/60 text-rose-300 rounded text-xs transition-colors"

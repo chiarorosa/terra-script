@@ -126,14 +126,6 @@ export const BottomPanel: React.FC<BottomPanelProps> = ({ engine }) => {
                 <span className="text-[11px] text-[#8b949e] font-sans">
                   Logs de execução do script e mensagens do sistema ({logs.length} registro{logs.length !== 1 ? 's' : ''})
                 </span>
-                <button
-                  onClick={() => engine.clearLogs()}
-                  className="flex items-center gap-1.5 px-2 py-0.5 text-[11px] text-[#8b949e] hover:text-[#f85149] bg-[#161b22] hover:bg-[#21262d] border border-[#30363d] rounded transition-colors"
-                  title="Limpar todos os logs do console"
-                >
-                  <Trash2 className="w-3 h-3" />
-                  <span>Limpar Console</span>
-                </button>
               </div>
               {logs.length === 0 ? (
                 <div className="text-[#8b949e] italic py-2">Saída do console está vazia. Execute o código ou chame print() para inspecionar valores.</div>

@@ -10,7 +10,9 @@ import {
   FolderArchive, 
   FileText, 
   Sparkles,
-  Bot
+  Bot,
+  Trash2,
+  RotateCcw
 } from 'lucide-react';
 import { GameEngine } from '../engine/GameEngine';
 import { VirtualFS } from '../engine/virtualFs';
@@ -29,6 +31,7 @@ interface SaveManagerModalProps {
   activeFilePath?: string;
   onClose: () => void;
   onFileImported?: (path: string) => void;
+  onResetGame?: () => void;
 }
 
 export const SaveManagerModal: React.FC<SaveManagerModalProps> = ({
@@ -36,9 +39,12 @@ export const SaveManagerModal: React.FC<SaveManagerModalProps> = ({
   vfs,
   activeFilePath,
   onClose,
-  onFileImported
+  onFileImported,
+  onResetGame
 }) => {
   const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [showResetModal, setShowResetModal] = useState<boolean>(false);
+  const [resetConfirmInput, setResetConfirmInput] = useState<string>('');
 
   const saveFileInputRef = useRef<HTMLInputElement>(null);
   const scriptFileInputRef = useRef<HTMLInputElement>(null);
@@ -49,6 +55,25 @@ export const SaveManagerModal: React.FC<SaveManagerModalProps> = ({
   const showFeedback = (type: 'success' | 'error', message: string) => {
     setNotification({ type, message });
     setTimeout(() => setNotification(null), 3500);
+  };
+
+  // Reset Everything to Factory Defaults
+  const handleResetGame = () => {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('terrascript_welcome_seen');
+      localStorage.removeItem('terrascript_programmer_name');
+      localStorage.removeItem('terrascript_programmer_avatar');
+    }
+    engine.resetEverything(vfs);
+    const ep = vfs.getEntrypoint();
+    if (ep && onFileImported) {
+      onFileImported(ep.path);
+    }
+    setShowResetModal(false);
+    onClose();
+    if (onResetGame) {
+      onResetGame();
+    }
   };
 
   // 1. Export Game Save
@@ -290,10 +315,53 @@ export const SaveManagerModal: React.FC<SaveManagerModalProps> = ({
 
           </div>
 
+          {/* SECTION 3: Danger Zone - Reset Game from Scratch */}
+          <div className="bg-[#0d1117] border border-rose-900/60 rounded-xl p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Trash2 className="w-4 h-4 text-rose-400" />
+                <h3 className="text-xs font-bold text-rose-300 uppercase tracking-wider">
+                  Começar do Zero (Reset Total)
+                </h3>
+              </div>
+              <span className="text-[10px] font-mono text-rose-400 bg-rose-950/60 px-2 py-0.5 rounded border border-rose-800/60">
+                Irreversível
+              </span>
+            </div>
+
+            <p className="text-xs text-[#8b949e] leading-relaxed">
+              Deseja reiniciar toda a simulação do zero? Esta ação apagará permanentemente o terreno 3D, todos os recursos acumulados, pesquisas desbloqueadas e restaurará os scripts originais da workspace.
+            </p>
+
+            <div className="pt-1">
+              <button
+                onClick={() => {
+                  setResetConfirmInput('');
+                  setShowResetModal(true);
+                }}
+                className="flex items-center justify-center gap-2 px-4 py-2.5 bg-rose-950/80 hover:bg-rose-900 border border-rose-800/80 text-rose-200 rounded-lg text-xs font-bold transition-all active:scale-98 shadow-sm"
+              >
+                <RotateCcw className="w-4 h-4 text-rose-400" />
+                Começar do Zero (Resetar Tudo)
+              </button>
+            </div>
+          </div>
+
         </div>
 
         {/* Footer */}
-        <div className="px-5 py-3 bg-[#010409] border-t border-[#30363d] flex items-center justify-end">
+        <div className="px-5 py-3 bg-[#010409] border-t border-[#30363d] flex items-center justify-between">
+          <button
+            onClick={() => {
+              setResetConfirmInput('');
+              setShowResetModal(true);
+            }}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 border border-rose-800/60 rounded-lg text-xs font-semibold transition-all"
+          >
+            <RotateCcw className="w-3.5 h-3.5 text-rose-400" />
+            <span>Começar do Zero</span>
+          </button>
+
           <button
             onClick={onClose}
             className="px-4 py-2 bg-[#21262d] hover:bg-[#30363d] text-[#c9d1d9] rounded-lg text-xs font-bold transition-all"
@@ -303,6 +371,63 @@ export const SaveManagerModal: React.FC<SaveManagerModalProps> = ({
         </div>
 
       </div>
+
+      {/* TYPED CONFIRMATION MODAL OVERLAY */}
+      {showResetModal && (
+        <div className="fixed inset-0 z-60 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-150">
+          <div className="bg-[#161b22] border border-rose-800/80 rounded-xl w-full max-w-md p-5 shadow-2xl space-y-4 text-left">
+            <div className="flex items-center gap-3 text-rose-400">
+              <div className="p-2.5 bg-rose-950/80 border border-rose-800/80 rounded-lg shrink-0">
+                <AlertCircle className="w-6 h-6 text-rose-400" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-rose-200">Confirmar Reset Total do Jogo</h3>
+                <p className="text-xs text-[#8b949e]">Esta ação apaga permanentemente todo o seu progresso.</p>
+              </div>
+            </div>
+
+            <div className="p-3 bg-[#0d1117] border border-[#30363d] rounded-lg space-y-1.5 text-xs text-[#c9d1d9]">
+              <p className="text-rose-300 font-semibold">Itens que serão resetados:</p>
+              <ul className="list-disc list-inside text-[#8b949e] space-y-0.5 text-[11px]">
+                <li>Mapa 3D volta para grade 1x1 inicial</li>
+                <li>Recursos, inventário e estatísticas zerados</li>
+                <li>Árvore de pesquisas bloqueada novamente</li>
+                <li>Scripts da workspace voltam para os arquivos padrão</li>
+              </ul>
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-xs font-semibold text-[#c9d1d9]">
+                Para confirmar, digite <span className="text-rose-400 font-mono font-bold select-all">RESETAR</span> ou <span className="text-rose-400 font-mono font-bold select-all">DELETAR</span> abaixo:
+              </label>
+              <input
+                type="text"
+                value={resetConfirmInput}
+                onChange={(e) => setResetConfirmInput(e.target.value)}
+                placeholder="Digite RESETAR ou DELETAR"
+                className="w-full px-3 py-2 bg-[#0d1117] border border-rose-900/60 focus:border-rose-500 text-white text-xs font-mono rounded-lg outline-none transition-colors placeholder:text-[#484f58]"
+                autoFocus
+              />
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-2">
+              <button
+                onClick={() => setShowResetModal(false)}
+                className="px-3.5 py-2 bg-[#21262d] hover:bg-[#30363d] text-[#c9d1d9] rounded-lg text-xs font-bold transition-all"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleResetGame}
+                disabled={!['RESETAR', 'DELETAR'].includes(resetConfirmInput.trim().toUpperCase())}
+                className="px-4 py-2 bg-rose-600 hover:bg-rose-500 disabled:opacity-30 disabled:hover:bg-rose-600 text-white rounded-lg text-xs font-bold transition-all active:scale-98 shadow-md"
+              >
+                Confirmar Reset Total
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

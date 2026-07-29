@@ -101,7 +101,7 @@ export const PrestigeBar: React.FC<PrestigeBarProps> = ({ engine }) => {
                     ) : (
                       <Lock className="w-3.5 h-3.5 text-[#8b949e]" />
                     )}
-                    O Bloco Reluzente
+                    Bloco de Prestígio
                   </span>
                   <span className={`text-[10px] font-semibold px-1.5 py-0.2 rounded border ${
                     prestige.worldChangeUnlocked 
@@ -120,6 +120,11 @@ export const PrestigeBar: React.FC<PrestigeBarProps> = ({ engine }) => {
                   }
                 </p>
               </div>
+            </div>
+
+            {/* Subtle clue footer */}
+            <div className="pt-2 border-t border-[#30363d]/50 text-[10px] text-[#8b949e] font-sans leading-tight">
+              Investigue a documentação, métodos de API e registros para encontrar pistas.
             </div>
           </div>
         )}

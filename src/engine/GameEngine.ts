@@ -61,6 +61,15 @@ export const INITIAL_TECH_TREE: TechNode[] = [
   { id: 'SCALE_9', branch: 'SCALE', name: 'Mega Zona 12x12', description: 'Expanda o terreno para um lote mega agrícola 12x12.', tier: 9, cost: { biomass: 200, crystals: 50 }, unlocked: false, requires: ['SCALE_8'] }
 ];
 
+export function getInitialTechTree(): TechNode[] {
+  return INITIAL_TECH_TREE.map(node => ({
+    ...node,
+    cost: { ...node.cost },
+    requires: node.requires ? [...node.requires] : undefined,
+    unlocked: node.tier === 0
+  }));
+}
+
 const ENGINE_STORAGE_KEY = 'terrascript_engine_state_v1';
 
 export class GameEngine {
@@ -79,7 +88,7 @@ export class GameEngine {
     crystals: 0,
     fossils: 0
   };
-  private techTree: TechNode[] = [...INITIAL_TECH_TREE];
+  private techTree: TechNode[] = getInitialTechTree();
   private prestige: PrestigeState = {
     level: 1,
     points: 0,
@@ -107,6 +116,12 @@ export class GameEngine {
     this.runner = new ScriptRunner(this);
     this.initDefaultState();
     this.loadEngineState();
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('beforeunload', () => {
+        this.saveEngineState();
+      });
+    }
   }
 
   public subscribe(listener: () => void): () => void {
@@ -121,8 +136,8 @@ export class GameEngine {
   }
 
   private initDefaultState() {
-    // Initial 1x1 grid
-    this.rebuildGrid(1, 1);
+    // Initial 1x1 grid (do not save to storage during default init, wait for loadEngineState)
+    this.rebuildGrid(1, 1, false);
 
     // Initial Drone Agent 1 (Claudio)
     this.agents = [
@@ -296,7 +311,7 @@ export class GameEngine {
         const targetH = typeof parsed.height === 'number' ? Math.min(parsed.height, maxAllowedH) : 1;
         this.width = Math.max(1, targetW);
         this.height = Math.max(1, targetH);
-        this.rebuildGrid(this.width, this.height);
+        this.rebuildGrid(this.width, this.height, false);
 
         if (typeof parsed.primaryAgentId === 'number') {
           this.primaryAgentId = parsed.primaryAgentId;
@@ -330,7 +345,7 @@ export class GameEngine {
     }
   }
 
-  public rebuildGrid(width: number, height: number) {
+  public rebuildGrid(width: number, height: number, shouldSave: boolean = true) {
     this.width = width;
     this.height = height;
     const oldTiles = new Map(this.tiles);
@@ -360,7 +375,9 @@ export class GameEngine {
     // Ensure strictly 1 Prestige Block exists and relocates to new center on expansion
     this.ensurePrestigeBlock();
 
-    this.saveEngineState();
+    if (shouldSave) {
+      this.saveEngineState();
+    }
     this.notify();
   }
 
@@ -461,6 +478,75 @@ export class GameEngine {
     this.notify();
   }
 
+  public resetEverything(vfs?: VirtualFS) {
+    this.mode = 'PAUSED';
+    this.currentTick = 0;
+    this.totalActionsPerformed = 0;
+    this.idleTicks = 0;
+    this.logs = [];
+    this.agentContexts.clear();
+    this.messageQueue = [];
+
+    // Reset resources
+    this.resources = {
+      fiber: 10,
+      wood: 0,
+      roots: 0,
+      fruits: 0,
+      energy: 0,
+      biomass: 0,
+      catalyst: 0,
+      crystals: 0,
+      fossils: 0
+    };
+
+    // Reset Tech Tree with clean unmutated template
+    this.techTree = getInitialTechTree();
+
+    // Reset Prestige
+    this.prestige = {
+      level: 1,
+      points: 0,
+      totalPoints: 0,
+      worldChangeUnlocked: false
+    };
+
+    // Reset Agents to Claudio only
+    this.primaryAgentId = 1;
+    this.agents = [
+      {
+        id: 1,
+        name: 'Claudio',
+        x: 0,
+        y: 0,
+        color: '#3b82f6',
+        assignedFile: 'main.py',
+        status: 'IDLE',
+        currentLine: 1,
+        actionMessage: 'Ready'
+      }
+    ];
+
+    // Reset Grid to 1x1 from clean state (clear existing tile states)
+    this.tiles.clear();
+    this.rebuildGrid(1, 1, false);
+
+    // Reset VirtualFS if provided or internal vfs
+    const fsToReset = vfs || this.vfs;
+    if (fsToReset) {
+      fsToReset.resetToDefaults();
+    }
+
+    // Clear localStorage
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem(ENGINE_STORAGE_KEY);
+    }
+
+    this.saveEngineState();
+    this.addLog(1, 'system', 'Jogo e scripts completamente resetados do zero.');
+    this.notify();
+  }
+
   public stepSimulation() {
     this.mode = 'STEPPING';
     this.agents.forEach(agent => {
@@ -553,10 +639,10 @@ export class GameEngine {
         tile.ground = 'NATURAL';
       }
       
-      // Auto-grow wild fiber on any unplanted ground periodically (excluding soaked soil)
-      if (tile.crop === 'NONE' && tile.ground !== 'SOAKED' && tile.moisture <= 1.0 && Math.random() < 0.03) {
+      // Auto-grow wild fiber on any unplanted ground periodically (excluding soaked soil) - Increased spawn rate
+      if (tile.crop === 'NONE' && tile.ground !== 'SOAKED' && tile.moisture <= 1.0 && Math.random() < 0.10) {
         tile.crop = 'WILD_FIBER';
-        tile.growth = 20;
+        tile.growth = 30;
       }
     });
 
@@ -598,6 +684,10 @@ export class GameEngine {
     }
 
     if (!anyAction) this.idleTicks++;
+
+    if (this.currentTick % 10 === 0) {
+      this.saveEngineState();
+    }
 
     this.notify();
   }
