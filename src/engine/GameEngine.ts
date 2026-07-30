@@ -673,8 +673,10 @@ export class GameEngine {
             if (res.error) {
               agent.status = 'ERROR';
               agent.actionMessage = 'Erro no Script';
-            } else if (isSingleStep) {
+            } else {
               agent.status = 'PAUSED';
+              agent.actionMessage = 'Finished';
+              this.addLog(agent.id, 'system', `Script '${file.path}' finalizou a execução.`);
             }
             this.notify();
           }).catch(err => {
