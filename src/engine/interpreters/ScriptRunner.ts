@@ -919,6 +919,30 @@ export class ScriptRunner {
     const agent = this.engine.getAgent(ctx.agentId);
     if (!agent) return false;
 
+    // 0. Literals & Template Strings (Evaluated before operators and API calls)
+    if (expr.startsWith('`') && expr.endsWith('`')) {
+      const raw = expr.slice(1, -1);
+      return raw.replace(/\$\{([^}]+)\}/g, (_, subExpr) => {
+        const val = this.evalExpression(subExpr, ctx);
+        return val !== undefined && val !== null ? String(val) : '';
+      });
+    }
+
+    if ((expr.startsWith('f"') && expr.endsWith('"')) || (expr.startsWith("f'") && expr.endsWith("'"))) {
+      const raw = expr.slice(2, -1);
+      return raw.replace(/\{([^}]+)\}/g, (_, subExpr) => {
+        const val = this.evalExpression(subExpr, ctx);
+        return val !== undefined && val !== null ? String(val) : '';
+      });
+    }
+
+    if (expr === 'true' || expr === 'True') return true;
+    if (expr === 'false' || expr === 'False') return false;
+    if (!isNaN(Number(expr)) && expr.trim() !== '') return Number(expr);
+    if ((expr.startsWith('"') && expr.endsWith('"')) || (expr.startsWith("'") && expr.endsWith("'"))) {
+      return expr.slice(1, -1);
+    }
+
     // 1. Logical OR (||, or)
     const orMatch = splitTopLevel(expr, '||') || splitTopLevel(expr, ' or ');
     if (orMatch) {
@@ -1170,31 +1194,7 @@ export class ScriptRunner {
       return this.engine.getResourceCount(res);
     }
 
-    // 7. Literal evaluations & variable resolution
-    if (expr.startsWith('`') && expr.endsWith('`')) {
-      const raw = expr.slice(1, -1);
-      return raw.replace(/\$\{([^}]+)\}/g, (_, subExpr) => {
-        const val = this.evalExpression(subExpr, ctx);
-        return val !== undefined && val !== null ? String(val) : '';
-      });
-    }
-
-    if ((expr.startsWith('f"') && expr.endsWith('"')) || (expr.startsWith("f'") && expr.endsWith("'"))) {
-      const raw = expr.slice(2, -1);
-      return raw.replace(/\{([^}]+)\}/g, (_, subExpr) => {
-        const val = this.evalExpression(subExpr, ctx);
-        return val !== undefined && val !== null ? String(val) : '';
-      });
-    }
-
-    if (expr === 'true' || expr === 'True') return true;
-    if (expr === 'false' || expr === 'False') return false;
-    if (!isNaN(Number(expr))) return Number(expr);
-    if ((expr.startsWith('"') && expr.endsWith('"')) || (expr.startsWith("'") && expr.endsWith("'"))) {
-      return expr.slice(1, -1);
-    }
-
-    // Lookup in local scope
+    // 7. Lookup in local scope or fallback
     if (expr in ctx.scope) {
       return ctx.scope[expr];
     }
