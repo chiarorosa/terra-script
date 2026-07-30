@@ -8,10 +8,23 @@ export interface ChangelogRelease {
 
 export const CHANGELOG_HISTORY: ChangelogRelease[] = [
   {
+    version: 'v2.2.0',
+    date: '2026-07-30',
+    title: 'Redesign do Jogador: UI/UX Linear, Guia Refatorado & Experiência de Programação',
+    isCurrent: true,
+    changes: [
+      'Novo Design System inspirado no Linear: Interface escura e sóbria de alto contraste com cantos arredondados matemáticos e tipografia técnica.',
+      'Remoção de Emojis em Títulos e Modais: Substituição de emojis decorativos por ícones vetoriais do Lucide para uma estética de IDE limpa e profissional.',
+      'Reorganização da Aba "Mecânicas": A aba de mecânicas de cultivo foi renomeada para "Mecânicas" e posicionada como a 2ª opção logo após a Matriz de Desbloqueios.',
+      'Refatoração da Linguagem e Tom do Guia: Textos do modal de Árvore de Pesquisa, Drones e Guia de API reescritos com foco divertido no contexto de programação de autômatos (compilador da fazenda, threads paralelas, manual técnico de API).',
+      'Harmonização de Cores das Ramos Técnicos: Identificação visual consistente para Automação (Cyan), Agronomia (Verde), Sistemas (Roxo) e Escala (Neutro).'
+    ]
+  },
+  {
     version: 'v2.1.0',
     date: '2026-07-28',
     title: 'Grande Atualização: Sistema de Prestígio & Mudança do Mão (World Change)',
-    isCurrent: true,
+    isCurrent: false,
     changes: [
       'Novo Sistema de Prestígio (Nível 1 a 100): Barra de progresso dourada e elegante abaixo dos recursos da fazenda.',
       'Ganho de Pontos de Prestígio via Desbloqueio de Pesquisas: Cada nó desbloqueado na Árvore de Tecnologia concede XP de Prestígio de acordo com sua dificuldade.',

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { 
   BookOpen, 
   Cpu, 
-  Sparkles, 
+  FlaskConical, 
   Terminal, 
   CheckCircle2, 
   Lock, 
@@ -23,7 +23,12 @@ import {
   HelpCircle,
   Boxes,
   Award,
-  Globe
+  Globe,
+  Maximize2,
+  AlertTriangle,
+  Star,
+  Wheat,
+  Apple
 } from 'lucide-react';
 import { GameEngine } from '../engine/GameEngine';
 import { VirtualFS } from '../engine/virtualFs';
@@ -68,8 +73,8 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ engine, onNavigate
       // AUTOMATION
       case 'AUTO_1':
         return {
-          capabilities: ['Execução sequencial de código linha a linha', 'Movimento básico: world.move("EAST")', 'Verificação básica de obstáculo: world.can_move("EAST")', 'Reset de bloco: world.clear()'],
-          snippet: 'farm.harvest()\nworld.move("EAST")'
+          capabilities: ['Execução sequencial de código linha a linha', 'Movimento básico: world.move("RIGHT")', 'Verificação básica de obstáculo: world.can_move("RIGHT")', 'Reset de bloco: world.clear()'],
+          snippet: 'farm.harvest()\nworld.move("RIGHT")'
         };
       case 'AUTO_2':
         return {
@@ -84,12 +89,12 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ engine, onNavigate
       case 'AUTO_4':
         return {
           capabilities: ['Estruturas de laço: while / for', 'Laços de automação contínua (while True:)'],
-          snippet: 'while True:\n    if farm.can_harvest():\n        farm.harvest()\n    world.move("EAST")'
+          snippet: 'while True:\n    if farm.can_harvest():\n        farm.harvest()\n    world.move("RIGHT")'
         };
       case 'AUTO_5':
         return {
           capabilities: ['Definição de funções: def minha_func() / function minhaFunc()', 'Procedimentos de código modulares e reutilizáveis'],
-          snippet: 'def harvest_tile():\n    if farm.can_harvest():\n        farm.harvest()\n    world.move("EAST")'
+          snippet: 'def harvest_tile():\n    if farm.can_harvest():\n        farm.harvest()\n    world.move("RIGHT")'
         };
       case 'AUTO_6':
         return {
@@ -134,8 +139,8 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ engine, onNavigate
         };
       case 'AGRO_7':
         return {
-          capabilities: ['Plantar Plantas com Nota: farm.plant("GRADED_PLANT")', 'Trocar blocos de cultivo com vizinho: farm.swap("EAST")', 'Executar algoritmos de ordenação (ex: Bubble Sort) para ordenar fileiras para Máxima Biomassa'],
-          snippet: 'if world.measure() > next_grade:\n    farm.swap("EAST")'
+          capabilities: ['Plantar Plantas com Nota: farm.plant("GRADED_PLANT")', 'Trocar blocos de cultivo com vizinho: farm.swap("RIGHT")', 'Executar algoritmos de ordenação (ex: Bubble Sort) para ordenar fileiras para Máxima Biomassa'],
+          snippet: 'if world.measure() > next_grade:\n    farm.swap("RIGHT")'
         };
       case 'AGRO_8':
         return {
@@ -215,31 +220,31 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ engine, onNavigate
   const syntaxApis = filteredApis.filter(a => a.namespace === 'syntax');
 
   return (
-    <div className="flex-1 bg-[#0d1117] p-6 overflow-y-auto font-sans text-[#c9d1d9] select-none">
+    <div className="flex-1 bg-[#08090a] p-6 overflow-y-auto font-sans text-[#d0d6e0] select-none">
       <div className="max-w-5xl mx-auto space-y-6">
         
         {/* Header Title & Research Progress Bar */}
-        <div className="border-b border-[#30363d] pb-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="border-b border-[#23252a] pb-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-[#f0f6fc] flex items-center gap-2">
-              <BookOpen className="w-6 h-6 text-[#3fb950]" />
-              TerraScript 3D - Guia de Pesquisas e Funcionalidades
+            <h1 className="text-xl font-medium text-[#ffffff] flex items-center gap-2">
+              <BookOpen className="w-5 h-5 text-[#27a644]" />
+              Guia do Desenvolvedor & Documentação de API
             </h1>
-            <p className="text-xs text-[#8b949e] mt-1">
-              Referência completa do que cada <strong>DESBLOQUEIO DE PESQUISA</strong> habilita em seu interpretador e no mundo da fazenda!
+            <p className="text-xs text-[#8a8f98] mt-1">
+              Manual de referência técnica para automação agrícola. Consulte sintaxes da linguagem, métodos das APIs <code className="text-[#27a644] font-mono">farm</code> e <code className="text-[#8b5cf6] font-mono">world</code>, e regras físicas do ambiente.
             </p>
           </div>
 
           {/* Research Progress Widget */}
-          <div className="bg-[#161b22] border border-[#30363d] p-3 rounded-lg flex items-center gap-4 shrink-0">
+          <div className="bg-[#0f1011] border border-[#23252a] p-3 rounded-[12px] flex items-center gap-4 shrink-0">
             <div className="space-y-1">
               <div className="flex items-center justify-between text-xs font-mono">
-                <span className="text-[#8b949e] font-semibold">Pesquisas Desbloqueadas:</span>
-                <span className="text-[#3fb950] font-bold ml-2">{unlockedTechCount} / {totalTech} ({unlockPercentage}%)</span>
+                <span className="text-[#8a8f98] font-medium">Pesquisas Desbloqueadas:</span>
+                <span className="text-[#27a644] font-medium ml-2">{unlockedTechCount} / {totalTech} ({unlockPercentage}%)</span>
               </div>
-              <div className="w-48 h-2 bg-[#010409] rounded-full overflow-hidden border border-[#30363d]">
+              <div className="w-48 h-2 bg-[#08090a] rounded-[4px] overflow-hidden border border-[#23252a]">
                 <div 
-                  className="h-full bg-gradient-to-r from-[#238636] to-[#3fb950] transition-all duration-500" 
+                  className="h-full bg-[#27a644] transition-all duration-500" 
                   style={{ width: `${unlockPercentage}%` }}
                 />
               </div>
@@ -250,7 +255,7 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ engine, onNavigate
                 onClick={() => onNavigateToTab('research')}
                 className="px-3 py-1.5 bg-[#238636] hover:bg-[#2ea043] text-white rounded text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm active:scale-95 shrink-0 border border-[#3fb950]/30"
               >
-                <Sparkles className="w-3.5 h-3.5" />
+                <FlaskConical className="w-3.5 h-3.5" />
                 Árvore de Pesquisa
               </button>
             )}
@@ -267,44 +272,8 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ engine, onNavigate
                 : 'bg-[#161b22]/60 text-[#8b949e] hover:text-[#f0f6fc] border border-[#30363d]'
             }`}
           >
-            <Zap className="w-4 h-4 text-[#3fb950]" />
+            <Zap className="w-4 h-4 text-[#27a644]" />
             Matriz de Desbloqueios
-          </button>
-
-          <button
-            onClick={() => setActiveGuideTab('farm')}
-            className={`flex items-center gap-2 px-3.5 py-2 rounded text-xs font-bold transition-all ${
-              activeGuideTab === 'farm' 
-                ? 'bg-[#21262d] text-[#f0f6fc] border border-[#30363d] shadow-sm' 
-                : 'bg-[#161b22]/60 text-[#8b949e] hover:text-[#f0f6fc] border border-[#30363d]'
-            }`}
-          >
-            <Sprout className="w-4 h-4 text-[#3fb950]" />
-            API da Fazenda (<code className="text-[#3fb950]">farm.*</code>)
-          </button>
-
-          <button
-            onClick={() => setActiveGuideTab('world')}
-            className={`flex items-center gap-2 px-3.5 py-2 rounded text-xs font-bold transition-all ${
-              activeGuideTab === 'world' 
-                ? 'bg-[#21262d] text-[#f0f6fc] border border-[#30363d] shadow-sm' 
-                : 'bg-[#161b22]/60 text-[#8b949e] hover:text-[#f0f6fc] border border-[#30363d]'
-            }`}
-          >
-            <Compass className="w-4 h-4 text-[#58a6ff]" />
-            Mundo e Sensores (<code className="text-[#58a6ff]">world.*</code>)
-          </button>
-
-          <button
-            onClick={() => setActiveGuideTab('syntax')}
-            className={`flex items-center gap-2 px-3.5 py-2 rounded text-xs font-bold transition-all ${
-              activeGuideTab === 'syntax' 
-                ? 'bg-[#21262d] text-[#f0f6fc] border border-[#30363d] shadow-sm' 
-                : 'bg-[#161b22]/60 text-[#8b949e] hover:text-[#f0f6fc] border border-[#30363d]'
-            }`}
-          >
-            <Code className="w-4 h-4 text-[#bc8cff]" />
-            Linguagem e Sintaxe
           </button>
 
           <button
@@ -315,8 +284,44 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ engine, onNavigate
                 : 'bg-[#161b22]/60 text-[#8b949e] hover:text-[#f0f6fc] border border-[#30363d]'
             }`}
           >
-            <Sprout className="w-4 h-4 text-emerald-400" />
-            Mecânicas de Crescimento
+            <Sprout className="w-4 h-4 text-[#27a644]" />
+            Mecânicas
+          </button>
+
+          <button
+            onClick={() => setActiveGuideTab('farm')}
+            className={`flex items-center gap-2 px-3.5 py-2 rounded text-xs font-bold transition-all ${
+              activeGuideTab === 'farm' 
+                ? 'bg-[#21262d] text-[#f0f6fc] border border-[#30363d] shadow-sm' 
+                : 'bg-[#161b22]/60 text-[#8b949e] hover:text-[#f0f6fc] border border-[#30363d]'
+            }`}
+          >
+            <Sprout className="w-4 h-4 text-[#27a644]" />
+            API da Fazenda (<code className="text-[#27a644]">farm.*</code>)
+          </button>
+
+          <button
+            onClick={() => setActiveGuideTab('world')}
+            className={`flex items-center gap-2 px-3.5 py-2 rounded text-xs font-bold transition-all ${
+              activeGuideTab === 'world' 
+                ? 'bg-[#21262d] text-[#f0f6fc] border border-[#30363d] shadow-sm' 
+                : 'bg-[#161b22]/60 text-[#8b949e] hover:text-[#f0f6fc] border border-[#30363d]'
+            }`}
+          >
+            <Terminal className="w-4 h-4 text-[#8b5cf6]" />
+            Mundo e Sensores (<code className="text-[#8b5cf6]">world.*</code>)
+          </button>
+
+          <button
+            onClick={() => setActiveGuideTab('syntax')}
+            className={`flex items-center gap-2 px-3.5 py-2 rounded text-xs font-bold transition-all ${
+              activeGuideTab === 'syntax' 
+                ? 'bg-[#21262d] text-[#f0f6fc] border border-[#30363d] shadow-sm' 
+                : 'bg-[#161b22]/60 text-[#8b949e] hover:text-[#f0f6fc] border border-[#30363d]'
+            }`}
+          >
+            <Cpu className="w-4 h-4 text-[#02b8cc]" />
+            Linguagem e Sintaxe
           </button>
         </div>
 
@@ -327,11 +332,11 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ engine, onNavigate
             {/* AUTOMATION BRANCH */}
             <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-5 space-y-4">
               <div className="flex items-center justify-between border-b border-[#30363d] pb-2">
-                <h2 className="font-bold text-sm text-[#bc8cff] flex items-center gap-2">
+                <h2 className="font-bold text-sm text-[#02b8cc] flex items-center gap-2">
                   <Cpu className="w-4 h-4" />
-                  RAMO DE AUTOMAÇÃO — Controle de Programação e Recursos do Interpretador
+                  Automação e Linguagem
                 </h2>
-                <span className="text-xs font-mono text-[#bc8cff]">
+                <span className="text-xs font-mono text-[#02b8cc]">
                   {techByBranch.AUTOMATION.filter(t => t.unlocked).length} / {techByBranch.AUTOMATION.length} Desbloqueados
                 </span>
               </div>
@@ -344,17 +349,17 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ engine, onNavigate
                       key={node.id} 
                       className={`p-4 rounded-xl border transition-all ${
                         node.unlocked 
-                          ? 'bg-[#010409] border-[#bc8cff]/40 text-[#f0f6fc] shadow-sm' 
+                          ? 'bg-[#010409] border-[#02b8cc]/40 text-[#f0f6fc] shadow-sm' 
                           : 'bg-[#010409]/50 border-[#30363d] text-[#8b949e] opacity-70'
                       }`}
                     >
                       <div className="flex items-center justify-between mb-2">
-                        <span className="font-bold text-xs text-[#bc8cff] flex items-center gap-1.5">
-                          {node.unlocked ? <CheckCircle2 className="w-4 h-4 text-[#bc8cff]" /> : <Lock className="w-4 h-4 text-[#d29922]" />}
+                        <span className="font-bold text-xs text-[#02b8cc] flex items-center gap-1.5">
+                          {node.unlocked ? <CheckCircle2 className="w-4 h-4 text-[#02b8cc]" /> : <Lock className="w-4 h-4 text-[#d29922]" />}
                           {node.name} <span className="text-[10px] text-[#8b949e] font-mono">({node.id})</span>
                         </span>
                         <span className={`text-[10px] font-sans px-2 py-0.5 rounded font-bold ${
-                          node.unlocked ? 'bg-[#bc8cff]/15 text-[#bc8cff] border border-[#bc8cff]/30' : 'bg-[#d29922]/15 text-[#d29922] border border-[#d29922]/30'
+                          node.unlocked ? 'bg-[#02b8cc]/15 text-[#02b8cc] border border-[#02b8cc]/30' : 'bg-[#d29922]/15 text-[#d29922] border border-[#d29922]/30'
                         }`}>
                           {node.unlocked ? 'DESBLOQUEADO' : `Nível ${node.tier}`}
                         </span>
@@ -373,14 +378,14 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ engine, onNavigate
 
                       {details.snippet && (
                         <div className="bg-[#0d1117] p-2.5 rounded border border-[#30363d] flex items-center justify-between group">
-                          <code className="text-xs font-mono text-[#bc8cff] whitespace-pre leading-relaxed">{details.snippet}</code>
+                          <code className="text-xs font-mono text-[#02b8cc] whitespace-pre leading-relaxed">{details.snippet}</code>
                           {node.unlocked && (
                             <button 
                               onClick={() => copyCode(details.snippet)}
                               className="p-1.5 hover:bg-[#21262d] rounded text-[#8b949e] hover:text-[#f0f6fc] transition-all opacity-0 group-hover:opacity-100 shrink-0"
                               title="Copiar código"
                             >
-                              {copiedSnippet === details.snippet ? <Check className="w-4 h-4 text-[#3fb950]" /> : <Copy className="w-4 h-4" />}
+                              {copiedSnippet === details.snippet ? <Check className="w-4 h-4 text-[#27a644]" /> : <Copy className="w-4 h-4" />}
                             </button>
                           )}
                         </div>
@@ -394,11 +399,11 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ engine, onNavigate
             {/* AGRONOMY BRANCH */}
             <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-5 space-y-4">
               <div className="flex items-center justify-between border-b border-[#30363d] pb-2">
-                <h2 className="font-bold text-sm text-[#3fb950] flex items-center gap-2">
+                <h2 className="font-bold text-sm text-[#27a644] flex items-center gap-2">
                   <Sprout className="w-4 h-4" />
-                  RAMO DE AGRONOMIA — Culturas, Preparo do Solo e Mecânicas de Cultivo
+                  Agronomia e Culturas
                 </h2>
-                <span className="text-xs font-mono text-[#3fb950]">
+                <span className="text-xs font-mono text-[#27a644]">
                   {techByBranch.AGRONOMY.filter(t => t.unlocked).length} / {techByBranch.AGRONOMY.length} Desbloqueados
                 </span>
               </div>
@@ -411,17 +416,17 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ engine, onNavigate
                       key={node.id} 
                       className={`p-4 rounded-xl border transition-all ${
                         node.unlocked 
-                          ? 'bg-[#010409] border-[#3fb950]/40 text-[#f0f6fc] shadow-sm' 
+                          ? 'bg-[#010409] border-[#27a644]/40 text-[#f0f6fc] shadow-sm' 
                           : 'bg-[#010409]/50 border-[#30363d] text-[#8b949e] opacity-70'
                       }`}
                     >
                       <div className="flex items-center justify-between mb-2">
-                        <span className="font-bold text-xs text-[#3fb950] flex items-center gap-1.5">
-                          {node.unlocked ? <CheckCircle2 className="w-4 h-4 text-[#3fb950]" /> : <Lock className="w-4 h-4 text-[#d29922]" />}
+                        <span className="font-bold text-xs text-[#27a644] flex items-center gap-1.5">
+                          {node.unlocked ? <CheckCircle2 className="w-4 h-4 text-[#27a644]" /> : <Lock className="w-4 h-4 text-[#d29922]" />}
                           {node.name} <span className="text-[10px] text-[#8b949e] font-mono">({node.id})</span>
                         </span>
                         <span className={`text-[10px] font-sans px-2 py-0.5 rounded font-bold ${
-                          node.unlocked ? 'bg-[#3fb950]/15 text-[#3fb950] border border-[#3fb950]/30' : 'bg-[#d29922]/15 text-[#d29922] border border-[#d29922]/30'
+                          node.unlocked ? 'bg-[#27a644]/15 text-[#27a644] border border-[#27a644]/30' : 'bg-[#d29922]/15 text-[#d29922] border border-[#d29922]/30'
                         }`}>
                           {node.unlocked ? 'DESBLOQUEADO' : `Nível ${node.tier}`}
                         </span>
@@ -440,14 +445,14 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ engine, onNavigate
 
                       {details.snippet && (
                         <div className="bg-[#0d1117] p-2.5 rounded border border-[#30363d] flex items-center justify-between group">
-                          <code className="text-xs font-mono text-[#3fb950] whitespace-pre leading-relaxed">{details.snippet}</code>
+                          <code className="text-xs font-mono text-[#27a644] whitespace-pre leading-relaxed">{details.snippet}</code>
                           {node.unlocked && (
                             <button 
                               onClick={() => copyCode(details.snippet)}
                               className="p-1.5 hover:bg-[#21262d] rounded text-[#8b949e] hover:text-[#f0f6fc] transition-all opacity-0 group-hover:opacity-100 shrink-0"
                               title="Copiar código"
                             >
-                              {copiedSnippet === details.snippet ? <Check className="w-4 h-4 text-[#3fb950]" /> : <Copy className="w-4 h-4" />}
+                              {copiedSnippet === details.snippet ? <Check className="w-4 h-4 text-[#27a644]" /> : <Copy className="w-4 h-4" />}
                             </button>
                           )}
                         </div>
@@ -461,11 +466,11 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ engine, onNavigate
             {/* SYSTEMS BRANCH */}
             <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-5 space-y-4">
               <div className="flex items-center justify-between border-b border-[#30363d] pb-2">
-                <h2 className="font-bold text-sm text-[#58a6ff] flex items-center gap-2">
-                  <Compass className="w-4 h-4" />
-                  RAMO DE SISTEMAS — Sensores, Logs de Terminal e Ferramentas de Depuração
+                <h2 className="font-bold text-sm text-[#8b5cf6] flex items-center gap-2">
+                  <Terminal className="w-4 h-4" />
+                  Sistemas e Depuração
                 </h2>
-                <span className="text-xs font-mono text-[#58a6ff]">
+                <span className="text-xs font-mono text-[#8b5cf6]">
                   {techByBranch.SYSTEMS.filter(t => t.unlocked).length} / {techByBranch.SYSTEMS.length} Desbloqueados
                 </span>
               </div>
@@ -478,17 +483,17 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ engine, onNavigate
                       key={node.id} 
                       className={`p-4 rounded-xl border transition-all ${
                         node.unlocked 
-                          ? 'bg-[#010409] border-[#58a6ff]/40 text-[#f0f6fc] shadow-sm' 
+                          ? 'bg-[#010409] border-[#8b5cf6]/40 text-[#f0f6fc] shadow-sm' 
                           : 'bg-[#010409]/50 border-[#30363d] text-[#8b949e] opacity-70'
                       }`}
                     >
                       <div className="flex items-center justify-between mb-2">
-                        <span className="font-bold text-xs text-[#58a6ff] flex items-center gap-1.5">
-                          {node.unlocked ? <CheckCircle2 className="w-4 h-4 text-[#58a6ff]" /> : <Lock className="w-4 h-4 text-[#d29922]" />}
+                        <span className="font-bold text-xs text-[#8b5cf6] flex items-center gap-1.5">
+                          {node.unlocked ? <CheckCircle2 className="w-4 h-4 text-[#8b5cf6]" /> : <Lock className="w-4 h-4 text-[#d29922]" />}
                           {node.name} <span className="text-[10px] text-[#8b949e] font-mono">({node.id})</span>
                         </span>
                         <span className={`text-[10px] font-sans px-2 py-0.5 rounded font-bold ${
-                          node.unlocked ? 'bg-[#58a6ff]/15 text-[#58a6ff] border border-[#58a6ff]/30' : 'bg-[#d29922]/15 text-[#d29922] border border-[#d29922]/30'
+                          node.unlocked ? 'bg-[#8b5cf6]/15 text-[#8b5cf6] border border-[#8b5cf6]/30' : 'bg-[#d29922]/15 text-[#d29922] border border-[#d29922]/30'
                         }`}>
                           {node.unlocked ? 'DESBLOQUEADO' : `Nível ${node.tier}`}
                         </span>
@@ -507,14 +512,14 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ engine, onNavigate
 
                       {details.snippet && (
                         <div className="bg-[#0d1117] p-2.5 rounded border border-[#30363d] flex items-center justify-between group">
-                          <code className="text-xs font-mono text-[#58a6ff] whitespace-pre leading-relaxed">{details.snippet}</code>
+                          <code className="text-xs font-mono text-[#8b5cf6] whitespace-pre leading-relaxed">{details.snippet}</code>
                           {node.unlocked && (
                             <button 
                               onClick={() => copyCode(details.snippet)}
                               className="p-1.5 hover:bg-[#21262d] rounded text-[#8b949e] hover:text-[#f0f6fc] transition-all opacity-0 group-hover:opacity-100 shrink-0"
                               title="Copiar código"
                             >
-                              {copiedSnippet === details.snippet ? <Check className="w-4 h-4 text-[#3fb950]" /> : <Copy className="w-4 h-4" />}
+                              {copiedSnippet === details.snippet ? <Check className="w-4 h-4 text-[#27a644]" /> : <Copy className="w-4 h-4" />}
                             </button>
                           )}
                         </div>
@@ -528,11 +533,11 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ engine, onNavigate
             {/* SCALE BRANCH */}
             <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-5 space-y-4">
               <div className="flex items-center justify-between border-b border-[#30363d] pb-2">
-                <h2 className="font-bold text-sm text-[#d29922] flex items-center gap-2">
-                  <Grid className="w-4 h-4" />
-                  RAMO DE ESCALA — Expansão de Terreno e Frota de Drones
+                <h2 className="font-bold text-sm text-[#d0d6e0] flex items-center gap-2">
+                  <Maximize2 className="w-4 h-4" />
+                  Escala e Expansão de Terreno
                 </h2>
-                <span className="text-xs font-mono text-[#d29922]">
+                <span className="text-xs font-mono text-[#d0d6e0]">
                   {techByBranch.SCALE.filter(t => t.unlocked).length} / {techByBranch.SCALE.length} Desbloqueados
                 </span>
               </div>
@@ -545,17 +550,17 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ engine, onNavigate
                       key={node.id} 
                       className={`p-4 rounded-xl border transition-all ${
                         node.unlocked 
-                          ? 'bg-[#010409] border-[#d29922]/40 text-[#f0f6fc] shadow-sm' 
+                          ? 'bg-[#010409] border-[#d0d6e0]/40 text-[#f0f6fc] shadow-sm' 
                           : 'bg-[#010409]/50 border-[#30363d] text-[#8b949e] opacity-70'
                       }`}
                     >
                       <div className="flex items-center justify-between mb-2">
-                        <span className="font-bold text-xs text-[#d29922] flex items-center gap-1.5">
-                          {node.unlocked ? <CheckCircle2 className="w-4 h-4 text-[#d29922]" /> : <Lock className="w-4 h-4 text-[#d29922]" />}
+                        <span className="font-bold text-xs text-[#d0d6e0] flex items-center gap-1.5">
+                          {node.unlocked ? <CheckCircle2 className="w-4 h-4 text-[#d0d6e0]" /> : <Lock className="w-4 h-4 text-[#d29922]" />}
                           {node.name} <span className="text-[10px] text-[#8b949e] font-mono">({node.id})</span>
                         </span>
                         <span className={`text-[10px] font-sans px-2 py-0.5 rounded font-bold ${
-                          node.unlocked ? 'bg-[#d29922]/15 text-[#d29922] border border-[#d29922]/30' : 'bg-[#d29922]/10 text-[#d29922] border border-[#d29922]/20'
+                          node.unlocked ? 'bg-[#d0d6e0]/15 text-[#d0d6e0] border border-[#d0d6e0]/30' : 'bg-[#d29922]/10 text-[#d29922] border border-[#d29922]/20'
                         }`}>
                           {node.unlocked ? 'DESBLOQUEADO' : `Nível ${node.tier}`}
                         </span>
@@ -584,9 +589,9 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ engine, onNavigate
         {activeGuideTab === 'farm' && (
           <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-5 space-y-4">
             <div className="flex items-center justify-between border-b border-[#30363d] pb-3">
-              <h2 className="font-bold text-sm text-[#3fb950] flex items-center gap-2">
+              <h2 className="font-bold text-sm text-[#27a644] flex items-center gap-2">
                 <Sprout className="w-4 h-4" />
-                Comandos da Fazenda (<code className="text-[#3fb950]">farm.*</code>)
+                Comandos da Fazenda (<code className="text-[#27a644]">farm.*</code>)
               </h2>
               <span className="text-xs text-[#8b949e] font-mono">
                 {farmApis.filter(a => isUnlocked(a.techId)).length} / {farmApis.length} Desbloqueados
@@ -594,16 +599,16 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ engine, onNavigate
             </div>
 
             {/* Growth Notice Callout */}
-            <div className="bg-[#3fb950]/10 border border-[#3fb950]/30 p-3 rounded-lg flex items-center justify-between gap-3 text-xs">
+            <div className="bg-[#27a644]/10 border border-[#27a644]/30 p-3 rounded-lg flex items-center justify-between gap-3 text-xs">
               <div className="flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-[#3fb950] shrink-0" />
+                <CheckCircle2 className="w-4 h-4 text-[#27a644] shrink-0" />
                 <span className="text-[#f0f6fc] font-sans">
-                  <strong>Regra de Colheita:</strong> A colheita com <code className="text-[#3fb950] font-mono">farm.harvest()</code> exige <strong>100% de crescimento</strong> no bloco.
+                  <strong>Regra de Colheita:</strong> A colheita com <code className="text-[#27a644] font-mono">farm.harvest()</code> exige <strong>100% de crescimento</strong> no bloco.
                 </span>
               </div>
               <button 
                 onClick={() => setActiveGuideTab('mechanics')}
-                className="text-[11px] font-bold text-[#3fb950] hover:underline shrink-0"
+                className="text-[11px] font-bold text-[#27a644] hover:underline shrink-0"
               >
                 Ver Mecânicas →
               </button>
@@ -619,27 +624,27 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ engine, onNavigate
                     key={api.id}
                     className={`p-4 rounded-xl border text-xs font-mono transition-all ${
                       unlocked 
-                        ? 'bg-[#010409] border-[#3fb950]/40 text-[#f0f6fc]' 
+                        ? 'bg-[#010409] border-[#27a644]/40 text-[#f0f6fc]' 
                         : 'bg-[#010409]/50 border-[#30363d] text-[#8b949e] opacity-60'
                     }`}
                   >
                     <div className="flex items-center justify-between mb-2">
-                      <span className="font-bold text-[#3fb950] flex items-center gap-1.5 text-xs">
+                      <span className="font-bold text-[#27a644] flex items-center gap-1.5 text-xs">
                         {unlocked ? (
-                          <CheckCircle2 className="w-3.5 h-3.5 text-[#3fb950]" />
+                          <CheckCircle2 className="w-3.5 h-3.5 text-[#27a644]" />
                         ) : (
                           <Lock className="w-3.5 h-3.5 text-[#d29922]" />
                         )}
                         {api.displayText}
                       </span>
                       <span className={`text-[10px] px-2 py-0.5 rounded font-sans font-bold ${
-                        unlocked ? 'bg-[#3fb950]/15 text-[#3fb950] border border-[#3fb950]/30' : 'bg-[#d29922]/15 text-[#d29922] border border-[#d29922]/30'
+                        unlocked ? 'bg-[#27a644]/15 text-[#27a644] border border-[#27a644]/30' : 'bg-[#d29922]/15 text-[#d29922] border border-[#d29922]/30'
                       }`}>
                         {unlocked ? 'DESBLOQUEADO' : `Req: ${techNode?.name || api.techId}`}
                       </span>
                     </div>
 
-                    <div className="text-[11px] font-mono text-[#3fb950] mb-2 bg-[#0d1117] px-2 py-1 rounded border border-[#30363d]">
+                    <div className="text-[11px] font-mono text-[#27a644] mb-2 bg-[#0d1117] px-2 py-1 rounded border border-[#30363d]">
                       <span className="text-[#8b949e] font-sans font-semibold mr-1">Sintaxe:</span>
                       <code>{api.signature}</code>
                     </div>
@@ -647,14 +652,14 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ engine, onNavigate
                     <p className="text-xs font-sans text-[#c9d1d9] mb-3 leading-relaxed">{api.docDetail}</p>
 
                     <div className="bg-[#0d1117] p-2.5 rounded border border-[#30363d] flex items-center justify-between group">
-                      <code className="text-xs text-[#3fb950]">{api.exampleCode}</code>
+                      <code className="text-xs text-[#27a644]">{api.exampleCode}</code>
                       {unlocked && (
                         <button 
                           onClick={() => copyCode(api.exampleCode)}
                           className="p-1 hover:bg-[#21262d] rounded text-[#8b949e] hover:text-[#f0f6fc] transition-all opacity-0 group-hover:opacity-100"
                           title="Copiar código"
                         >
-                          {copiedSnippet === api.exampleCode ? <Check className="w-3.5 h-3.5 text-[#3fb950]" /> : <Copy className="w-3.5 h-3.5" />}
+                          {copiedSnippet === api.exampleCode ? <Check className="w-3.5 h-3.5 text-[#27a644]" /> : <Copy className="w-3.5 h-3.5" />}
                         </button>
                       )}
                     </div>
@@ -669,9 +674,9 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ engine, onNavigate
         {activeGuideTab === 'world' && (
           <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-5 space-y-4">
             <div className="flex items-center justify-between border-b border-[#30363d] pb-3">
-              <h2 className="font-bold text-sm text-[#58a6ff] flex items-center gap-2">
-                <Compass className="w-4 h-4" />
-                API de Mundo e Sensores (<code className="text-[#58a6ff]">world.*</code>)
+              <h2 className="font-bold text-sm text-[#8b5cf6] flex items-center gap-2">
+                <Terminal className="w-4 h-4" />
+                API de Mundo e Sensores (<code className="text-[#8b5cf6]">world.*</code>)
               </h2>
               <span className="text-xs text-[#8b949e] font-mono">
                 {worldApis.filter(a => isUnlocked(a.techId)).length} / {worldApis.length} Desbloqueados
@@ -688,27 +693,27 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ engine, onNavigate
                     key={api.id}
                     className={`p-4 rounded-xl border text-xs font-mono transition-all ${
                       unlocked 
-                        ? 'bg-[#010409] border-[#58a6ff]/40 text-[#f0f6fc]' 
+                        ? 'bg-[#010409] border-[#8b5cf6]/40 text-[#f0f6fc]' 
                         : 'bg-[#010409]/50 border-[#30363d] text-[#8b949e] opacity-60'
                     }`}
                   >
                     <div className="flex items-center justify-between mb-2">
-                      <span className="font-bold text-[#58a6ff] flex items-center gap-1.5 text-xs">
+                      <span className="font-bold text-[#8b5cf6] flex items-center gap-1.5 text-xs">
                         {unlocked ? (
-                          <CheckCircle2 className="w-3.5 h-3.5 text-[#58a6ff]" />
+                          <CheckCircle2 className="w-3.5 h-3.5 text-[#8b5cf6]" />
                         ) : (
                           <Lock className="w-3.5 h-3.5 text-[#d29922]" />
                         )}
                         {api.displayText}
                       </span>
                       <span className={`text-[10px] px-2 py-0.5 rounded font-sans font-bold ${
-                        unlocked ? 'bg-[#58a6ff]/15 text-[#58a6ff] border border-[#58a6ff]/30' : 'bg-[#d29922]/15 text-[#d29922] border border-[#d29922]/30'
+                        unlocked ? 'bg-[#8b5cf6]/15 text-[#8b5cf6] border border-[#8b5cf6]/30' : 'bg-[#d29922]/15 text-[#d29922] border border-[#d29922]/30'
                       }`}>
                         {unlocked ? 'DESBLOQUEADO' : `Req: ${techNode?.name || api.techId}`}
                       </span>
                     </div>
 
-                    <div className="text-[11px] font-mono text-[#58a6ff] mb-2 bg-[#0d1117] px-2 py-1 rounded border border-[#30363d]">
+                    <div className="text-[11px] font-mono text-[#8b5cf6] mb-2 bg-[#0d1117] px-2 py-1 rounded border border-[#30363d]">
                       <span className="text-[#8b949e] font-sans font-semibold mr-1">Sintaxe:</span>
                       <code>{api.signature}</code>
                     </div>
@@ -716,14 +721,14 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ engine, onNavigate
                     <p className="text-xs font-sans text-[#c9d1d9] mb-3 leading-relaxed">{api.docDetail}</p>
 
                     <div className="bg-[#0d1117] p-2.5 rounded border border-[#30363d] flex items-center justify-between group">
-                      <code className="text-xs text-[#58a6ff]">{api.exampleCode}</code>
+                      <code className="text-xs text-[#8b5cf6]">{api.exampleCode}</code>
                       {unlocked && (
                         <button 
                           onClick={() => copyCode(api.exampleCode)}
                           className="p-1 hover:bg-[#21262d] rounded text-[#8b949e] hover:text-[#f0f6fc] transition-all opacity-0 group-hover:opacity-100"
                           title="Copiar código"
                         >
-                          {copiedSnippet === api.exampleCode ? <Check className="w-3.5 h-3.5 text-[#3fb950]" /> : <Copy className="w-3.5 h-3.5" />}
+                          {copiedSnippet === api.exampleCode ? <Check className="w-3.5 h-3.5 text-[#27a644]" /> : <Copy className="w-3.5 h-3.5" />}
                         </button>
                       )}
                     </div>
@@ -738,8 +743,8 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ engine, onNavigate
         {activeGuideTab === 'syntax' && (
           <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-5 space-y-4">
             <div className="flex items-center justify-between border-b border-[#30363d] pb-3">
-              <h2 className="font-bold text-sm text-[#bc8cff] flex items-center gap-2">
-                <Code className="w-4 h-4" />
+              <h2 className="font-bold text-sm text-[#02b8cc] flex items-center gap-2">
+                <Cpu className="w-4 h-4" />
                 Sintaxe e Estruturas da Linguagem
               </h2>
               <span className="text-xs text-[#8b949e] font-mono">
@@ -757,27 +762,27 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ engine, onNavigate
                     key={syn.id} 
                     className={`p-4 rounded-xl border text-xs font-mono transition-all ${
                       unlocked 
-                        ? 'bg-[#010409] border-[#bc8cff]/40 text-[#f0f6fc]' 
+                        ? 'bg-[#010409] border-[#02b8cc]/40 text-[#f0f6fc]' 
                         : 'bg-[#010409]/50 border-[#30363d] text-[#8b949e] opacity-70'
                     }`}
                   >
                     <div className="flex items-center justify-between mb-2">
-                      <span className="font-bold text-[#bc8cff] flex items-center gap-1.5 text-xs">
+                      <span className="font-bold text-[#02b8cc] flex items-center gap-1.5 text-xs">
                         {unlocked ? (
-                          <CheckCircle2 className="w-3.5 h-3.5 text-[#bc8cff]" />
+                          <CheckCircle2 className="w-3.5 h-3.5 text-[#02b8cc]" />
                         ) : (
                           <Lock className="w-3.5 h-3.5 text-[#d29922]" />
                         )}
                         {syn.displayText}
                       </span>
                       <span className={`text-[10px] px-2 py-0.5 rounded font-sans font-bold ${
-                        unlocked ? 'bg-[#bc8cff]/15 text-[#bc8cff] border border-[#bc8cff]/30' : 'bg-[#d29922]/15 text-[#d29922] border border-[#d29922]/30'
+                        unlocked ? 'bg-[#02b8cc]/15 text-[#02b8cc] border border-[#02b8cc]/30' : 'bg-[#d29922]/15 text-[#d29922] border border-[#d29922]/30'
                       }`}>
                         {unlocked ? 'Desbloqueado' : `Pesquisa: ${techNode?.name}`}
                       </span>
                     </div>
 
-                    <div className="text-[11px] font-mono text-[#bc8cff] mb-2 bg-[#0d1117] px-2 py-1 rounded border border-[#30363d]">
+                    <div className="text-[11px] font-mono text-[#02b8cc] mb-2 bg-[#0d1117] px-2 py-1 rounded border border-[#30363d]">
                       <span className="text-[#8b949e] font-sans font-semibold mr-1">Sintaxe:</span>
                       <code>{syn.signature}</code>
                     </div>
@@ -785,14 +790,14 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ engine, onNavigate
                     <p className="text-xs font-sans text-[#c9d1d9] mb-3 leading-relaxed">{syn.description}</p>
 
                     <div className="bg-[#0d1117] p-2.5 rounded border border-[#30363d] flex items-center justify-between group">
-                      <code className="text-xs text-[#bc8cff] whitespace-pre">{syn.exampleCode}</code>
+                      <code className="text-xs text-[#02b8cc] whitespace-pre">{syn.exampleCode}</code>
                       {unlocked && (
                         <button 
                           onClick={() => copyCode(syn.exampleCode)}
                           className="p-1 hover:bg-[#21262d] rounded text-[#8b949e] hover:text-[#f0f6fc] transition-all opacity-0 group-hover:opacity-100"
                           title="Copiar código"
                         >
-                          {copiedSnippet === syn.exampleCode ? <Check className="w-3.5 h-3.5 text-[#3fb950]" /> : <Copy className="w-3.5 h-3.5" />}
+                          {copiedSnippet === syn.exampleCode ? <Check className="w-3.5 h-3.5 text-[#27a644]" /> : <Copy className="w-3.5 h-3.5" />}
                         </button>
                       )}
                     </div>
@@ -834,7 +839,7 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ engine, onNavigate
                 {/* Prestige System & World Change Card */}
                 <div className="bg-[#010409] p-4 rounded-xl border border-[#d29922]/50 space-y-3 md:col-span-2 shadow-[0_0_15px_rgba(210,153,34,0.15)]">
                   <div className="flex items-center gap-2 font-bold text-sm text-[#e3b341]">
-                    <Sparkles className="w-4 h-4 text-[#e3b341]" />
+                    <Award className="w-4 h-4 text-[#e3b341]" />
                     Sistema de Prestígio (Nível 1 a 100) e Mudança do Mundo (World Change)
                   </div>
                   <p className="text-xs text-[#c9d1d9] leading-relaxed">
@@ -915,7 +920,7 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ engine, onNavigate
                     5. Solo Encharcado (SOAKED) e Perda de Cultura
                   </div>
                   <p className="text-xs text-[#c9d1d9] leading-relaxed">
-                    🚨 <strong>Cuidado com o excesso de água!</strong> Regar um bloco que já possui <strong>&gt; 95% de umidade</strong> eleva o nível para <strong>110% (1.10)</strong> e altera o solo para <strong>Encharcado (<code className="text-[#58a6ff] font-mono">SOAKED</code>)</strong>.<br/>
+                    <AlertTriangle className="w-3.5 h-3.5 text-[#eb5757] inline mr-1" /> <strong>Cuidado com o excesso de água!</strong> Regar um bloco que já possui <strong>&gt; 95% de umidade</strong> eleva o nível para <strong>110% (1.10)</strong> e altera o solo para <strong>Encharcado (<code className="text-[#58a6ff] font-mono">SOAKED</code>)</strong>.<br/>
                     • <strong>Efeito Destrutivo:</strong> Destrói a cultura atual imediatamente (<code className="text-[#f85149] font-mono">crop = NONE</code>).<br/>
                     • <strong>Bloqueio de Plantio:</strong> Tentar plantar com <code className="text-[#58a6ff] font-mono">farm.plant()</code> em solo encharcado resultará em falha.<br/>
                     • <strong>Recuperação:</strong> É necessário aguardar a evaporação dos ticks até a umidade cair para &le; 100% (<code className="text-[#58a6ff] font-mono">IRRIGATED</code>) para voltar a cultivar.
@@ -925,11 +930,11 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ engine, onNavigate
                 <div className="bg-[#010409] p-4 rounded-xl border border-[#bc8cff]/50 space-y-2">
                   <div className="flex items-center gap-2 font-bold text-xs text-[#bc8cff]">
                     <Bot className="w-4 h-4 text-[#bc8cff]" />
-                    6. Drone Principal (⭐) e Execução Instantânea
+                    6. Drone Principal e Execução Instantânea
                   </div>
                   <p className="text-xs text-[#c9d1d9] leading-relaxed">
-                    ⭐ <strong>Execução direta pelo Explorador:</strong> Na lista de arquivos do Explorador, o botão <strong>PLAY (►)</strong> executa o script diretamente no <strong>Drone Principal</strong>.<br/>
-                    • O Drone Principal atual é indicado com um ícone de estrela <code className="text-[#e3b341]">⭐</code>.<br/>
+                    <Star className="w-3.5 h-3.5 text-[#e3b341] fill-[#e3b341] inline shrink-0 mr-1" /> <strong>Execução direta pelo Explorador:</strong> Na lista de arquivos do Explorador, o botão <strong>PLAY</strong> executa o script diretamente no <strong>Drone Principal</strong>.<br/>
+                    • O Drone Principal atual é indicado com um ícone de estrela.<br/>
                     • Alterne qual drone é o Principal na aba <strong>Drones</strong> a qualquer momento.<br/>
                     • <strong>Rastreamento do Drone no Painel INFO:</strong> Na janela de informações do bloco (canto inferior direito do visualizador 3D), alterne o botão <strong>Seguir: ON/OFF</strong> para que o inspetor acompanhe a posição do Drone Principal em tempo real. Clicar em qualquer bloco fixa a inspeção naquele bloco.
                   </p>
@@ -952,17 +957,17 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ engine, onNavigate
                   {/* WILD_FIBER */}
                   <div className="bg-[#010409] p-4 rounded-xl border border-[#30363d] space-y-2.5">
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2 font-bold text-xs text-[#3fb950]">
-                        <span className="text-base">🌾</span>
+                      <div className="flex items-center gap-2 font-bold text-xs text-[#e4f222]">
+                        <Wheat className="w-4 h-4 text-[#e4f222]" />
                         <span>Fibra Selvagem</span>
                         <code className="text-[10px] text-[#8b949e] font-mono">"WILD_FIBER"</code>
                       </div>
-                      <span className="text-[10px] bg-[#3fb950]/15 text-[#3fb950] border border-[#3fb950]/30 px-2 py-0.5 rounded font-mono font-semibold">
+                      <span className="text-[10px] bg-[#e4f222]/15 text-[#e4f222] border border-[#e4f222]/30 px-2 py-0.5 rounded font-mono font-semibold">
                         Base: 5%/tick
                       </span>
                     </div>
                     <p className="text-xs text-[#c9d1d9] leading-relaxed">
-                      Cultura silvestre inicial. Rebrota de forma espontânea e natural em qualquer solo não plantado (<code className="text-[#3fb950] font-mono">crop = "NONE"</code>).
+                      Cultura silvestre inicial. Rebrota de forma espontânea e natural em qualquer solo não plantado (<code className="text-[#e4f222] font-mono">crop = "NONE"</code>).
                     </p>
                     <div className="grid grid-cols-3 gap-2 text-[11px] font-mono bg-[#0d1117] p-2 rounded border border-[#30363d]">
                       <div>
@@ -975,7 +980,7 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ engine, onNavigate
                       </div>
                       <div>
                         <span className="text-[#8b949e] block text-[9px] uppercase font-sans font-bold">Adjacência:</span>
-                        <span className="text-[#3fb950]">Livre</span>
+                        <span className="text-[#27a644]">Livre</span>
                       </div>
                     </div>
                   </div>
@@ -983,12 +988,12 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ engine, onNavigate
                   {/* WOODY_BUSH */}
                   <div className="bg-[#010409] p-4 rounded-xl border border-[#30363d] space-y-2.5">
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2 font-bold text-xs text-[#d29922]">
-                        <span className="text-base">🌿</span>
+                      <div className="flex items-center gap-2 font-bold text-xs text-[#27a644]">
+                        <TreePine className="w-4 h-4 text-[#27a644]" />
                         <span>Arbusto de Madeira</span>
                         <code className="text-[10px] text-[#8b949e] font-mono">"WOODY_BUSH"</code>
                       </div>
-                      <span className="text-[10px] bg-[#d29922]/15 text-[#d29922] border border-[#d29922]/30 px-2 py-0.5 rounded font-mono font-semibold">
+                      <span className="text-[10px] bg-[#27a644]/15 text-[#27a644] border border-[#27a644]/30 px-2 py-0.5 rounded font-mono font-semibold">
                         Base: 3%/tick
                       </span>
                     </div>
@@ -1006,7 +1011,7 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ engine, onNavigate
                       </div>
                       <div>
                         <span className="text-[#8b949e] block text-[9px] uppercase font-sans font-bold">Adjacência:</span>
-                        <span className="text-[#3fb950]">Livre</span>
+                        <span className="text-[#27a644]">Livre</span>
                       </div>
                     </div>
                   </div>
@@ -1014,22 +1019,22 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ engine, onNavigate
                   {/* CULTIVATED_ROOT */}
                   <div className="bg-[#010409] p-4 rounded-xl border border-[#30363d] space-y-2.5">
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2 font-bold text-xs text-[#e3b341]">
-                        <span className="text-base">🥕</span>
+                      <div className="flex items-center gap-2 font-bold text-xs text-[#f97316]">
+                        <Sprout className="w-4 h-4 text-[#f97316]" />
                         <span>Raízes Cultivadas</span>
                         <code className="text-[10px] text-[#8b949e] font-mono">"CULTIVATED_ROOT"</code>
                       </div>
-                      <span className="text-[10px] bg-[#e3b341]/15 text-[#e3b341] border border-[#e3b341]/30 px-2 py-0.5 rounded font-mono font-semibold">
+                      <span className="text-[10px] bg-[#f97316]/15 text-[#f97316] border border-[#f97316]/30 px-2 py-0.5 rounded font-mono font-semibold">
                         Base: 4%/tick (Arado)
                       </span>
                     </div>
                     <p className="text-xs text-[#c9d1d9] leading-relaxed">
-                      Exige preparação do terreno. Cresce <strong>duas vezes mais rápido (4%/tick)</strong> em solo Arado (<code className="text-[#d29922] font-mono">farm.till()</code>) do que em solo natural.
+                      Exige preparação do terreno. Cresce <strong>duas vezes mais rápido (4%/tick)</strong> em solo Arado (<code className="text-[#f97316] font-mono">farm.till()</code>) do que em solo natural.
                     </p>
                     <div className="grid grid-cols-3 gap-2 text-[11px] font-mono bg-[#0d1117] p-2 rounded border border-[#30363d]">
                       <div>
                         <span className="text-[#8b949e] block text-[9px] uppercase font-sans font-bold">Solo Ideal:</span>
-                        <span className="text-[#d29922]">Arado (TILLED)</span>
+                        <span className="text-[#f97316]">Arado (TILLED)</span>
                       </div>
                       <div>
                         <span className="text-[#8b949e] block text-[9px] uppercase font-sans font-bold">Umidade:</span>
@@ -1037,7 +1042,7 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ engine, onNavigate
                       </div>
                       <div>
                         <span className="text-[#8b949e] block text-[9px] uppercase font-sans font-bold">Adjacência:</span>
-                        <span className="text-[#3fb950]">Livre</span>
+                        <span className="text-[#27a644]">Livre</span>
                       </div>
                     </div>
                   </div>
@@ -1045,12 +1050,12 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ engine, onNavigate
                   {/* TREE */}
                   <div className="bg-[#010409] p-4 rounded-xl border border-[#30363d] space-y-2.5">
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2 font-bold text-xs text-[#bc8cff]">
-                        <span className="text-base">🌲</span>
+                      <div className="flex items-center gap-2 font-bold text-xs text-[#a16207]">
+                        <TreePine className="w-4 h-4 text-[#a16207]" />
                         <span>Árvore (Madeira Nobre)</span>
                         <code className="text-[10px] text-[#8b949e] font-mono">"TREE"</code>
                       </div>
-                      <span className="text-[10px] bg-[#bc8cff]/15 text-[#bc8cff] border border-[#bc8cff]/30 px-2 py-0.5 rounded font-mono font-semibold">
+                      <span className="text-[10px] bg-[#a16207]/15 text-[#a16207] border border-[#a16207]/30 px-2 py-0.5 rounded font-mono font-semibold">
                         Base: 2%/tick (Xadrez)
                       </span>
                     </div>
@@ -1068,7 +1073,7 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ engine, onNavigate
                       </div>
                       <div>
                         <span className="text-[#8b949e] block text-[9px] uppercase font-sans font-bold">Adjacência:</span>
-                        <span className="text-[#f85149]">Evitar Vizinho</span>
+                        <span className="text-[#eb5757]">Evitar Vizinho</span>
                       </div>
                     </div>
                   </div>
@@ -1076,12 +1081,12 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ engine, onNavigate
                   {/* FRUIT_COLONY */}
                   <div className="bg-[#010409] p-4 rounded-xl border border-[#30363d] space-y-2.5">
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2 font-bold text-xs text-[#f85149]">
-                        <span className="text-base">🍓</span>
+                      <div className="flex items-center gap-2 font-bold text-xs text-[#eb5757]">
+                        <Apple className="w-4 h-4 text-[#eb5757]" />
                         <span>Colônia de Frutas</span>
                         <code className="text-[10px] text-[#8b949e] font-mono">"FRUIT_COLONY"</code>
                       </div>
-                      <span className="text-[10px] bg-[#f85149]/15 text-[#f85149] border border-[#f85149]/30 px-2 py-0.5 rounded font-mono font-semibold">
+                      <span className="text-[10px] bg-[#eb5757]/15 text-[#eb5757] border border-[#eb5757]/30 px-2 py-0.5 rounded font-mono font-semibold">
                         Delicada (Umidade &ge; 75%)
                       </span>
                     </div>
@@ -1095,11 +1100,11 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ engine, onNavigate
                       </div>
                       <div>
                         <span className="text-[#8b949e] block text-[9px] uppercase font-sans font-bold">Umidade Min:</span>
-                        <span className="text-[#f85149] font-bold">&ge; 75%</span>
+                        <span className="text-[#eb5757] font-bold">&ge; 75%</span>
                       </div>
                       <div>
                         <span className="text-[#8b949e] block text-[9px] uppercase font-sans font-bold">Adjacência:</span>
-                        <span className="text-[#3fb950]">Colônias</span>
+                        <span className="text-[#27a644]">Colônias</span>
                       </div>
                     </div>
                   </div>
@@ -1107,17 +1112,17 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ engine, onNavigate
                   {/* ENERGY_FLOWER */}
                   <div className="bg-[#010409] p-4 rounded-xl border border-[#30363d] space-y-2.5">
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2 font-bold text-[#a5d6ff] text-xs">
-                        <span className="text-base">⚡</span>
+                      <div className="flex items-center gap-2 font-bold text-[#02b8cc] text-xs">
+                        <Zap className="w-4 h-4 text-[#02b8cc]" />
                         <span>Flor de Energia</span>
                         <code className="text-[10px] text-[#8b949e] font-mono">"ENERGY_FLOWER"</code>
                       </div>
-                      <span className="text-[10px] bg-[#a5d6ff]/15 text-[#a5d6ff] border border-[#a5d6ff]/30 px-2 py-0.5 rounded font-mono font-semibold">
+                      <span className="text-[10px] bg-[#02b8cc]/15 text-[#02b8cc] border border-[#02b8cc]/30 px-2 py-0.5 rounded font-mono font-semibold">
                         Delicada (Umidade &ge; 75%)
                       </span>
                     </div>
                     <p className="text-xs text-[#c9d1d9] leading-relaxed">
-                      Gera energia elétrica. Requer umidade alta (&ge; 75%). Utilize <code className="text-[#58a6ff] font-mono">world.measure()</code> para ler o acúmulo de energia e colher no valor de pico (&gt; 50).
+                      Gera energia elétrica. Requer umidade alta (&ge; 75%). Utilize <code className="text-[#02b8cc] font-mono">world.measure()</code> para ler o acúmulo de energia e colher no valor de pico (&gt; 50).
                     </p>
                     <div className="grid grid-cols-3 gap-2 text-[11px] font-mono bg-[#0d1117] p-2 rounded border border-[#30363d]">
                       <div>
@@ -1126,11 +1131,11 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ engine, onNavigate
                       </div>
                       <div>
                         <span className="text-[#8b949e] block text-[9px] uppercase font-sans font-bold">Umidade Min:</span>
-                        <span className="text-[#f85149] font-bold">&ge; 75%</span>
+                        <span className="text-[#eb5757] font-bold">&ge; 75%</span>
                       </div>
                       <div>
                         <span className="text-[#8b949e] block text-[9px] uppercase font-sans font-bold">Sensor:</span>
-                        <span className="text-[#a5d6ff]">measure()</span>
+                        <span className="text-[#02b8cc]">measure()</span>
                       </div>
                     </div>
                   </div>
@@ -1138,17 +1143,17 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ engine, onNavigate
                   {/* GRADED_PLANT */}
                   <div className="bg-[#010409] p-4 rounded-xl border border-[#30363d] space-y-2.5 md:col-span-2">
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2 font-bold text-xs text-[#bc8cff]">
-                        <span className="text-base">🧬</span>
+                      <div className="flex items-center gap-2 font-bold text-xs text-[#8b5cf6]">
+                        <Cpu className="w-4 h-4 text-[#8b5cf6]" />
                         <span>Planta Graduada (Ordenação de Biomassa)</span>
                         <code className="text-[10px] text-[#8b949e] font-mono">"GRADED_PLANT"</code>
                       </div>
-                      <span className="text-[10px] bg-[#bc8cff]/15 text-[#bc8cff] border border-[#bc8cff]/30 px-2 py-0.5 rounded font-mono font-semibold">
+                      <span className="text-[10px] bg-[#8b5cf6]/15 text-[#8b5cf6] border border-[#8b5cf6]/30 px-2 py-0.5 rounded font-mono font-semibold">
                         Delicada (Umidade &ge; 75%)
                       </span>
                     </div>
                     <p className="text-xs text-[#c9d1d9] leading-relaxed">
-                      Cultura avançada para algoritmos de ordenação (ex: Bubble Sort). Cada planta possui um grau numérico lido via <code className="text-[#58a6ff] font-mono">world.measure()</code>. Troque posições com blocos vizinhos via <code className="text-[#bc8cff] font-mono">farm.swap("EAST")</code> para criar sequências ordenadas e maximizar a biomassa gerada.
+                      Cultura avançada para algoritmos de ordenação (ex: Bubble Sort). Cada planta possui um grau numérico lido via <code className="text-[#58a6ff] font-mono">world.measure()</code>. Troque posições com blocos vizinhos via <code className="text-[#bc8cff] font-mono">farm.swap("RIGHT")</code> para criar sequências ordenadas e maximizar a biomassa gerada.
                     </p>
                     <div className="grid grid-cols-4 gap-2 text-[11px] font-mono bg-[#0d1117] p-2 rounded border border-[#30363d]">
                       <div>

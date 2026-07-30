@@ -821,7 +821,7 @@ export class ScriptRunner {
       if (!this.engine.isTechUnlocked('AGRO_7')) {
         throw new Error("'Swap Tiles' feature is locked! Research AGRO_7 in the Research Tree.");
       }
-      const dirArg = expr.match(/farm\.swap\((.*?)\)/)?.[1]?.replace(/['"]/g, '').trim() || 'EAST';
+      const dirArg = expr.match(/farm\.swap\((.*?)\)/)?.[1]?.replace(/['"]/g, '').trim() || 'RIGHT';
       ctx.actionsPerformedInRun++;
       return this.engine.swapTiles(ctx.agentId, agent.x, agent.y, dirArg);
     }
@@ -836,12 +836,12 @@ export class ScriptRunner {
 
     // world.*
     if (expr.includes('world.move(')) {
-      const dirArg = expr.match(/world\.move\((.*?)\)/)?.[1]?.replace(/['"]/g, '').trim() || 'EAST';
+      const dirArg = expr.match(/world\.move\((.*?)\)/)?.[1]?.replace(/['"]/g, '').trim() || 'RIGHT';
       ctx.actionsPerformedInRun++;
       return this.engine.moveAgent(ctx.agentId, dirArg);
     }
     if (expr.includes('world.can_move(') || expr.includes('world.canMove(')) {
-      const dirArg = expr.match(/world\.can_?move\((.*?)\)/)?.[1]?.replace(/['"]/g, '').trim() || 'EAST';
+      const dirArg = expr.match(/world\.can_?move\((.*?)\)/)?.[1]?.replace(/['"]/g, '').trim() || 'RIGHT';
       return this.engine.canMoveAgent(ctx.agentId, dirArg);
     }
     if (expr.includes('world.x()')) {

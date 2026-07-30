@@ -1,7 +1,7 @@
 import React from 'react';
 import confetti from 'canvas-confetti';
 import { 
-  Sparkles, 
+  FlaskConical, 
   Lock, 
   CheckCircle2, 
   Wheat, 
@@ -43,8 +43,8 @@ export const TechTreeModal: React.FC<TechTreeModalProps> = ({ engine }) => {
     const branchNodes = techTree.filter(n => n.branch === branch);
 
     return (
-      <div className="bg-[#161b22] border border-[#30363d] rounded-lg p-4 flex flex-col gap-3">
-        <div className={`flex items-center gap-2 font-bold text-sm border-b border-[#30363d] pb-2 ${colorClass}`}>
+      <div className="bg-[#0f1011] border border-[#23252a] rounded-[12px] p-4 flex flex-col gap-3">
+        <div className={`flex items-center gap-2 font-medium text-xs border-b border-[#23252a] pb-2 ${colorClass}`}>
           {icon}
           {title}
         </div>
@@ -67,61 +67,72 @@ export const TechTreeModal: React.FC<TechTreeModalProps> = ({ engine }) => {
             return (
               <div
                 key={node.id}
-                className={`p-3 rounded-md border transition-all ${
+                className={`p-3 rounded-[8px] border transition-all ${
                   isUnlocked
-                    ? 'bg-[#238636]/15 border-[#238636]/50 text-[#f0f6fc]'
+                    ? 'bg-[#27a644]/10 border-[#27a644]/30 text-[#ffffff]'
                     : reqsMet
-                      ? 'bg-[#010409] border-[#30363d] text-[#c9d1d9] hover:border-[#8b949e]'
-                      : 'bg-[#010409]/40 border-[#21262d] text-[#6e7681] opacity-60'
+                      ? 'bg-[#161718] border-[#23252a] text-[#d0d6e0] hover:border-[#383b3f]'
+                      : 'bg-[#08090a]/60 border-[#23252a] text-[#62666d] opacity-60'
                 }`}
               >
                 <div className="flex items-center justify-between mb-1">
-                  <div className="font-semibold text-xs flex items-center gap-2">
+                  <div className="font-medium text-xs flex items-center gap-2">
                     {isUnlocked ? (
-                      <CheckCircle2 className="w-4 h-4 text-[#3fb950] shrink-0" />
+                      <CheckCircle2 className="w-4 h-4 text-[#27a644] shrink-0" />
                     ) : (
-                      <Lock className="w-3.5 h-3.5 text-[#6e7681] shrink-0" />
+                      <Lock className="w-3.5 h-3.5 text-[#62666d] shrink-0" />
                     )}
-                    <span className={isUnlocked ? 'text-[#3fb950] font-bold' : ''}>{node.name}</span>
+                    <span className={isUnlocked ? 'text-[#27a644] font-medium' : ''}>{node.name}</span>
                   </div>
-                  <span className="text-[10px] uppercase font-mono px-1.5 py-0.5 rounded bg-[#21262d] border border-[#30363d] text-[#8b949e]">
+                  <span className="text-[10px] uppercase font-mono px-1.5 py-0.5 rounded-[4px] bg-[#08090a] border border-[#23252a] text-[#8a8f98]">
                     Nível {node.tier}
                   </span>
                 </div>
 
-                <p className="text-[11px] text-[#8b949e] mb-2 leading-relaxed">{node.description}</p>
+                <p className="text-[11px] text-[#8a8f98] mb-2 leading-relaxed font-sans">{node.description}</p>
 
                 {/* Costs & Unlock Button */}
                 {!isUnlocked && (
-                  <div className="flex items-center justify-between mt-2 pt-2 border-t border-[#30363d]">
+                  <div className="flex items-center justify-between mt-2 pt-2 border-t border-[#23252a]">
                     <div className="flex items-center gap-2 text-[10px] font-mono">
                       {Object.entries(node.cost).map(([res, cost]) => {
                         const hasEnough = (resources[res as keyof typeof resources] || 0) >= (cost || 0);
+                        const resMap: Record<string, { name: string; color: string }> = {
+                          fiber: { name: 'Fibra', color: '#e4f222' },
+                          wood: { name: 'Madeira', color: '#27a644' },
+                          roots: { name: 'Raízes', color: '#f97316' },
+                          fruits: { name: 'Frutas', color: '#eb5757' },
+                          energy: { name: 'Energia', color: '#02b8cc' },
+                          biomass: { name: 'Biomassa', color: '#8b5cf6' }
+                        };
+                        const info = resMap[res] || { name: res, color: '#d0d6e0' };
+
                         return (
                           <span
                             key={res}
-                            className={`px-1.5 py-0.5 rounded border ${
+                            style={{ color: hasEnough ? info.color : '#eb5757' }}
+                            className={`px-1.5 py-0.5 rounded-[4px] border ${
                               hasEnough 
-                                ? 'bg-[#21262d] border-[#30363d] text-[#c9d1d9]' 
-                                : 'bg-[#da3633]/20 border-[#da3633]/50 text-[#f85149]'
+                                ? 'bg-[#161718] border-[#23252a]' 
+                                : 'bg-[#eb5757]/10 border-[#eb5757]/30'
                             }`}
                           >
-                            {cost} {res}
+                            {cost} {info.name}
                           </span>
                         );
                       })}
                       {Object.keys(node.cost).length === 0 && (
-                        <span className="text-[#3fb950]">GRÁTIS</span>
+                        <span className="text-[#27a644]">GRÁTIS</span>
                       )}
                     </div>
 
                     <button
                       disabled={!reqsMet || !canAfford}
                       onClick={() => handleUnlock(node)}
-                      className={`px-3 py-1 rounded text-xs font-semibold shadow transition-all ${
+                      className={`px-3 py-1 rounded-[6px] text-xs font-medium transition-all ${
                         reqsMet && canAfford
-                          ? 'bg-[#238636] hover:bg-[#2ea043] text-white active:scale-95 cursor-pointer border border-[#3fb950]/30'
-                          : 'bg-[#21262d] text-[#6e7681] cursor-not-allowed border border-[#30363d]'
+                          ? 'bg-[#27a644] hover:bg-[#27a644]/90 text-[#ffffff] active:scale-95 cursor-pointer'
+                          : 'bg-[#161718] text-[#62666d] cursor-not-allowed border border-[#23252a]'
                       }`}
                     >
                       Desbloquear
@@ -137,27 +148,27 @@ export const TechTreeModal: React.FC<TechTreeModalProps> = ({ engine }) => {
   };
 
   return (
-    <div className="flex-1 bg-[#0d1117] p-6 overflow-y-auto font-sans">
+    <div className="flex-1 bg-[#08090a] p-6 overflow-y-auto font-sans">
       <div className="max-w-6xl mx-auto space-y-6">
         {/* Header Title */}
-        <div className="flex items-center justify-between border-b border-[#30363d] pb-4">
+        <div className="flex items-center justify-between border-b border-[#23252a] pb-4">
           <div>
-            <h1 className="text-xl font-bold text-[#f0f6fc] flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-[#d29922]" />
+            <h1 className="text-lg font-medium text-[#ffffff] flex items-center gap-2">
+              <FlaskConical className="w-5 h-5 text-[#27a644]" />
               Árvore de Tecnologia e Pesquisa
             </h1>
-            <p className="text-xs text-[#8b949e] mt-0.5">
-              Desbloqueie sintaxes de programação, novas espécies de culturas, sensores, ferramentas de depuração e expansão de terreno!
+            <p className="text-xs text-[#8a8f98] mt-0.5 leading-relaxed">
+              O compilador da sua fazenda. Invista recursos agrícolas para liberar sintaxes de programação, métodos de API, sensores de terreno e expansão de memória da grade.
             </p>
           </div>
         </div>
 
         {/* 4 Branches Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {renderBranch('AUTOMATION', 'Automação e Linguagem', <Cpu className="w-4 h-4" />, 'text-[#58a6ff]')}
-          {renderBranch('AGRONOMY', 'Agronomia e Culturas', <Sprout className="w-4 h-4" />, 'text-[#3fb950]')}
-          {renderBranch('SYSTEMS', 'Sistemas e Depuração', <Terminal className="w-4 h-4" />, 'text-[#bc8cff]')}
-          {renderBranch('SCALE', 'Escala e Expansão de Terreno', <Maximize2 className="w-4 h-4" />, 'text-[#d29922]')}
+          {renderBranch('AUTOMATION', 'Automação e Linguagem', <Cpu className="w-4 h-4" />, 'text-[#02b8cc]')}
+          {renderBranch('AGRONOMY', 'Agronomia e Culturas', <Sprout className="w-4 h-4" />, 'text-[#27a644]')}
+          {renderBranch('SYSTEMS', 'Sistemas e Depuração', <Terminal className="w-4 h-4" />, 'text-[#8b5cf6]')}
+          {renderBranch('SCALE', 'Escala e Expansão de Terreno', <Maximize2 className="w-4 h-4" />, 'text-[#d0d6e0]')}
         </div>
       </div>
     </div>

@@ -9,7 +9,6 @@ import {
   X, 
   FolderArchive, 
   FileText, 
-  Sparkles,
   Bot,
   Trash2,
   RotateCcw
@@ -157,23 +156,23 @@ export const SaveManagerModal: React.FC<SaveManagerModalProps> = ({
         className="hidden" 
       />
 
-      <div className="bg-[#161b22] border border-[#30363d] rounded-xl w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+      <div className="bg-[#0f1011] border border-[#23252a] rounded-[12px] w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
         
         {/* Header */}
-        <div className="px-5 py-4 bg-[#010409] border-b border-[#30363d] flex items-center justify-between">
+        <div className="px-5 py-4 bg-[#08090a] border-b border-[#23252a] flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-[#238636]/20 border border-[#238636]/40 flex items-center justify-center text-[#3fb950]">
+            <div className="w-8 h-8 rounded-[6px] bg-[#27a644]/10 border border-[#27a644]/30 flex items-center justify-center text-[#27a644]">
               <Save className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-sm font-bold text-[#f0f6fc]">Gerenciador de Saves & Scripts</h2>
-              <p className="text-xs text-[#8b949e]">Exporte/Importe o progresso do jogo ou arquivos de código Python/JS locais</p>
+              <h2 className="text-sm font-medium text-[#ffffff]">Gerenciador de Saves & Scripts</h2>
+              <p className="text-xs text-[#8a8f98]">Exporte/Importe o progresso do jogo ou arquivos de código Python/JS locais</p>
             </div>
           </div>
 
           <button
             onClick={onClose}
-            className="p-1.5 text-[#8b949e] hover:text-[#f0f6fc] hover:bg-[#21262d] rounded-lg transition-all"
+            className="p-1.5 text-[#8a8f98] hover:text-[#ffffff] hover:bg-[#161718] rounded-[6px] transition-all"
           >
             <X className="w-5 h-5" />
           </button>
@@ -181,15 +180,15 @@ export const SaveManagerModal: React.FC<SaveManagerModalProps> = ({
 
         {/* Feedback Alert Toast */}
         {notification && (
-          <div className={`px-4 py-2.5 text-xs font-semibold flex items-center gap-2 ${
+          <div className={`px-4 py-2.5 text-xs font-medium flex items-center gap-2 ${
             notification.type === 'success' 
-              ? 'bg-[#238636]/20 text-[#3fb950] border-b border-[#238636]/40' 
-              : 'bg-[#da3633]/20 text-[#f85149] border-b border-[#da3633]/40'
+              ? 'bg-[#27a644]/10 text-[#27a644] border-b border-[#27a644]/30' 
+              : 'bg-[#eb5757]/10 text-[#eb5757] border-b border-[#eb5757]/30'
           }`}>
             {notification.type === 'success' ? (
-              <CheckCircle2 className="w-4 h-4 text-[#3fb950] shrink-0" />
+              <CheckCircle2 className="w-4 h-4 text-[#27a644] shrink-0" />
             ) : (
-              <AlertCircle className="w-4 h-4 text-[#f85149] shrink-0" />
+              <AlertCircle className="w-4 h-4 text-[#eb5757] shrink-0" />
             )}
             <span>{notification.message}</span>
           </div>
@@ -199,27 +198,27 @@ export const SaveManagerModal: React.FC<SaveManagerModalProps> = ({
         <div className="p-5 space-y-6 overflow-y-auto">
 
           {/* SECTION 1: Full Game Save State */}
-          <div className="bg-[#0d1117] border border-[#30363d] rounded-xl p-4 space-y-3">
+          <div className="bg-[#161718] border border-[#23252a] rounded-[12px] p-4 space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <FolderArchive className="w-4 h-4 text-[#58a6ff]" />
-                <h3 className="text-xs font-bold text-[#f0f6fc] uppercase tracking-wider">
+                <FolderArchive className="w-4 h-4 text-[#02b8cc]" />
+                <h3 className="text-xs font-medium text-[#ffffff] uppercase tracking-wider">
                   Progresso do Jogo Completo (Save File .json)
                 </h3>
               </div>
-              <span className="text-[10px] font-mono text-[#8b949e] bg-[#161b22] px-2 py-0.5 rounded border border-[#30363d]">
+              <span className="text-[10px] font-mono text-[#8a8f98] bg-[#08090a] px-2 py-0.5 rounded-[4px] border border-[#23252a]">
                 Contém Terreno 3D, Recursos e Scripts
               </span>
             </div>
 
-            <p className="text-xs text-[#8b949e] leading-relaxed">
+            <p className="text-xs text-[#8a8f98] leading-relaxed font-sans">
               O Save completo guarda o tamanho do mapa 3D, todos os recursos acumulados (fibra, madeira, raízes, etc.), pesquisas desbloqueadas na Árvore de Pesquisa e todos os seus scripts.
             </p>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
               <button
                 onClick={handleExportSave}
-                className="flex items-center justify-center gap-2 px-4 py-2.5 bg-[#238636] hover:bg-[#2ea043] text-white rounded-lg text-xs font-bold transition-all shadow-sm active:scale-98"
+                className="flex items-center justify-center gap-2 px-4 py-2.5 bg-[#27a644] hover:bg-[#27a644]/90 text-[#ffffff] rounded-[6px] text-xs font-medium transition-all active:scale-98"
               >
                 <Download className="w-4 h-4" />
                 Exportar Save (.json)
@@ -227,30 +226,30 @@ export const SaveManagerModal: React.FC<SaveManagerModalProps> = ({
 
               <button
                 onClick={() => saveFileInputRef.current?.click()}
-                className="flex items-center justify-center gap-2 px-4 py-2.5 bg-[#21262d] hover:bg-[#30363d] text-[#f0f6fc] border border-[#30363d] rounded-lg text-xs font-bold transition-all active:scale-98"
+                className="flex items-center justify-center gap-2 px-4 py-2.5 bg-[#08090a] hover:bg-[#161718] text-[#ffffff] border border-[#23252a] rounded-[6px] text-xs font-medium transition-all active:scale-98"
               >
-                <Upload className="w-4 h-4 text-[#58a6ff]" />
+                <Upload className="w-4 h-4 text-[#02b8cc]" />
                 Importar Save (.json)
               </button>
             </div>
           </div>
 
           {/* SECTION 2: Individual Scripts Export / Import */}
-          <div className="bg-[#0d1117] border border-[#30363d] rounded-xl p-4 space-y-3">
+          <div className="bg-[#161718] border border-[#23252a] rounded-[12px] p-4 space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <FileCode className="w-4 h-4 text-[#d29922]" />
-                <h3 className="text-xs font-bold text-[#f0f6fc] uppercase tracking-wider">
+                <FileCode className="w-4 h-4 text-[#d0d6e0]" />
+                <h3 className="text-xs font-medium text-[#ffffff] uppercase tracking-wider">
                   Scripts e Arquivos de Código Locais
                 </h3>
               </div>
-              <span className="text-[10px] font-mono text-[#8b949e] bg-[#161b22] px-2 py-0.5 rounded border border-[#30363d]">
+              <span className="text-[10px] font-mono text-[#8a8f98] bg-[#08090a] px-2 py-0.5 rounded-[4px] border border-[#23252a]">
                 Python (.py) e JavaScript (.js)
               </span>
             </div>
 
-            <p className="text-xs text-[#8b949e] leading-relaxed">
-              Baixe seus algoritmos individualmente para guardar em seu computador ou selecione arquivos <code className="text-[#58a6ff]">.py</code> e <code className="text-[#d29922]">.js</code> do seu disco rígido para importar para o ambiente do jogo.
+            <p className="text-xs text-[#8a8f98] leading-relaxed font-sans">
+              Baixe seus algoritmos individualmente para guardar em seu computador ou selecione arquivos <code className="text-[#02b8cc]">.py</code> e <code className="text-[#d0d6e0]">.js</code> do seu disco rígido para importar para o ambiente do jogo.
             </p>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
@@ -258,25 +257,25 @@ export const SaveManagerModal: React.FC<SaveManagerModalProps> = ({
               <button
                 onClick={handleDownloadActiveScript}
                 disabled={!activeFile}
-                className="flex items-center justify-center gap-2 px-3 py-2.5 bg-[#21262d] hover:bg-[#30363d] text-[#f0f6fc] border border-[#30363d] rounded-lg text-xs font-semibold transition-all disabled:opacity-50"
+                className="flex items-center justify-center gap-2 px-3 py-2.5 bg-[#08090a] hover:bg-[#161718] text-[#ffffff] border border-[#23252a] rounded-[6px] text-xs font-medium transition-all disabled:opacity-50"
               >
-                <Download className="w-3.5 h-3.5 text-[#3fb950]" />
+                <Download className="w-3.5 h-3.5 text-[#27a644]" />
                 Baixar '{activeFile ? activeFile.name : 'Atual'}'
               </button>
 
               {/* Download All Scripts Bundle */}
               <button
                 onClick={handleDownloadAllScripts}
-                className="flex items-center justify-center gap-2 px-3 py-2.5 bg-[#21262d] hover:bg-[#30363d] text-[#f0f6fc] border border-[#30363d] rounded-lg text-xs font-semibold transition-all"
+                className="flex items-center justify-center gap-2 px-3 py-2.5 bg-[#08090a] hover:bg-[#161718] text-[#ffffff] border border-[#23252a] rounded-[6px] text-xs font-medium transition-all"
               >
-                <Download className="w-3.5 h-3.5 text-[#d29922]" />
+                <Download className="w-3.5 h-3.5 text-[#d0d6e0]" />
                 Baixar Todos os Scripts
               </button>
 
               {/* Import Script File */}
               <button
                 onClick={() => scriptFileInputRef.current?.click()}
-                className="flex items-center justify-center gap-2 px-3 py-2.5 bg-[#1f6feb] hover:bg-[#388bfd] text-white rounded-lg text-xs font-bold transition-all shadow-sm"
+                className="flex items-center justify-center gap-2 px-3 py-2.5 bg-[#27a644] hover:bg-[#27a644]/90 text-[#ffffff] rounded-[6px] text-xs font-medium transition-all"
               >
                 <Upload className="w-3.5 h-3.5" />
                 Importar Script (.py/.js)
@@ -284,26 +283,26 @@ export const SaveManagerModal: React.FC<SaveManagerModalProps> = ({
             </div>
 
             {/* List of current workspace files */}
-            <div className="mt-3 pt-3 border-t border-[#30363d]/60 space-y-1.5">
-              <span className="text-[11px] font-semibold text-[#8b949e] flex items-center justify-between">
+            <div className="mt-3 pt-3 border-t border-[#23252a] space-y-1.5">
+              <span className="text-[11px] font-medium text-[#8a8f98] flex items-center justify-between">
                 <span>Arquivos Atuais na Workspace ({allFiles.length}):</span>
               </span>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 max-h-36 overflow-y-auto pr-1">
                 {allFiles.map(file => (
-                  <div key={file.path} className="flex items-center justify-between bg-[#161b22] px-2.5 py-1.5 rounded border border-[#30363d] text-xs font-mono">
+                  <div key={file.path} className="flex items-center justify-between bg-[#08090a] px-2.5 py-1.5 rounded-[6px] border border-[#23252a] text-xs font-mono">
                     <div className="flex items-center gap-2 truncate">
-                      <span className={`text-[9px] px-1 py-0.2 rounded font-bold ${
-                        file.language === 'python' ? 'bg-[#388bfd]/20 text-[#58a6ff]' : 'bg-[#d29922]/20 text-[#d29922]'
+                      <span className={`text-[9px] px-1 py-0.2 rounded font-medium ${
+                        file.language === 'python' ? 'bg-[#02b8cc]/10 text-[#02b8cc]' : 'bg-[#e4f222]/15 text-[#e4f222]'
                       }`}>
                         {file.language === 'python' ? 'PY' : 'JS'}
                       </span>
-                      <span className="text-[#c9d1d9] truncate">{file.name}</span>
+                      <span className="text-[#d0d6e0] truncate">{file.name}</span>
                     </div>
 
                     <button
                       onClick={() => downloadScript(file)}
-                      className="p-1 text-[#8b949e] hover:text-[#3fb950] transition-colors"
+                      className="p-1 text-[#8a8f98] hover:text-[#27a644] transition-colors"
                       title={`Baixar ${file.name}`}
                     >
                       <Download className="w-3.5 h-3.5" />
@@ -316,20 +315,20 @@ export const SaveManagerModal: React.FC<SaveManagerModalProps> = ({
           </div>
 
           {/* SECTION 3: Danger Zone - Reset Game from Scratch */}
-          <div className="bg-[#0d1117] border border-rose-900/60 rounded-xl p-4 space-y-3">
+          <div className="bg-[#161718] border border-[#eb5757]/30 rounded-[12px] p-4 space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Trash2 className="w-4 h-4 text-rose-400" />
-                <h3 className="text-xs font-bold text-rose-300 uppercase tracking-wider">
+                <Trash2 className="w-4 h-4 text-[#eb5757]" />
+                <h3 className="text-xs font-medium text-[#eb5757] uppercase tracking-wider">
                   Começar do Zero (Reset Total)
                 </h3>
               </div>
-              <span className="text-[10px] font-mono text-rose-400 bg-rose-950/60 px-2 py-0.5 rounded border border-rose-800/60">
+              <span className="text-[10px] font-mono text-[#eb5757] bg-[#eb5757]/10 px-2 py-0.5 rounded-[4px] border border-[#eb5757]/30">
                 Irreversível
               </span>
             </div>
 
-            <p className="text-xs text-[#8b949e] leading-relaxed">
+            <p className="text-xs text-[#8a8f98] leading-relaxed font-sans">
               Deseja reiniciar toda a simulação do zero? Esta ação apagará permanentemente o terreno 3D, todos os recursos acumulados, pesquisas desbloqueadas e restaurará os scripts originais da workspace.
             </p>
 
@@ -339,9 +338,9 @@ export const SaveManagerModal: React.FC<SaveManagerModalProps> = ({
                   setResetConfirmInput('');
                   setShowResetModal(true);
                 }}
-                className="flex items-center justify-center gap-2 px-4 py-2.5 bg-rose-950/80 hover:bg-rose-900 border border-rose-800/80 text-rose-200 rounded-lg text-xs font-bold transition-all active:scale-98 shadow-sm"
+                className="flex items-center justify-center gap-2 px-4 py-2.5 bg-[#eb5757]/10 hover:bg-[#eb5757]/20 border border-[#eb5757]/30 text-[#eb5757] rounded-[6px] text-xs font-medium transition-all active:scale-98"
               >
-                <RotateCcw className="w-4 h-4 text-rose-400" />
+                <RotateCcw className="w-4 h-4 text-[#eb5757]" />
                 Começar do Zero (Resetar Tudo)
               </button>
             </div>

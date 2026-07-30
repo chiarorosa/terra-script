@@ -887,13 +887,30 @@ export class GameEngine {
     return true;
   }
 
+  public normalizeDirection(dirStr: string): 'NORTH' | 'SOUTH' | 'EAST' | 'WEST' {
+    const raw = (dirStr || '').toUpperCase().trim();
+    if (raw === 'NORTH' || raw === 'FORWARD' || raw === 'FRONT' || raw === 'F') {
+      return 'NORTH';
+    }
+    if (raw === 'SOUTH' || raw === 'BACKWARD' || raw === 'BACK' || raw === 'B') {
+      return 'SOUTH';
+    }
+    if (raw === 'EAST' || raw === 'RIGHT' || raw === 'R') {
+      return 'EAST';
+    }
+    if (raw === 'WEST' || raw === 'LEFT' || raw === 'L') {
+      return 'WEST';
+    }
+    return 'EAST';
+  }
+
   public swapTiles(agentId: number, x: number, y: number, dirStr: string): boolean {
     if (!this.isTechUnlocked('AGRO_7')) {
       this.addLog(agentId, 'stderr', `🚨 Guardrail de Progresso: farm.swap() requer o desbloqueio de Culturas Graduadas (AGRO_7)!`);
       return false;
     }
 
-    const dir = dirStr.toUpperCase();
+    const dir = this.normalizeDirection(dirStr);
     let targetX = x;
     let targetY = y;
     if (dir === 'EAST') targetX = (x + 1) % this.width;
@@ -934,7 +951,7 @@ export class GameEngine {
     const ag = this.getAgent(agentId);
     if (!ag) return false;
 
-    const dir = dirStr.toUpperCase();
+    const dir = this.normalizeDirection(dirStr);
     if (dir === 'EAST') ag.x = (ag.x + 1) % this.width;
     else if (dir === 'WEST') ag.x = (ag.x - 1 + this.width) % this.width;
     else if (dir === 'NORTH') ag.y = (ag.y + 1) % this.height;
@@ -942,14 +959,14 @@ export class GameEngine {
 
     audioManager.playMove();
     this.totalActionsPerformed++;
-    ag.actionMessage = `Moved ${dir} to (${ag.x},${ag.y})`;
+    ag.actionMessage = `Moved ${dirStr.toUpperCase()} to (${ag.x},${ag.y})`;
     return true;
   }
 
   public canMoveAgent(agentId: number, dirStr: string): boolean {
     const ag = this.getAgent(agentId);
     if (!ag) return false;
-    const dir = dirStr.toUpperCase();
+    const dir = this.normalizeDirection(dirStr);
     let targetX = ag.x;
     let targetY = ag.y;
     if (dir === 'EAST') targetX = (ag.x + 1) % this.width;

@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { GameEngine } from '../engine/GameEngine';
 import { CropType, GroundType, TileState } from '../types/game';
-import { RotateCw, RotateCcw, Info, Zap, Activity, Gauge, Eye, EyeOff, HardDrive, Target, Star, ZoomIn, ZoomOut, Sparkles } from 'lucide-react';
+import { RotateCw, RotateCcw, Info, Zap, Activity, Gauge, Eye, EyeOff, HardDrive, Target, Star, ZoomIn, ZoomOut, Trash2 } from 'lucide-react';
 import { GameLogo } from './GameLogo';
 
 interface World3DCanvasProps {
@@ -55,8 +55,9 @@ class ThreeAssetCache {
   public static bushMat = new THREE.MeshStandardMaterial({ color: 0x16a34a, roughness: 0.7 });
   public static trunkMat = new THREE.MeshStandardMaterial({ color: 0x78350f });
   public static foliageMat = new THREE.MeshStandardMaterial({ color: 0x047857, roughness: 0.5 });
-  public static rootMat = new THREE.MeshStandardMaterial({ color: 0xe11d48, roughness: 0.5 });
-  public static flowerMat = new THREE.MeshStandardMaterial({ color: 0x06b6d4, emissive: 0x0891b2, emissiveIntensity: 0.8 });
+  public static rootMat = new THREE.MeshStandardMaterial({ color: 0xf97316, roughness: 0.5 });
+  public static fruitMat = new THREE.MeshStandardMaterial({ color: 0xeb5757, roughness: 0.5 });
+  public static flowerMat = new THREE.MeshStandardMaterial({ color: 0x02b8cc, emissive: 0x0284c7, emissiveIntensity: 0.8 });
   public static gradedMat = new THREE.MeshStandardMaterial({ color: 0x8b5cf6, roughness: 0.4 });
   public static defaultCropMat = new THREE.MeshStandardMaterial({ color: 0x10b981 });
 
@@ -173,7 +174,7 @@ export const World3DCanvas: React.FC<World3DCanvasProps> = ({ engine }) => {
 
     // 1. Scene Setup
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x0f172a); // Slate-900 ambient
+    scene.background = new THREE.Color(0x08090a); // Linear Dark Slate ambient
     sceneRef.current = scene;
 
     // 2. Orthographic Isometric Camera Setup
@@ -494,6 +495,11 @@ export const World3DCanvas: React.FC<World3DCanvasProps> = ({ engine }) => {
       root.position.y = 0.15 * scale;
       root.scale.set(scale, scale, scale);
       cropGroup.add(root);
+    } else if (type === 'FRUIT_COLONY') {
+      const fruit = new THREE.Mesh(ThreeAssetCache.rootGeo, ThreeAssetCache.fruitMat);
+      fruit.position.y = 0.2 * scale;
+      fruit.scale.set(scale, scale, scale);
+      cropGroup.add(fruit);
     } else if (type === 'ENERGY_FLOWER') {
       const flower = new THREE.Mesh(ThreeAssetCache.flowerGeo, ThreeAssetCache.flowerMat);
       flower.position.y = 0.3 * scale;
@@ -585,23 +591,23 @@ export const World3DCanvas: React.FC<World3DCanvasProps> = ({ engine }) => {
     : null;
 
   return (
-    <div className="flex-1 bg-slate-950 flex flex-col h-full relative overflow-hidden font-sans select-none">
+    <div className="flex-1 bg-[#08090a] flex flex-col h-full relative overflow-hidden font-sans select-none">
       {/* Canvas Controls Header Bar */}
-      <div className="h-9 bg-slate-900 border-b border-slate-800 flex items-center justify-between px-3 text-xs text-slate-300 font-mono z-10">
+      <div className="h-9 bg-[#08090a] border-b border-[#23252a] flex items-center justify-between px-3 text-xs text-slate-300 font-mono z-10">
         <div className="flex items-center gap-2">
           <GameLogo className="w-4 h-4" />
-          <span className="font-semibold text-white">Visualização 3D da Fazenda</span>
-          <span className="text-[10px] bg-slate-800 px-2 py-0.5 rounded text-slate-400">
+          <span className="font-semibold text-white">3D</span>
+          <span className="text-[10px] bg-[#161718] border border-[#23252a] px-2 py-0.5 rounded text-slate-400">
             Grade: {engine.getGridWidth()}x{engine.getGridHeight()} ({engine.getGridWidth() * engine.getGridHeight()} blocos)
           </span>
         </div>
 
         <div className="flex items-center gap-2">
           {/* Zoom Controls */}
-          <div className="flex items-center gap-1 bg-slate-800/90 border border-slate-700/80 rounded px-1 py-0.5">
+          <div className="flex items-center gap-1 bg-[#08090a]/90 border border-[#23252a] rounded px-1 py-0.5">
             <button
               onClick={() => setZoomLevel((prev) => Math.max(parseFloat((prev - 0.15).toFixed(2)), 0.4))}
-              className="p-1 hover:bg-slate-700 text-slate-300 hover:text-white rounded transition-colors"
+              className="p-1 hover:bg-[#161718] text-slate-300 hover:text-white rounded transition-colors"
               title="Afastar Zoom (Scroll Down / Zoom Out)"
             >
               <ZoomOut className="w-3.5 h-3.5" />
@@ -611,7 +617,7 @@ export const World3DCanvas: React.FC<World3DCanvasProps> = ({ engine }) => {
             </span>
             <button
               onClick={() => setZoomLevel((prev) => Math.min(parseFloat((prev + 0.15).toFixed(2)), 2.5))}
-              className="p-1 hover:bg-slate-700 text-slate-300 hover:text-white rounded transition-colors"
+              className="p-1 hover:bg-[#161718] text-slate-300 hover:text-white rounded transition-colors"
               title="Aproximar Zoom (Scroll Up / Zoom In)"
             >
               <ZoomIn className="w-3.5 h-3.5" />
@@ -619,7 +625,7 @@ export const World3DCanvas: React.FC<World3DCanvasProps> = ({ engine }) => {
             {zoomLevel !== 1.0 && (
               <button
                 onClick={() => setZoomLevel(1.0)}
-                className="px-1.5 py-0.5 text-[10px] text-slate-400 hover:text-white bg-slate-700/60 hover:bg-slate-700 rounded transition-colors"
+                className="px-1.5 py-0.5 text-[10px] text-slate-400 hover:text-white bg-[#161718] hover:bg-[#23252a] rounded transition-colors"
                 title="Ajustar Zoom para 100%"
               >
                 100%
@@ -633,16 +639,16 @@ export const World3DCanvas: React.FC<World3DCanvasProps> = ({ engine }) => {
                 engine.clearWorld();
               }
             }}
-            className="flex items-center gap-1 px-2 py-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 rounded text-xs transition-colors"
+            className="flex items-center gap-1 px-2 py-1 bg-[#08090a] hover:bg-[#161718] border border-[#23252a] text-slate-300 rounded text-xs transition-colors"
             title="Limpar plantas do lote atual (Preserva pesquisas e tamanho do mundo)"
           >
-            <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+            <Trash2 className="w-3.5 h-3.5 text-slate-400" />
             Limpar Lote
           </button>
 
           <button
             onClick={rotateCamera}
-            className="flex items-center gap-1 px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded text-xs transition-colors"
+            className="flex items-center gap-1 px-2 py-1 bg-[#08090a] hover:bg-[#161718] border border-[#23252a] text-slate-300 rounded text-xs transition-colors"
             title="Girar Câmera 90°"
           >
             <RotateCw className="w-3.5 h-3.5 text-cyan-400" />
@@ -661,15 +667,15 @@ export const World3DCanvas: React.FC<World3DCanvasProps> = ({ engine }) => {
       {/* Floating Performance HUD (In-Canvas Overlay) */}
       <div className="absolute top-12 left-3 z-20 font-mono text-xs select-none">
         {showHud ? (
-          <div className="bg-slate-900/90 backdrop-blur border border-slate-800 rounded-lg p-2.5 shadow-xl text-slate-200 min-w-[170px] transition-all">
-            <div className="flex items-center justify-between gap-3 pb-1.5 mb-2 border-b border-slate-800/80">
+          <div className="bg-[#0f1011] border border-[#383b3f] rounded-lg p-3 text-slate-200 min-w-[175px] transition-all shadow-[0_12px_36px_rgba(0,0,0,0.95),0_0_1px_rgba(255,255,255,0.15)]">
+            <div className="flex items-center justify-between gap-3 pb-2 mb-2 border-b border-[#383b3f]">
               <span className="flex items-center gap-1.5 font-bold text-emerald-400 text-[11px]">
                 <Activity className="w-3.5 h-3.5 text-cyan-400" />
                 Métricas
               </span>
               <button
                 onClick={() => setShowHud(false)}
-                className="p-1 hover:bg-slate-800 text-slate-400 hover:text-white rounded transition-colors"
+                className="p-1 hover:bg-[#161718] text-slate-400 hover:text-white rounded transition-colors"
                 title="Esconder métricas"
               >
                 <EyeOff className="w-3.5 h-3.5" />
@@ -700,7 +706,7 @@ export const World3DCanvas: React.FC<World3DCanvasProps> = ({ engine }) => {
         ) : (
           <button
             onClick={() => setShowHud(true)}
-            className="flex items-center gap-2 bg-slate-900/80 hover:bg-slate-900 backdrop-blur border border-slate-800/90 px-2.5 py-1.5 rounded-md text-[10px] text-slate-300 shadow-md hover:text-white transition-all"
+            className="flex items-center gap-2 bg-[#0f1011] hover:bg-[#161718] border border-[#383b3f] px-3 py-1.5 rounded-md text-[10px] text-slate-200 shadow-[0_8px_24px_rgba(0,0,0,0.95)] hover:text-white transition-all"
             title="Mostrar Métricas"
           >
             <span className="text-emerald-400 font-bold">{ramMb} MB</span>
@@ -713,8 +719,8 @@ export const World3DCanvas: React.FC<World3DCanvasProps> = ({ engine }) => {
 
       {/* Tile Inspector Overlay Panel */}
       {inspectedTile && (
-        <div className="absolute bottom-4 right-4 bg-slate-900/95 backdrop-blur border border-slate-700 rounded-lg p-3 text-xs font-mono text-slate-200 shadow-xl w-64 z-20">
-          <div className="flex items-center justify-between border-b border-slate-800 pb-2 mb-2 font-bold text-emerald-400">
+        <div className="absolute bottom-4 right-4 bg-[#0f1011] border border-[#383b3f] rounded-lg p-3 text-xs font-mono text-slate-200 shadow-[0_12px_36px_rgba(0,0,0,0.95),0_0_1px_rgba(255,255,255,0.15)] w-68 z-20">
+          <div className="flex items-center justify-between border-b border-[#383b3f] pb-2 mb-2 font-bold text-emerald-400">
             <span className="flex items-center gap-1.5 truncate text-xs">
               <Info className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
               Bloco ({inspectedTile.x}, {inspectedTile.y})
@@ -731,7 +737,7 @@ export const World3DCanvas: React.FC<World3DCanvasProps> = ({ engine }) => {
                 className={`px-2 py-0.5 rounded text-[10px] font-mono transition-colors border ${
                   followDrone
                     ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/50 font-bold'
-                    : 'bg-slate-800/80 text-slate-500 border-slate-700/80 hover:text-slate-400 font-normal'
+                    : 'bg-[#161718] text-slate-400 border-[#383b3f] hover:text-slate-200 font-normal'
                 }`}
                 title={followDrone ? "Seguir Drone: ON (Clique para desligar)" : "Seguir Drone: OFF (Clique para ligar)"}
               >
@@ -742,7 +748,7 @@ export const World3DCanvas: React.FC<World3DCanvasProps> = ({ engine }) => {
                   setFollowDrone(false);
                   setInspectedCoords(null);
                 }}
-                className="text-slate-500 hover:text-slate-300 text-sm font-bold pl-0.5 leading-none"
+                className="text-slate-400 hover:text-white text-sm font-bold pl-0.5 leading-none"
                 title="Fechar"
               >
                 ×
@@ -759,7 +765,16 @@ export const World3DCanvas: React.FC<World3DCanvasProps> = ({ engine }) => {
             </div>
             <div className="flex justify-between">
               <span className="text-slate-400">Cultura:</span>
-              <span className="font-semibold text-emerald-300">{inspectedTile.crop}</span>
+              <span className={`font-semibold ${
+                inspectedTile.crop === 'WILD_FIBER' ? 'text-[#e4f222]' :
+                inspectedTile.crop === 'CULTIVATED_ROOT' ? 'text-[#f97316]' :
+                inspectedTile.crop === 'WOODY_BUSH' ? 'text-[#27a644]' :
+                inspectedTile.crop === 'TREE' ? 'text-[#a16207]' :
+                inspectedTile.crop === 'FRUIT_COLONY' ? 'text-[#eb5757]' :
+                inspectedTile.crop === 'ENERGY_FLOWER' ? 'text-[#02b8cc]' :
+                inspectedTile.crop === 'GRADED_PLANT' ? 'text-[#8b5cf6]' :
+                'text-slate-300'
+              }`}>{inspectedTile.crop}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-slate-400">Crescimento:</span>

@@ -134,7 +134,7 @@ export const ExplorerPanel: React.FC<ExplorerPanelProps> = ({
   const primaryAgent = engine.getPrimaryAgent();
 
   return (
-    <div className="w-64 bg-[#161b22] border-r border-[#30363d] flex flex-col h-full text-[#c9d1d9] select-none shrink-0 font-sans">
+    <div className="w-64 bg-[#0f1011] border-r border-[#23252a] flex flex-col h-full text-[#d0d6e0] select-none shrink-0 font-sans text-xs">
       <input 
         type="file" 
         ref={fileInputRef} 
@@ -145,22 +145,22 @@ export const ExplorerPanel: React.FC<ExplorerPanelProps> = ({
       />
 
       {/* Panel Header */}
-      <div className="px-3 py-2 border-b border-[#30363d] flex items-center justify-between bg-[#010409]">
-        <span className="text-xs font-semibold uppercase tracking-wider text-[#8b949e] flex items-center gap-1.5">
-          <Folder className="w-3.5 h-3.5 text-[#d29922]" />
+      <div className="px-3 py-2 border-b border-[#23252a] flex items-center justify-between bg-[#08090a]">
+        <span className="text-xs font-medium uppercase tracking-wider text-[#8a8f98] flex items-center gap-1.5">
+          <Folder className="w-3.5 h-3.5 text-[#d0d6e0]" />
           Explorador
         </span>
         <div className="flex items-center gap-1">
           <button
             onClick={() => setIsCreating(true)}
-            className="p-1 hover:bg-[#21262d] text-[#8b949e] hover:text-[#3fb950] rounded transition-all"
+            className="p-1 hover:bg-[#161718] text-[#8a8f98] hover:text-[#27a644] rounded-[4px] transition-all"
             title="Novo Arquivo de Script"
           >
-            <Plus className="w-4 h-4" />
+            <Plus className="w-3.5 h-3.5" />
           </button>
           <button
             onClick={() => fileInputRef.current?.click()}
-            className="p-1 hover:bg-[#21262d] text-[#8b949e] hover:text-[#58a6ff] rounded transition-all"
+            className="p-1 hover:bg-[#161718] text-[#8a8f98] hover:text-[#02b8cc] rounded-[4px] transition-all"
             title="Importar Script Local (.py / .js)"
           >
             <Upload className="w-3.5 h-3.5" />
@@ -168,7 +168,7 @@ export const ExplorerPanel: React.FC<ExplorerPanelProps> = ({
           {onOpenSaveManager && (
             <button
               onClick={onOpenSaveManager}
-              className="p-1 hover:bg-[#21262d] text-[#8b949e] hover:text-[#d29922] rounded transition-all"
+              className="p-1 hover:bg-[#161718] text-[#8a8f98] hover:text-[#ffffff] rounded-[4px] transition-all"
               title="Gerenciador de Saves e Backup"
             >
               <Save className="w-3.5 h-3.5" />
@@ -176,7 +176,7 @@ export const ExplorerPanel: React.FC<ExplorerPanelProps> = ({
           )}
           <button
             onClick={handleResetDefaults}
-            className="p-1 hover:bg-[#21262d] text-[#8b949e] hover:text-[#d29922] rounded transition-all"
+            className="p-1 hover:bg-[#161718] text-[#8a8f98] hover:text-[#ffffff] rounded-[4px] transition-all"
             title="Restaurar apenas os Scripts Padrão (main.py)"
           >
             <RotateCcw className="w-3.5 h-3.5" />
@@ -186,21 +186,21 @@ export const ExplorerPanel: React.FC<ExplorerPanelProps> = ({
 
       {/* New File Modal Inline Form */}
       {isCreating && (
-        <form onSubmit={handleCreate} className="p-2 border-b border-[#30363d] bg-[#010409] text-xs">
-          <div className="mb-1.5 font-medium text-[#f0f6fc]">Criar Novo Arquivo de Script</div>
+        <form onSubmit={handleCreate} className="p-2 border-b border-[#23252a] bg-[#08090a] text-xs">
+          <div className="mb-1.5 font-medium text-[#ffffff]">Criar Novo Arquivo de Script</div>
           <input
             type="text"
             placeholder="script_nome.py"
             value={newFileName}
             onChange={(e) => setNewFileName(e.target.value)}
-            className="w-full bg-[#0d1117] border border-[#30363d] rounded px-2 py-1 text-[#f0f6fc] text-xs focus:outline-none focus:border-[#58a6ff] mb-2 font-mono"
+            className="w-full bg-[#161718] border border-[#23252a] rounded-[6px] px-2 py-1 text-[#ffffff] text-xs focus:outline-none focus:border-[#383b3f] mb-2 font-mono"
             autoFocus
           />
           <div className="flex items-center justify-between gap-2">
             <select
               value={newFileLang}
               onChange={(e) => setNewFileLang(e.target.value as any)}
-              className="bg-[#0d1117] border border-[#30363d] rounded px-1.5 py-1 text-xs text-[#c9d1d9]"
+              className="bg-[#161718] border border-[#23252a] rounded-[6px] px-1.5 py-1 text-xs text-[#d0d6e0]"
             >
               <option value="python">Python (.py)</option>
               <option value="javascript">JavaScript (.js)</option>
@@ -208,14 +208,14 @@ export const ExplorerPanel: React.FC<ExplorerPanelProps> = ({
             <div className="flex gap-1">
               <button
                 type="submit"
-                className="px-2 py-1 bg-[#238636] text-white rounded text-[11px] font-medium hover:bg-[#2ea043]"
+                className="px-2 py-1 bg-[#27a644] text-[#ffffff] rounded-[6px] text-[11px] font-medium hover:bg-[#27a644]/90"
               >
                 Criar
               </button>
               <button
                 type="button"
                 onClick={() => setIsCreating(false)}
-                className="px-2 py-1 bg-[#21262d] text-[#8b949e] rounded text-[11px] hover:bg-[#30363d]"
+                className="px-2 py-1 bg-[#161718] text-[#8a8f98] rounded-[6px] text-[11px] hover:bg-[#23252a]"
               >
                 Cancelar
               </button>
@@ -226,8 +226,8 @@ export const ExplorerPanel: React.FC<ExplorerPanelProps> = ({
 
       {/* File Tree List */}
       <div className="flex-1 overflow-y-auto py-2 px-1">
-        <div className="text-[11px] font-mono text-[#8b949e] px-2 py-1 flex items-center gap-1 uppercase tracking-wider">
-          <ChevronDown className="w-3 h-3" />
+        <div className="text-[11px] font-mono text-[#8a8f98] px-2 py-1 flex items-center gap-1 uppercase tracking-wider">
+          <ChevronDown className="w-3 h-3 text-[#62666d]" />
           workspace /
         </div>
 
@@ -242,17 +242,17 @@ export const ExplorerPanel: React.FC<ExplorerPanelProps> = ({
                 key={file.path}
                 onClick={() => onSelectFile(file.path)}
                 onDoubleClick={(e) => handleStartRename(e, file)}
-                className={`group flex items-center justify-between px-2.5 py-1.5 rounded text-xs font-mono cursor-pointer transition-all ${
+                className={`group flex items-center justify-between px-2.5 py-1.5 rounded-[6px] text-xs font-mono cursor-pointer transition-all ${
                   isActive 
-                    ? 'bg-[#21262d] text-[#f0f6fc] font-semibold border-l-2 border-[#3fb950]' 
-                    : 'text-[#8b949e] hover:text-[#f0f6fc] hover:bg-[#21262d]/60'
+                    ? 'bg-[#161718] text-[#ffffff] font-medium border-l-2 border-[#27a644]' 
+                    : 'text-[#8a8f98] hover:text-[#ffffff] hover:bg-[#161718]/60'
                 }`}
                 title="Clique duplo para renomear este arquivo"
               >
                 <div className="flex items-center gap-2 truncate min-w-0 pr-1 flex-1">
                   {/* Language Badge */}
-                  <span className={`text-[9px] px-1 py-0.2 font-bold rounded shrink-0 ${
-                    isPy ? 'bg-[#388bfd]/20 text-[#58a6ff] border border-[#388bfd]/40' : 'bg-[#d29922]/20 text-[#d29922] border border-[#d29922]/40'
+                  <span className={`text-[9px] px-1 py-0.2 font-mono font-medium rounded-[4px] shrink-0 ${
+                    isPy ? 'bg-[#02b8cc]/10 text-[#02b8cc] border border-[#02b8cc]/30' : 'bg-[#e4f222]/15 text-[#e4f222] border border-[#e4f222]/30'
                   }`}>
                     {isPy ? 'PY' : 'JS'}
                   </span>
@@ -277,7 +277,7 @@ export const ExplorerPanel: React.FC<ExplorerPanelProps> = ({
                             setEditingPath(null);
                           }
                         }}
-                        className="w-full bg-[#0d1117] border border-[#58a6ff] rounded px-1.5 py-0.5 text-xs text-[#f0f6fc] font-mono focus:outline-none"
+                        className="w-full bg-[#08090a] border border-[#383b3f] rounded-[4px] px-1.5 py-0.5 text-xs text-[#ffffff] font-mono focus:outline-none"
                         autoFocus
                       />
                     </form>
@@ -287,7 +287,7 @@ export const ExplorerPanel: React.FC<ExplorerPanelProps> = ({
 
                   {file.isEntrypoint && (
                     <span title="Script de Entrada Principal" className="shrink-0">
-                      <Star className="w-3 h-3 text-[#d29922] fill-[#d29922]" />
+                      <Star className="w-3 h-3 text-[#d0d6e0] fill-[#d0d6e0]" />
                     </span>
                   )}
                 </div>
@@ -296,7 +296,7 @@ export const ExplorerPanel: React.FC<ExplorerPanelProps> = ({
                 <div className="flex items-center gap-1 opacity-80 group-hover:opacity-100">
                   {assignedAgents.length > 0 && (
                     <span 
-                      className="text-[10px] px-1 bg-[#388bfd]/20 text-[#58a6ff] rounded font-sans flex items-center gap-0.5"
+                      className="text-[10px] px-1 bg-[#8b5cf6]/10 text-[#8b5cf6] border border-[#8b5cf6]/30 rounded-[4px] font-sans flex items-center gap-0.5"
                       title={`Atribuído ao Drone ${assignedAgents.map(a => a.name).join(', ')}`}
                     >
                       <Bot className="w-2.5 h-2.5" />
@@ -307,7 +307,7 @@ export const ExplorerPanel: React.FC<ExplorerPanelProps> = ({
                   {!file.isEntrypoint && (
                     <button
                       onClick={(e) => handleSetEntrypoint(e, file.path)}
-                      className="p-1 hover:text-[#d29922] text-[#8b949e] transition-colors"
+                      className="p-1 hover:text-[#d0d6e0] text-[#8a8f98] transition-colors"
                       title="Definir como Entrada Principal"
                     >
                       <Star className="w-3 h-3" />
@@ -320,7 +320,7 @@ export const ExplorerPanel: React.FC<ExplorerPanelProps> = ({
                       onSelectFile(file.path);
                       engine.runScriptOnPrimaryAgent(file.path);
                     }}
-                    className="p-1 hover:text-[#3fb950] hover:bg-[#3fb950]/20 text-[#3fb950] transition-all rounded"
+                    className="p-1 text-[#5e6ad2] hover:text-[#707eff] transition-all rounded-[4px]"
                     title={`Executar Script no Drone Principal (${primaryAgent.name})`}
                   >
                     <Play className="w-3 h-3 fill-current" />
@@ -328,7 +328,7 @@ export const ExplorerPanel: React.FC<ExplorerPanelProps> = ({
 
                   <button
                     onClick={(e) => handleDelete(e, file.path)}
-                    className="p-1 hover:text-[#f85149] text-[#8b949e] transition-colors"
+                    className="p-1 hover:text-[#eb5757] text-[#8a8f98] transition-colors"
                     title="Excluir Arquivo"
                   >
                     <Trash2 className="w-3 h-3" />
@@ -341,14 +341,14 @@ export const ExplorerPanel: React.FC<ExplorerPanelProps> = ({
       </div>
 
       {/* Drone Assignment Quick Bar */}
-      <div className="p-2 border-t border-[#30363d] bg-[#010409] text-xs">
-        <div className="text-[11px] font-semibold text-[#8b949e] mb-1 flex items-center justify-between">
+      <div className="p-2 border-t border-[#23252a] bg-[#08090a] text-xs">
+        <div className="text-[11px] font-medium text-[#8a8f98] mb-1 flex items-center justify-between">
           <span className="flex items-center gap-1">
-            <Bot className="w-3.5 h-3.5 text-[#bc8cff]" />
+            <Bot className="w-3.5 h-3.5 text-[#8b5cf6]" />
             Atribuir ao Drone:
           </span>
-          <span className="text-[10px] text-[#e3b341] font-mono flex items-center gap-1" title="Drone Principal para o botão PLAY do Explorador">
-            <Star className="w-3 h-3 text-[#d29922] fill-[#d29922]" />
+          <span className="text-[10px] text-[#d0d6e0] font-mono flex items-center gap-1" title="Drone Principal para o botão PLAY do Explorador">
+            <Star className="w-3 h-3 text-[#d0d6e0] fill-[#d0d6e0]" />
             <span>{primaryAgent.name}</span>
           </span>
         </div>
@@ -356,16 +356,16 @@ export const ExplorerPanel: React.FC<ExplorerPanelProps> = ({
           {agents.map(ag => {
             const isPrimary = ag.id === engine.getPrimaryAgentId();
             return (
-              <div key={ag.id} className="flex items-center justify-between bg-[#161b22] p-1.5 rounded border border-[#30363d]">
-                <span className="text-[11px] font-mono text-[#c9d1d9] flex items-center gap-1">
+              <div key={ag.id} className="flex items-center justify-between bg-[#161718] p-1.5 rounded-[6px] border border-[#23252a]">
+                <span className="text-[11px] font-mono text-[#d0d6e0] flex items-center gap-1">
                   <span className="w-2 h-2 rounded-full" style={{ backgroundColor: ag.color }} />
                   {ag.name}
-                  {isPrimary && <Star className="w-2.5 h-2.5 text-[#d29922] fill-[#d29922]" title="Drone Principal" />}
+                  {isPrimary && <Star className="w-2.5 h-2.5 text-[#d0d6e0] fill-[#d0d6e0]" title="Drone Principal" />}
                 </span>
                 <select
                   value={ag.assignedFile}
                   onChange={(e) => engine.assignAgentFile(ag.id, e.target.value)}
-                  className="bg-[#0d1117] border border-[#30363d] text-[#c9d1d9] text-[10px] rounded px-1 py-0.5 font-mono"
+                  className="bg-[#08090a] border border-[#23252a] text-[#d0d6e0] text-[10px] rounded-[4px] px-1 py-0.5 font-mono"
                 >
                   {files.map(f => (
                     <option key={f.path} value={f.path}>{f.name}</option>

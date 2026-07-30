@@ -75,7 +75,7 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
       <div className="h-9 bg-[#161b22] border-b border-[#30363d] flex items-center justify-between px-3 text-xs font-mono text-[#c9d1d9] select-none shrink-0">
         <div className="flex items-center gap-2">
           <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold uppercase ${
-            isPython ? 'bg-[#388bfd]/20 text-[#58a6ff] border border-[#388bfd]/40' : 'bg-[#d29922]/20 text-[#d29922] border border-[#d29922]/40'
+            isPython ? 'bg-[#388bfd]/20 text-[#58a6ff] border border-[#388bfd]/40' : 'bg-[#e4f222]/20 text-[#e4f222] border border-[#e4f222]/40'
           }`}>
             {file.language}
           </span>
@@ -90,7 +90,7 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
 
         <div className="flex items-center gap-3 text-[#8b949e] text-[11px]">
           {activeLine && (
-            <span className="text-[#3fb950] font-bold animate-pulse flex items-center gap-1">
+            <span className="text-[#5e6ad2] font-bold animate-pulse flex items-center gap-1">
               <Play className="w-3 h-3 fill-current" />
               Executando Linha {activeLine}
             </span>

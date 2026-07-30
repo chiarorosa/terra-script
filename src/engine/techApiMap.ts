@@ -43,7 +43,7 @@ export const API_CATALOG: ApiItem[] = [
     techId: 'AGRO_1',
     category: 'Farm Commands',
     docDetail: 'Verifica o estado de crescimento do bloco sem consumir um tick de ação.',
-    exampleCode: 'while True:\n    if farm.can_harvest():\n        farm.harvest()\n    world.move("EAST")'
+    exampleCode: 'while True:\n    if farm.can_harvest():\n        farm.harvest()\n    world.move("RIGHT")'
   },
   {
     id: 'farm_prestige',
@@ -189,15 +189,15 @@ export const API_CATALOG: ApiItem[] = [
     id: 'farm_swap',
     namespace: 'farm',
     methodName: 'swap',
-    displayText: 'farm.swap("EAST")',
+    displayText: 'farm.swap("RIGHT")',
     signature: 'farm.swap(direction: string): boolean',
-    pythonSnippet: 'farm.swap("EAST")',
-    jsSnippet: 'farm.swap("EAST")',
+    pythonSnippet: 'farm.swap("RIGHT")',
+    jsSnippet: 'farm.swap("RIGHT")',
     description: 'Troca a planta e sua nota com o bloco vizinho na direção informada.',
     techId: 'AGRO_7',
     category: 'Farm Commands',
     docDetail: 'Permite implementar algoritmos de ordenação como Bubble Sort nas fileiras da fazenda.',
-    exampleCode: 'if world.measure() > next_val:\n    farm.swap("EAST")'
+    exampleCode: 'if world.measure() > next_val:\n    farm.swap("RIGHT")'
   },
   {
     id: 'farm_get_companion',
@@ -233,29 +233,29 @@ export const API_CATALOG: ApiItem[] = [
     id: 'world_move',
     namespace: 'world',
     methodName: 'move',
-    displayText: 'world.move("EAST")',
+    displayText: 'world.move("RIGHT")',
     signature: 'world.move(direction: string): boolean',
-    pythonSnippet: 'world.move("EAST")',
-    jsSnippet: 'world.move("EAST")',
-    description: 'Move o drone 1 passo ("NORTH", "EAST", "SOUTH", "WEST").',
+    pythonSnippet: 'world.move("RIGHT")',
+    jsSnippet: 'world.move("RIGHT")',
+    description: 'Move o drone 1 passo ("FORWARD", "BACKWARD", "LEFT", "RIGHT" ou "NORTH", "SOUTH", "WEST", "EAST").',
     techId: 'AUTO_1',
     category: 'World Sensors',
-    docDetail: 'Navega o agente na grade. Retorna true se o movimento foi bem-sucedido.',
-    exampleCode: 'world.move("EAST")'
+    docDetail: 'Navega o agente na grade. Suporta direções intuitivas ("FORWARD", "BACKWARD", "LEFT", "RIGHT") e cardinais ("NORTH", "SOUTH", "WEST", "EAST"). Retorna true se o movimento foi bem-sucedido.',
+    exampleCode: 'world.move("RIGHT")'
   },
   {
     id: 'world_can_move',
     namespace: 'world',
     methodName: 'can_move',
-    displayText: 'world.can_move("EAST")',
+    displayText: 'world.can_move("RIGHT")',
     signature: 'world.can_move(direction: string): boolean',
-    pythonSnippet: 'world.can_move("EAST")',
-    jsSnippet: 'world.can_move("EAST")',
+    pythonSnippet: 'world.can_move("RIGHT")',
+    jsSnippet: 'world.can_move("RIGHT")',
     description: 'Verifica se a direção está livre para caminhada (sem paredes de labirinto).',
     techId: 'AUTO_1',
     category: 'World Sensors',
     docDetail: 'Retorna true se a direção estiver aberta para movimentação.',
-    exampleCode: 'if world.can_move("NORTH"):\n    world.move("NORTH")'
+    exampleCode: 'if world.can_move("FORWARD"):\n    world.move("FORWARD")'
   },
   {
     id: 'world_x',
@@ -455,7 +455,7 @@ export const API_CATALOG: ApiItem[] = [
     techId: 'AUTO_4',
     category: 'Language Features',
     docDetail: 'Automatiza algoritmos contínuos de agricultura.',
-    exampleCode: 'while True:\n    if farm.can_harvest():\n        farm.harvest()\n    world.move("EAST")'
+    exampleCode: 'while True:\n    if farm.can_harvest():\n        farm.harvest()\n    world.move("RIGHT")'
   },
   {
     id: 'syntax_functions',
@@ -463,7 +463,7 @@ export const API_CATALOG: ApiItem[] = [
     methodName: 'functions',
     displayText: 'Funções (def / function)',
     signature: 'def nome(): ... / function nome() { ... }',
-    pythonSnippet: 'def harvest_row():\n    for i in range(5):\n        farm.harvest()\n        world.move("EAST")',
+    pythonSnippet: 'def harvest_row():\n    for i in range(5):\n        farm.harvest()\n        world.move("RIGHT")',
     jsSnippet: 'function harvestRow() {\n  farm.harvest();\n}',
     description: 'Funções de código reutilizáveis e modulares.',
     techId: 'AUTO_5',

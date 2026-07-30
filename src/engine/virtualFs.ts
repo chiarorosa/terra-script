@@ -21,7 +21,7 @@ export const DEFAULT_FILES: VirtualFile[] = [
 # LEIA COM ATENÇÃO a aba GUIA
 
 farm.harvest()
-world.move("NORTH")
+world.move("FORWARD")
 `
   },
   {
@@ -42,7 +42,7 @@ world.move("NORTH")
 // LEIA COM ATENÇÃO a aba GUIA
 
 farm.harvest();
-world.move("NORTH");
+world.move("FORWARD");
 `
   },
   {
@@ -149,7 +149,7 @@ export class VirtualFS {
       path,
       name: path,
       language,
-      content: language === 'python' ? `# ${path}\n# Comandos de fazenda:\nfarm.harvest()\nworld.move("EAST")\n` : `// ${path}\n// Comandos de fazenda:\nfarm.harvest();\nworld.move("EAST");\n`,
+      content: language === 'python' ? `# ${path}\n# Comandos de fazenda:\nfarm.harvest()\nworld.move("RIGHT")\n` : `// ${path}\n// Comandos de fazenda:\nfarm.harvest();\nworld.move("RIGHT");\n`,
       isEntrypoint: this.files.size === 0
     };
     this.files.set(path, newFile);
