@@ -70,6 +70,12 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({ engine, activeTab, setActi
         <div>
           <div className="flex items-center gap-2">
             <span className="font-medium text-xs tracking-tight text-[#ffffff]">TerraScript <span className="text-[#27a644] font-semibold">3D</span></span>
+            <span className="px-1.5 py-0.2 rounded text-[10px] bg-[#161718] text-[#27a644] border border-[#27a644]/30 font-mono font-medium" title="Versão 2.3.0 - Motor Nativo WASM (Pyodide) & JS Sandbox Integrado">
+              v2.3.0
+            </span>
+            <span className="hidden xl:inline-flex items-center gap-1 px-1.5 py-0.2 rounded text-[10px] bg-[#02b8cc]/10 text-[#02b8cc] border border-[#02b8cc]/30 font-mono" title="Interpretadores Nativos carregados no Navegador">
+              ⚡ WASM Pyodide & V8 JS
+            </span>
             {onOpenWelcome && (
               <button
                 onClick={onOpenWelcome}

@@ -1,5 +1,7 @@
 import { Agent, ConsoleLog, Diagnostic, VariableScope } from '../../types/game';
 import { GameEngine } from '../GameEngine';
+import { PyodideManager } from '../pyodideLoader';
+import { JavaScriptSandbox } from '../jsSandbox';
 
 export interface ExecutionContext {
   agentId: number;
@@ -133,6 +135,22 @@ export class ScriptRunner {
 
   constructor(engine: GameEngine) {
     this.engine = engine;
+    // Kick off background Pyodide WASM pre-fetch
+    PyodideManager.getInstance().catch(() => {});
+  }
+
+  public async executeNativeScript(
+    code: string,
+    agentId: number,
+    filePath: string,
+    language: 'python' | 'javascript'
+  ): Promise<{ success: boolean; error?: string }> {
+    if (language === 'python' && PyodideManager.isReady()) {
+      return await PyodideManager.executePythonScript(code, agentId, this.engine, filePath);
+    } else if (language === 'javascript') {
+      return await JavaScriptSandbox.executeJsScript(code, agentId, this.engine, filePath);
+    }
+    return { success: false, error: 'Native engine unavailable' };
   }
 
   public createExecutionContext(agentId: number, filePath: string, code: string, language: 'python' | 'javascript'): ExecutionContext {
@@ -306,7 +324,7 @@ export class ScriptRunner {
           continue;
         }
       } else {
-        if (ctx.currentLineIndex > top.blockEndLineIdx) {
+        if (ctx.currentLineIndex >= top.blockEndLineIdx) {
           ctx.conditionalStack.pop();
           ctx.currentLineIndex = top.chainEndLineIdx;
           continue;
@@ -619,20 +637,24 @@ export class ScriptRunner {
     while (currIdx < ctx.lines.length) {
       const raw = ctx.lines[currIdx];
       const trimmed = raw.trim();
-      const indent = raw.search(/\S|$/);
+      if (!trimmed || trimmed.startsWith('#')) {
+        currIdx++;
+        continue;
+      }
 
+      const indent = raw.search(/\S|$/);
       if (indent !== baseIndent) break;
 
       let type: 'if' | 'elif' | 'else' | null = null;
       let condStr = '';
 
-      if (trimmed.startsWith('if ') || trimmed.startsWith('if(') || trimmed === 'if:' || trimmed.startsWith('if ')) {
+      if (/^if\b/.test(trimmed)) {
         type = 'if';
-        condStr = trimmed.replace(/^if\s*/, '').replace(/:$/, '').trim();
-      } else if (trimmed.startsWith('elif ') || trimmed.startsWith('elif(') || trimmed === 'elif:' || trimmed.startsWith('elif ')) {
+        condStr = trimmed.replace(/^if\b\s*/, '').replace(/:\s*$/, '').trim();
+      } else if (/^elif\b/.test(trimmed)) {
         type = 'elif';
-        condStr = trimmed.replace(/^elif\s*/, '').replace(/:$/, '').trim();
-      } else if (trimmed.startsWith('else:') || trimmed.startsWith('else ') || trimmed === 'else:') {
+        condStr = trimmed.replace(/^elif\b\s*/, '').replace(/:\s*$/, '').trim();
+      } else if (/^else\b/.test(trimmed)) {
         type = 'else';
         condStr = '';
       } else {
@@ -693,11 +715,11 @@ export class ScriptRunner {
       let type: 'if' | 'elif' | 'else' | null = null;
       let condStr = '';
 
-      if (trimmed.includes('if') && !trimmed.includes('else if')) {
-        type = 'if';
-      } else if (trimmed.includes('else if')) {
+      if (/^\}?\s*else\s+if\b/.test(trimmed) || trimmed.includes('else if')) {
         type = 'elif';
-      } else if (trimmed.includes('else')) {
+      } else if (/^\}?\s*if\b/.test(trimmed) || (trimmed.includes('if') && !trimmed.includes('else'))) {
+        type = 'if';
+      } else if (/^\}?\s*else\b/.test(trimmed) || trimmed.includes('else')) {
         type = 'else';
       } else {
         break;
@@ -729,7 +751,20 @@ export class ScriptRunner {
       let blockStartIdx = currIdx + 1;
       let blockEndIdx = currIdx;
 
-      let braceDepth = (raw.match(/\{/g) || []).length - (raw.match(/\}/g) || []).length;
+      // Extract text after header keyword to accurately count block braces
+      let afterHeader = trimmed;
+      if (type === 'elif') {
+        const idx = afterHeader.indexOf('else if');
+        if (idx !== -1) afterHeader = afterHeader.substring(idx + 7);
+      } else if (type === 'if') {
+        const idx = afterHeader.indexOf('if');
+        if (idx !== -1) afterHeader = afterHeader.substring(idx + 2);
+      } else if (type === 'else') {
+        const idx = afterHeader.indexOf('else');
+        if (idx !== -1) afterHeader = afterHeader.substring(idx + 4);
+      }
+
+      let braceDepth = (afterHeader.match(/\{/g) || []).length - (afterHeader.match(/\}/g) || []).length;
 
       if (braceDepth > 0) {
         let scanIdx = currIdx + 1;
@@ -760,7 +795,7 @@ export class ScriptRunner {
 
       if (nextRaw.includes('else')) {
         currIdx = nextLineIdx;
-      } else if (nextLineIdx + 1 < ctx.lines.length && ctx.lines[nextLineIdx + 1].trim().startsWith('else')) {
+      } else if (nextLineIdx + 1 < ctx.lines.length && /^\}?\s*else\b/.test(ctx.lines[nextLineIdx + 1].trim())) {
         currIdx = nextLineIdx + 1;
       } else {
         currIdx = blockEndIdx + 1;
@@ -785,7 +820,10 @@ export class ScriptRunner {
       let matched = false;
 
       if (branch.type === 'if' || branch.type === 'elif') {
-        const condVal = this.evalExpression(branch.condStr || 'true', ctx);
+        if (!branch.condStr || !branch.condStr.trim()) {
+          throw new Error(`Erro de Sintaxe (linha ${branch.headerLineIdx + 1}): Instrução '${branch.type}' requer uma condição válida.`);
+        }
+        const condVal = this.evalExpression(branch.condStr, ctx);
         if (condVal) {
           matched = true;
         }
@@ -887,10 +925,8 @@ export class ScriptRunner {
     }
 
     // Conditionals (if, elif, else, else if)
-    if (line.startsWith('if ') || line.startsWith('if(') || line.startsWith('if (') || line.startsWith('if:') ||
-        line.startsWith('elif ') || line.startsWith('elif(') || line.startsWith('elif:') ||
-        line.startsWith('else ') || line.startsWith('else:') || line.startsWith('else{') || line.startsWith('else {') ||
-        line.startsWith('} else')) {
+    const trimmedLine = line.trim();
+    if (/^\}?\s*(if|else\s+if|elif|else)\b/.test(trimmedLine)) {
       this.handleConditional(line, ctx);
       return;
     }

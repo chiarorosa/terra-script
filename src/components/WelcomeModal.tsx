@@ -70,11 +70,14 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({ engine, onClose }) =
         <div className="p-6 space-y-4 text-xs leading-relaxed text-[#d0d6e0] max-h-[65vh] overflow-y-auto">
           
           <div className="p-3.5 bg-[#161718] border border-[#23252a] rounded-[8px] space-y-2">
-            <p className="font-medium text-[#ffffff]">
-              Saudações, nobre Programador(a)!
+            <p className="font-medium text-[#ffffff] flex items-center justify-between">
+              <span>Saudações, nobre Programador(a)!</span>
+              <span className="text-[10px] bg-[#27a644]/10 text-[#27a644] border border-[#27a644]/30 px-1.5 py-0.5 rounded font-mono font-medium">
+                v2.3.0
+              </span>
             </p>
             <p className="text-[#8a8f98]">
-              Você acaba de assumir o comando da Estação de Automação. Sua missão é criar scripts em <span className="text-[#ffffff] font-mono font-medium">Python</span> e <span className="text-[#ffffff] font-mono font-medium">JavaScript</span> para automatizar nossos drones e transformar este quadrante num próspero ecossistema biotecnológico.
+              Você acaba de assumir o comando da Estação de Automação. Agora na versão <span className="text-[#27a644] font-mono font-semibold">v2.3.0</span>, seus scripts de <span className="text-[#ffffff] font-mono font-medium">Python</span> e <span className="text-[#ffffff] font-mono font-medium">JavaScript</span> são executados diretamente por motores nativos (<span className="text-[#02b8cc] font-mono">Pyodide WASM</span> e <span className="text-[#02b8cc] font-mono">V8 JS Sandbox</span>) no seu navegador, suportando algoritmos complexos, estruturas aninhadas e recursão!
             </p>
           </div>
 
@@ -139,8 +142,8 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({ engine, onClose }) =
                   <Palette className="w-3.5 h-3.5 text-[#d0d6e0]" />
                   <span>Estilo da Interface (UI Style)</span>
                 </span>
-                <span className="text-[10px] bg-[#161718] text-[#d0d6e0] border border-[#23252a] px-1.5 py-0.2 rounded font-mono font-medium">
-                  v2.2.0
+                <span className="text-[10px] bg-[#161718] text-[#27a644] border border-[#27a644]/30 px-1.5 py-0.2 rounded font-mono font-medium">
+                  v2.3.0
                 </span>
               </label>
 

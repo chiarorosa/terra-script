@@ -8,10 +8,24 @@ export interface ChangelogRelease {
 
 export const CHANGELOG_HISTORY: ChangelogRelease[] = [
   {
+    version: 'v2.3.0',
+    date: '2026-07-30',
+    title: 'Motor de Execução Nativo WASM (Pyodide) & Sandbox JavaScript V8 no Navegador',
+    isCurrent: true,
+    changes: [
+      'Integração do Pyodide WebAssembly (Python Nativo): Os scripts em Python agora rodam diretamente através da distribuição WebAssembly oficial do CPython (v0.26.4) carregada no navegador do jogador, garantindo suporte completo às especificações da linguagem.',
+      'Suporte Algorítmico Total sem Limitações: Eliminação da necessidade de interpretador hardcoded linha a linha. Suporte completo a algoritmos avançados, estruturas de dados (listas, dicionários, conjuntos), funções nativas (len, range, map, filter, sorted), recursão e laços aninhados.',
+      'Sandbox JavaScript V8 Nativo Async: Scripts em JavaScript (.js) são executados em ambiente de escopo assíncrono isolado com suporte a ES6+, métodos de array (map, filter, reduce), sleep(ms) e manipulação de objetos.',
+      'Ponte de Comunicação JS/Pyodide de Alta Performance: Conexão direta entre as APIs do jogo (farm, world, inventory) e o runtime do navegador, garantindo direcionamento imediato de comandos de movimento, plantio, colheita e inspeção.',
+      'Carregamento Transparente em Segundo Plano: O motor Pyodide WASM é inicializado em segundo plano com suporte a fallback automático, mantendo a inicialização do jogo instantânea e fluida.',
+      'Atualização Global da Interface (v2.3.0): Atualização de badges e selos de versão no Cabeçalho (HeaderBar), Tela de Boas-Vindas (WelcomeModal), Guia Técnico (TutorialModal) e Painel Inferior (BottomPanel).'
+    ]
+  },
+  {
     version: 'v2.2.1',
     date: '2026-07-30',
     title: 'Trilha Sonora Lo-Fi Marcante, Interpretador de Sintaxe Estrita & Autocomplete Inteligente',
-    isCurrent: true,
+    isCurrent: false,
     changes: [
       'Nova Trilha Sonora Lo-Fi Oficial ("Tema do Claudio"): Composição procedural icônica e marcante com arranjo de teclados Rhodes (Cmaj9 -> Am9 -> Fmaj7 -> G11), batida de bateria Lo-Fi Hip Hop (Kick, Snare, Hi-Hats), sub-baixo profundo e textura de vinil.',
       'Separação Estrita de Sintaxes (Python vs JavaScript): O interpretador agora valida rigorosamente a linguagem de cada arquivo (.py / .js) e exibe erros de sintaxe claros em português quando comandos de linguagens opostas são utilizados.',

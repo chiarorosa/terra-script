@@ -235,7 +235,7 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ engine, onNavigate
               Guia do Desenvolvedor & Documentação de API
             </h1>
             <p className="text-xs text-[#8a8f98] mt-1">
-              Manual de referência técnica para automação agrícola. Consulte sintaxes da linguagem, métodos das APIs <code className="text-[#27a644] font-mono">farm</code> e <code className="text-[#8b5cf6] font-mono">world</code>, e regras físicas do ambiente.
+              Manual de referência técnica para automação agrícola (<span className="text-[#27a644] font-mono">v2.3.0</span>). Seus scripts de Python e JS são executados via motores nativos (<code className="text-[#02b8cc] font-mono">Pyodide WASM</code> e <code className="text-[#02b8cc] font-mono">V8 JS Sandbox</code>) com suporte total a laços, funções, recursão e listas.
             </p>
           </div>
 
