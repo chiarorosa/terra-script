@@ -37,6 +37,13 @@ export class JavaScriptSandbox {
           throw new Error("Recurso 'Swap' está bloqueado!");
         }
         return engine.swapTiles(agentId, agent.x, agent.y, dir);
+      },
+      prestige: (resource = 'fiber', amount = 1) => {
+        return engine.offerPrestigeResource(agentId, agent.x, agent.y, resource, amount);
+      },
+      clear: () => {
+        engine.clearWorld();
+        return true;
       }
     };
 
@@ -53,7 +60,13 @@ export class JavaScriptSandbox {
       crop: () => engine.getTile(agent.x, agent.y).crop,
       moisture: () => engine.getTile(agent.x, agent.y).moisture,
       growth: () => engine.getTile(agent.x, agent.y).growth,
-      measure: () => engine.measureTile(agent.x, agent.y)
+      measure: () => engine.measureTile(agent.x, agent.y),
+      getCompanion: () => engine.getCompanionRequest(agent.x, agent.y),
+      get_companion: () => engine.getCompanionRequest(agent.x, agent.y),
+      clear: () => {
+        engine.clearWorld();
+        return true;
+      }
     };
 
     const inventory = {

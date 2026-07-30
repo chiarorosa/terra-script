@@ -106,6 +106,13 @@ export class PyodideManager {
         }
         return engine.swapTiles(agentId, agent.x, agent.y, dir || 'RIGHT');
       },
+      farm_prestige: (resource: string, amount: number) => {
+        return engine.offerPrestigeResource(agentId, agent.x, agent.y, resource || 'fiber', amount || 1);
+      },
+      world_clear: () => {
+        engine.clearWorld();
+        return true;
+      },
       world_move: (dir: string) => {
         return engine.moveAgent(agentId, dir || 'RIGHT');
       },
@@ -122,6 +129,7 @@ export class PyodideManager {
       world_moisture: () => engine.getTile(agent.x, agent.y).moisture,
       world_growth: () => engine.getTile(agent.x, agent.y).growth,
       world_measure: () => engine.measureTile(agent.x, agent.y),
+      world_companion: () => engine.getCompanionRequest(agent.x, agent.y),
       inventory_count: (res: string) => engine.getResourceCount(res || 'fiber')
     };
 
@@ -139,17 +147,25 @@ class FarmAPI:
         return _jsBridge.farm_harvest()
     def can_harvest(self):
         return _jsBridge.farm_can_harvest()
+    def canHarvest(self):
+        return _jsBridge.farm_can_harvest()
     def water(self):
         return _jsBridge.farm_water()
     def till(self):
         return _jsBridge.farm_till()
     def swap(self, dir="RIGHT"):
         return _jsBridge.farm_swap(str(dir))
+    def prestige(self, resource="fiber", amount=1):
+        return _jsBridge.farm_prestige(str(resource), int(amount))
+    def clear(self):
+        return _jsBridge.world_clear()
 
 class WorldAPI:
     def move(self, direction="RIGHT"):
         return _jsBridge.world_move(str(direction))
     def can_move(self, direction="RIGHT"):
+        return _jsBridge.world_can_move(str(direction))
+    def canMove(self, direction="RIGHT"):
         return _jsBridge.world_can_move(str(direction))
     def x(self):
         return _jsBridge.world_x()
@@ -171,6 +187,12 @@ class WorldAPI:
         return _jsBridge.world_growth()
     def measure(self):
         return _jsBridge.world_measure()
+    def get_companion(self):
+        return _jsBridge.world_companion()
+    def getCompanion(self):
+        return _jsBridge.world_companion()
+    def clear(self):
+        return _jsBridge.world_clear()
 
 class InventoryAPI:
     def count(self, item="fiber"):
