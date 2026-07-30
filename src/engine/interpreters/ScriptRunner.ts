@@ -8,6 +8,7 @@ export interface ExecutionContext {
   filePath: string;
   language: 'python' | 'javascript';
   lines: string[];
+  codeRaw?: string;
   currentLineIndex: number;
   scope: VariableScope;
   callStack: string[];
@@ -33,6 +34,9 @@ export interface ExecutionContext {
   instructionCount: number;
   actionsPerformedInRun: number;
   isCompleted: boolean;
+  nativeGenerator?: { next: () => { done: boolean; value?: number } } | null;
+  nativeGenFailed?: boolean;
+  nativeGenInitStarted?: boolean;
 }
 
 function stripOuterParens(str: string): string {
@@ -155,11 +159,12 @@ export class ScriptRunner {
 
   public createExecutionContext(agentId: number, filePath: string, code: string, language: 'python' | 'javascript'): ExecutionContext {
     const rawLines = code.split('\n');
-    return {
+    const ctx: ExecutionContext = {
       agentId,
       filePath,
       language,
       lines: rawLines,
+      codeRaw: code,
       currentLineIndex: 0,
       scope: {
         width: 1,
@@ -172,11 +177,95 @@ export class ScriptRunner {
       functionRegistry: new Map(),
       instructionCount: 0,
       actionsPerformedInRun: 0,
-      isCompleted: false
+      isCompleted: false,
+      nativeGenerator: null,
+      nativeGenFailed: false,
+      nativeGenInitStarted: false
     };
+
+    if (language === 'javascript') {
+      ctx.nativeGenInitStarted = true;
+      try {
+        ctx.nativeGenerator = JavaScriptSandbox.createStepGenerator(code, agentId, this.engine, filePath);
+      } catch (e: any) {
+        // Will fall back or throw on first step
+      }
+    } else if (language === 'python' && PyodideManager.isReady()) {
+      ctx.nativeGenInitStarted = true;
+      PyodideManager.createStepGenerator(code, agentId, this.engine, filePath)
+        .then(gen => {
+          ctx.nativeGenerator = gen;
+        })
+        .catch(() => {
+          ctx.nativeGenFailed = true;
+        });
+    }
+
+    return ctx;
   }
 
   public executeStep(ctx: ExecutionContext, breakpoints: Set<number>): { paused: boolean; hitBreakpoint?: boolean; error?: string; completed?: boolean } {
+    if (ctx.isCompleted) {
+      return { paused: true, completed: true };
+    }
+
+    // Try initializing or running Native Generator
+    if (!ctx.nativeGenFailed) {
+      const fullCode = ctx.codeRaw || ctx.lines.join('\n');
+
+      if (!ctx.nativeGenerator && !ctx.nativeGenInitStarted) {
+        if (ctx.language === 'javascript') {
+          ctx.nativeGenInitStarted = true;
+          try {
+            ctx.nativeGenerator = JavaScriptSandbox.createStepGenerator(fullCode, ctx.agentId, this.engine, ctx.filePath);
+          } catch (e: any) {
+            const errMsg = e?.message || String(e);
+            this.engine.addLog(ctx.agentId, 'stderr', `JSSyntaxError: ${errMsg}`, undefined, ctx.filePath);
+            ctx.isCompleted = true;
+            return { paused: true, error: errMsg };
+          }
+        } else if (ctx.language === 'python' && PyodideManager.isReady()) {
+          ctx.nativeGenInitStarted = true;
+          PyodideManager.createStepGenerator(fullCode, ctx.agentId, this.engine, ctx.filePath)
+            .then(gen => {
+              ctx.nativeGenerator = gen;
+            })
+            .catch(err => {
+              const errMsg = err?.message || String(err);
+              this.engine.addLog(ctx.agentId, 'stderr', `PythonSyntaxError: ${errMsg}`, undefined, ctx.filePath);
+              ctx.nativeGenFailed = true;
+              ctx.isCompleted = true;
+            });
+        }
+      }
+
+      if (ctx.nativeGenerator) {
+        try {
+          const res = ctx.nativeGenerator.next();
+          if (res.done) {
+            ctx.isCompleted = true;
+            return { paused: true, completed: true };
+          }
+          if (typeof res.value === 'number' && res.value > 0) {
+            ctx.currentLineIndex = res.value - 1;
+          }
+          if (breakpoints.has(ctx.currentLineIndex + 1)) {
+            return { paused: true, hitBreakpoint: true };
+          }
+          return { paused: false };
+        } catch (err: any) {
+          const errMsg = err?.message || String(err);
+          this.engine.addLog(ctx.agentId, 'stderr', `RuntimeError: ${errMsg}`, ctx.currentLineIndex + 1, ctx.filePath);
+          ctx.isCompleted = true;
+          return { paused: true, error: errMsg };
+        }
+      }
+    }
+
+    return this.executeFallbackStep(ctx, breakpoints);
+  }
+
+  public executeFallbackStep(ctx: ExecutionContext, breakpoints: Set<number>): { paused: boolean; hitBreakpoint?: boolean; error?: string; completed?: boolean } {
     if (ctx.isCompleted || ctx.currentLineIndex >= ctx.lines.length) {
       if (ctx.loopStack.length > 0) {
         ctx.currentLineIndex = ctx.loopStack[ctx.loopStack.length - 1].startLineIndex;
@@ -648,17 +737,26 @@ export class ScriptRunner {
       let type: 'if' | 'elif' | 'else' | null = null;
       let condStr = '';
 
-      if (/^if\b/.test(trimmed)) {
-        type = 'if';
-        condStr = trimmed.replace(/^if\b\s*/, '').replace(/:\s*$/, '').trim();
-      } else if (/^elif\b/.test(trimmed)) {
-        type = 'elif';
-        condStr = trimmed.replace(/^elif\b\s*/, '').replace(/:\s*$/, '').trim();
-      } else if (/^else\b/.test(trimmed)) {
-        type = 'else';
-        condStr = '';
+      if (branches.length === 0) {
+        if (/^if\b/.test(trimmed)) {
+          type = 'if';
+          condStr = trimmed.replace(/^if\b\s*/, '').replace(/:\s*$/, '').trim();
+        } else {
+          break;
+        }
       } else {
-        break;
+        if (branches[branches.length - 1].type === 'else') {
+          break;
+        }
+        if (/^elif\b/.test(trimmed)) {
+          type = 'elif';
+          condStr = trimmed.replace(/^elif\b\s*/, '').replace(/:\s*$/, '').trim();
+        } else if (/^else\b/.test(trimmed)) {
+          type = 'else';
+          condStr = '';
+        } else {
+          break;
+        }
       }
 
       condStr = stripOuterParens(condStr);
@@ -711,18 +809,31 @@ export class ScriptRunner {
     while (currIdx < ctx.lines.length) {
       const raw = ctx.lines[currIdx];
       const trimmed = raw.trim();
+      if (!trimmed || trimmed.startsWith('//') || trimmed.startsWith('/*')) {
+        currIdx++;
+        continue;
+      }
 
       let type: 'if' | 'elif' | 'else' | null = null;
       let condStr = '';
 
-      if (/^\}?\s*else\s+if\b/.test(trimmed) || trimmed.includes('else if')) {
-        type = 'elif';
-      } else if (/^\}?\s*if\b/.test(trimmed) || (trimmed.includes('if') && !trimmed.includes('else'))) {
-        type = 'if';
-      } else if (/^\}?\s*else\b/.test(trimmed) || trimmed.includes('else')) {
-        type = 'else';
+      if (branches.length === 0) {
+        if (/^\}?\s*if\b/.test(trimmed) || (trimmed.includes('if') && !trimmed.includes('else'))) {
+          type = 'if';
+        } else {
+          break;
+        }
       } else {
-        break;
+        if (branches[branches.length - 1].type === 'else') {
+          break;
+        }
+        if (/^\}?\s*else\s+if\b/.test(trimmed) || trimmed.includes('else if')) {
+          type = 'elif';
+        } else if (/^\}?\s*else\b/.test(trimmed) || trimmed.includes('else')) {
+          type = 'else';
+        } else {
+          break;
+        }
       }
 
       if (type === 'if' || type === 'elif') {

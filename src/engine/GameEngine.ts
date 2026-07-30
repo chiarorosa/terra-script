@@ -656,63 +656,28 @@ export class GameEngine {
         const file = this.vfs.getFile(agent.assignedFile) || this.vfs.getEntrypoint();
         if (!file) return;
 
-        // Prevent double execution if native script execution is currently in progress asynchronously
-        if ((agent as any)._isExecutingNative) {
-          anyAction = true;
-          return;
+        let ctx = this.agentContexts.get(agent.id);
+        if (!ctx || (isSingleStep && ctx.isCompleted)) {
+          this.prepareAgentContext(agent);
+          ctx = this.agentContexts.get(agent.id);
         }
+        if (ctx && !ctx.isCompleted) {
+          const fileBps = this.breakpoints.get(ctx.filePath) || new Set();
+          const res = this.runner.executeStep(ctx, fileBps);
+          agent.currentLine = ctx.currentLineIndex + 1;
 
-        const isPyReady = file.language === 'python' && PyodideManager.isReady();
-        const isJs = file.language === 'javascript';
-
-        if (isPyReady || isJs) {
-          (agent as any)._isExecutingNative = true;
-          anyAction = true;
-          this.runner.executeNativeScript(file.content, agent.id, file.path, file.language).then(res => {
-            (agent as any)._isExecutingNative = false;
-            if (res.error) {
-              agent.status = 'ERROR';
-              agent.actionMessage = 'Erro no Script';
-            } else {
-              agent.status = 'PAUSED';
-              agent.actionMessage = 'Finished';
-              this.addLog(agent.id, 'system', `Script '${file.path}' finalizou a execução.`);
-            }
-            this.notify();
-          }).catch(err => {
-            (agent as any)._isExecutingNative = false;
+          if (res.error) {
             agent.status = 'ERROR';
-            agent.actionMessage = 'Erro no Script';
-            this.notify();
-          });
-        } else {
-          // If Pyodide is still initializing, trigger load in background
-          if (file.language === 'python') {
-            PyodideManager.getInstance();
+            agent.actionMessage = `Error: Line ${agent.currentLine}`;
+          } else if (res.hitBreakpoint) {
+            this.pauseSimulation();
+            this.addLog(agent.id, 'system', `Breakpoint hit at ${ctx.filePath}:${agent.currentLine}`);
+          } else if (res.completed) {
+            agent.status = 'PAUSED';
+            agent.actionMessage = 'Finished';
+            this.addLog(agent.id, 'system', `Script '${ctx.filePath}' finished execution.`);
           }
-          let ctx = this.agentContexts.get(agent.id);
-          if (!ctx || (isSingleStep && ctx.isCompleted)) {
-            this.prepareAgentContext(agent);
-            ctx = this.agentContexts.get(agent.id);
-          }
-          if (ctx && !ctx.isCompleted) {
-            const fileBps = this.breakpoints.get(ctx.filePath) || new Set();
-            const res = this.runner.executeStep(ctx, fileBps);
-            agent.currentLine = ctx.currentLineIndex + 1;
-
-            if (res.error) {
-              agent.status = 'ERROR';
-              agent.actionMessage = `Error: Line ${agent.currentLine}`;
-            } else if (res.hitBreakpoint) {
-              this.pauseSimulation();
-              this.addLog(agent.id, 'system', `Breakpoint hit at ${ctx.filePath}:${agent.currentLine}`);
-            } else if (res.completed) {
-              agent.status = 'PAUSED';
-              agent.actionMessage = 'Finished';
-              this.addLog(agent.id, 'system', `Script '${ctx.filePath}' finished execution.`);
-            }
-            anyAction = true;
-          }
+          anyAction = true;
         }
       }
     });

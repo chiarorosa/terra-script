@@ -1,14 +1,106 @@
+import * as acorn from 'acorn';
 import { GameEngine } from './GameEngine';
 
 export class JavaScriptSandbox {
-  public static async executeJsScript(
+  public static instrumentJsToGenerator(code: string): string {
+    let ast: any;
+    try {
+      ast = acorn.parse(code, { ecmaVersion: 'latest', locations: true, allowReturnOutsideFunction: true });
+    } catch (err) {
+      // If syntax error, return code as is so native runtime throws error cleanly
+      return code;
+    }
+
+    const transformNode = (node: any): string => {
+      if (!node) return '';
+
+      switch (node.type) {
+        case 'Program':
+        case 'BlockStatement': {
+          const bodyCode = node.body.map((stmt: any) => transformStatement(stmt)).join('\n');
+          return node.type === 'BlockStatement' ? `{\n${bodyCode}\n}` : bodyCode;
+        }
+        case 'IfStatement': {
+          const line = node.loc?.start?.line || 1;
+          const testCode = code.slice(node.test.start, node.test.end);
+          const consequentCode = transformBranch(node.consequent);
+          const alternateCode = node.alternate ? ` else ${transformBranch(node.alternate)}` : '';
+          return `yield { line: ${line} };\nif (${testCode}) ${consequentCode}${alternateCode}`;
+        }
+        case 'WhileStatement': {
+          const line = node.loc?.start?.line || 1;
+          const testCode = code.slice(node.test.start, node.test.end);
+          const bodyCode = transformBranch(node.body);
+          return `yield { line: ${line} };\nwhile (${testCode}) ${bodyCode}`;
+        }
+        case 'DoWhileStatement': {
+          const line = node.loc?.start?.line || 1;
+          const testCode = code.slice(node.test.start, node.test.end);
+          const bodyCode = transformBranch(node.body);
+          return `yield { line: ${line} };\ndo ${bodyCode} while (${testCode});`;
+        }
+        case 'ForStatement': {
+          const line = node.loc?.start?.line || 1;
+          const initCode = node.init ? code.slice(node.init.start, node.init.end) : '';
+          const testCode = node.test ? code.slice(node.test.start, node.test.end) : '';
+          const updateCode = node.update ? code.slice(node.update.start, node.update.end) : '';
+          const bodyCode = transformBranch(node.body);
+          return `yield { line: ${line} };\nfor (${initCode}; ${testCode}; ${updateCode}) ${bodyCode}`;
+        }
+        case 'ForOfStatement':
+        case 'ForInStatement': {
+          const line = node.loc?.start?.line || 1;
+          const keyword = node.type === 'ForOfStatement' ? 'of' : 'in';
+          const leftCode = code.slice(node.left.start, node.left.end);
+          const rightCode = code.slice(node.right.start, node.right.end);
+          const bodyCode = transformBranch(node.body);
+          return `yield { line: ${line} };\nfor (${leftCode} ${keyword} ${rightCode}) ${bodyCode}`;
+        }
+        case 'FunctionDeclaration': {
+          const funcName = node.id ? node.id.name : '';
+          const params = node.params.map((p: any) => code.slice(p.start, p.end)).join(', ');
+          const body = transformNode(node.body);
+          return `function ${funcName}(${params}) ${body}`;
+        }
+        case 'ExpressionStatement':
+        case 'VariableDeclaration':
+        case 'ReturnStatement':
+        case 'BreakStatement':
+        case 'ContinueStatement': {
+          const line = node.loc?.start?.line || 1;
+          const stmtCode = code.slice(node.start, node.end);
+          return `yield { line: ${line} };\n${stmtCode}`;
+        }
+        default: {
+          return code.slice(node.start, node.end);
+        }
+      }
+    };
+
+    const transformStatement = (stmt: any): string => transformNode(stmt);
+
+    const transformBranch = (branch: any): string => {
+      if (!branch) return '';
+      if (branch.type === 'BlockStatement') {
+        return transformNode(branch);
+      } else {
+        return `{\n${transformNode(branch)}\n}`;
+      }
+    };
+
+    return transformNode(ast);
+  }
+
+  public static createStepGenerator(
     code: string,
     agentId: number,
     engine: GameEngine,
     filePath: string
-  ): Promise<{ success: boolean; error?: string }> {
+  ): { next: () => { done: boolean; value?: number } } {
     const agent = engine.getAgent(agentId);
-    if (!agent) return { success: false, error: 'Agente não encontrado' };
+    if (!agent) {
+      throw new Error('Agente não encontrado');
+    }
 
     const farm = {
       plant: (crop = 'WILD_FIBER') => {
@@ -84,13 +176,34 @@ export class JavaScriptSandbox {
       }
     };
 
-    const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+    const instrumentedCode = this.instrumentJsToGenerator(code);
+    const GeneratorFunction = Object.getPrototypeOf(function* () {}).constructor;
+    const genFunc = new GeneratorFunction('farm', 'world', 'inventory', 'console', instrumentedCode);
+    const gen = genFunc(farm, world, inventory, customConsole);
 
+    return {
+      next: () => {
+        const res = gen.next();
+        if (res.done) {
+          return { done: true };
+        }
+        return { done: false, value: res.value?.line || 1 };
+      }
+    };
+  }
+
+  public static async executeJsScript(
+    code: string,
+    agentId: number,
+    engine: GameEngine,
+    filePath: string
+  ): Promise<{ success: boolean; error?: string }> {
     try {
-      // Create async function sandbox
-      const AsyncFunction = Object.getPrototypeOf(async function () {}).constructor;
-      const runner = new AsyncFunction('farm', 'world', 'inventory', 'console', 'sleep', code);
-      await runner(farm, world, inventory, customConsole, sleep);
+      const gen = this.createStepGenerator(code, agentId, engine, filePath);
+      let stepRes = gen.next();
+      while (!stepRes.done) {
+        stepRes = gen.next();
+      }
       return { success: true };
     } catch (err: any) {
       const errMsg = err?.message || String(err);
