@@ -27,7 +27,7 @@ export const INITIAL_TECH_TREE: TechNode[] = [
   // AUTOMATION BRANCH
   { id: 'AUTO_1', branch: 'AUTOMATION', name: 'Comandos Sequenciais', description: 'Desbloqueia execução em sequência e comandos básicos de fazenda.', tier: 0, cost: {}, unlocked: true },
   { id: 'AUTO_2', branch: 'AUTOMATION', name: 'Variáveis e Operadores', description: 'Permite atribuição de variáveis e expressões matemáticas.', tier: 1, cost: { fiber: 10 }, unlocked: false, requires: ['AUTO_1'] },
-  { id: 'AUTO_3', branch: 'AUTOMATION', name: 'Condicionais (if/else)', description: 'Permite lógica de ramificação e checagem de estados.', tier: 2, cost: { fiber: 25, wood: 10 }, unlocked: false, requires: ['AUTO_2'] },
+  { id: 'AUTO_3', branch: 'AUTOMATION', name: 'Condicionais & Operadores Lógicos', description: 'Permite lógica de ramificação (if/elif/else) e combinação de condições com operadores lógicos (and, or, &&, ||).', tier: 2, cost: { fiber: 25, wood: 10 }, unlocked: false, requires: ['AUTO_2'] },
   { id: 'AUTO_4', branch: 'AUTOMATION', name: 'Loops (while / for)', description: 'Permite loops repetitivos contínuos.', tier: 3, cost: { fiber: 50, wood: 25 }, unlocked: false, requires: ['AUTO_3'] },
   { id: 'AUTO_5', branch: 'AUTOMATION', name: 'Funções', description: 'Agrupa código reutilizável em funções modulares.', tier: 4, cost: { fiber: 100, wood: 50, roots: 20 }, unlocked: false, requires: ['AUTO_4'] },
   { id: 'AUTO_6', branch: 'AUTOMATION', name: 'Comunicação Inter-Drones (IPC)', description: 'Sinais em tempo real e barramento de mensagens para coordenação entre robôs.', tier: 8, cost: { roots: 100, fruits: 50, energy: 20 }, unlocked: false, requires: ['AUTO_5'] },

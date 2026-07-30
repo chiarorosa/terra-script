@@ -33,6 +33,59 @@ export interface ExecutionContext {
   isCompleted: boolean;
 }
 
+function stripOuterParens(str: string): string {
+  let s = str.trim();
+  while (s.startsWith('(') && s.endsWith(')')) {
+    let depth = 0;
+    let matched = true;
+    for (let i = 0; i < s.length - 1; i++) {
+      if (s[i] === '(') depth++;
+      else if (s[i] === ')') depth--;
+      if (depth === 0) {
+        matched = false;
+        break;
+      }
+    }
+    if (matched) {
+      s = s.slice(1, -1).trim();
+    } else {
+      break;
+    }
+  }
+  return s;
+}
+
+function splitTopLevel(expr: string, op: string): [string, string] | null {
+  let parenDepth = 0;
+  let inString: string | null = null;
+  const opLen = op.length;
+
+  for (let i = expr.length - opLen; i >= 0; i--) {
+    const char = expr[i];
+    if (inString) {
+      if (char === inString && expr[i - 1] !== '\\') {
+        inString = null;
+      }
+      continue;
+    }
+    if (char === '"' || char === "'") {
+      inString = char;
+      continue;
+    }
+    if (char === ')') parenDepth++;
+    else if (char === '(') parenDepth--;
+
+    if (parenDepth === 0) {
+      if (expr.substring(i, i + opLen) === op) {
+        const left = expr.substring(0, i).trim();
+        const right = expr.substring(i + opLen).trim();
+        return [left, right];
+      }
+    }
+  }
+  return null;
+}
+
 export class ScriptRunner {
   private engine: GameEngine;
 
@@ -78,7 +131,7 @@ export class ScriptRunner {
     // Check budget
     ctx.instructionCount++;
     if (ctx.instructionCount > 100000 && ctx.actionsPerformedInRun === 0) {
-      const err = `ExecutionBudgetExceeded: ${ctx.filePath}:${currentLineNum}\nExecuted 100,000 instructions without producing a world action. Potential infinite loop.`;
+      const err = `ExecutionBudgetExceeded: ${ctx.filePath}:${currentLineNum}\nExecutou 100.000 instruções sem gerar ação no mundo. Possível loop infinito.`;
       this.engine.addLog(ctx.agentId, 'stderr', err, currentLineNum, ctx.filePath);
       return { paused: true, error: err };
     }
@@ -102,10 +155,19 @@ export class ScriptRunner {
       return { paused: false };
     }
 
+    // Validate Language Syntax strictly before executing
+    try {
+      this.validateLanguageSyntax(line, ctx);
+    } catch (e: any) {
+      const err = `SyntaxError: ${ctx.filePath}:${currentLineNum} - ${e.message || String(e)}`;
+      this.engine.addLog(ctx.agentId, 'stderr', err, currentLineNum, ctx.filePath);
+      return { paused: true, error: err };
+    }
+
     // Handle Function Definitions
     if (line.startsWith('def ') || line.startsWith('function ')) {
       if (!this.engine.isTechUnlocked('AUTO_5')) {
-        throw new Error("'Functions' feature is locked! Research AUTO_5 in the Research Tree.");
+        throw new Error("Recurso 'Funções' está bloqueado! Pesquise AUTO_5 na Árvore de Pesquisa.");
       }
       this.parseFunctionDef(line, ctx);
       return { paused: false };
@@ -140,6 +202,39 @@ export class ScriptRunner {
     }
 
     return { paused: false };
+  }
+
+  private validateLanguageSyntax(line: string, ctx: ExecutionContext) {
+    if (ctx.language === 'python') {
+      if (line.startsWith('function ') || line.startsWith('function(') || /^function\b/.test(line)) {
+        throw new Error(`'function' é sintaxe de JavaScript. Em arquivos Python (.py), declare funções com 'def nome_função():'.`);
+      }
+      if (line.startsWith('console.log(') || line.includes('console.log(')) {
+        throw new Error(`'console.log()' é sintaxe de JavaScript. Em arquivos Python (.py), use 'print()'.`);
+      }
+      if (line.startsWith('let ') || line.startsWith('const ') || line.startsWith('var ')) {
+        throw new Error(`As palavras-chave 'let/const/var' pertencem ao JavaScript. Em Python (.py), atribua diretamente: 'x = valor'.`);
+      }
+      if (line.startsWith('else if') || line.includes('else if(') || line.includes('else if ')) {
+        throw new Error(`'else if' é sintaxe de JavaScript. Em arquivos Python (.py), use 'elif'.`);
+      }
+      if ((line.startsWith('if ') || line.startsWith('elif ') || line.startsWith('else:') || line.startsWith('while ') || line.startsWith('for ') || line.startsWith('def ')) && line.endsWith('{')) {
+        throw new Error(`Blocos em Python usam dois-pontos (':') ao final da linha e sangria (identação), não chaves ('{}').`);
+      }
+    } else if (ctx.language === 'javascript') {
+      if (line.startsWith('def ') || /^def\b/.test(line)) {
+        throw new Error(`'def' é sintaxe de Python. Em arquivos JavaScript (.js), declare funções com 'function nomeFuncao() { ... }'.`);
+      }
+      if (line.startsWith('print(') || line.includes('print(')) {
+        throw new Error(`'print()' é sintaxe de Python. Em arquivos JavaScript (.js), use 'console.log()'.`);
+      }
+      if (line.startsWith('elif ') || line.startsWith('elif(') || line === 'elif:' || line.startsWith('elif:')) {
+        throw new Error(`'elif' é sintaxe de Python. Em arquivos JavaScript (.js), use 'else if (condição) { ... }'.`);
+      }
+      if (line.endsWith(':') && (line.startsWith('if') || line.startsWith('else') || line.startsWith('while') || line.startsWith('for') || line.startsWith('function'))) {
+        throw new Error(`Estruturas de controle em JavaScript usam parênteses e chaves ('{ ... }'), não dois-pontos (':').`);
+      }
+    }
   }
 
   private checkConditionalBoundary(ctx: ExecutionContext) {
@@ -247,18 +342,30 @@ export class ScriptRunner {
 
   private handleWhileLoop(line: string, ctx: ExecutionContext) {
     if (!this.engine.isTechUnlocked('AUTO_4')) {
-      throw new Error("'Loops (while/for)' feature is locked! Research AUTO_4 in the Research Tree.");
+      throw new Error("Recurso 'Loops (while/for)' está bloqueado! Pesquise AUTO_4 na Árvore de Pesquisa.");
     }
 
     const existingIndex = ctx.loopStack.findIndex(l => l.startLineIndex === ctx.currentLineIndex);
 
     let condStr = 'true';
     if (line.includes('(') && line.includes(')')) {
-      condStr = line.substring(line.indexOf('(') + 1, line.lastIndexOf(')'));
+      const openIdx = line.indexOf('(');
+      let parenCount = 0;
+      let closeIdx = -1;
+      for (let i = openIdx; i < line.length; i++) {
+        if (line[i] === '(') parenCount++;
+        else if (line[i] === ')') parenCount--;
+        if (parenCount === 0) {
+          closeIdx = i;
+          break;
+        }
+      }
+      if (closeIdx !== -1) {
+        condStr = line.substring(openIdx + 1, closeIdx).trim();
+      }
     } else if (line.startsWith('while ')) {
       condStr = line.replace('while ', '').replace(':', '').replace('{', '').trim();
     }
-    if (condStr === 'True') condStr = 'true';
 
     const condVal = this.evalExpression(condStr, ctx);
 
@@ -296,7 +403,7 @@ export class ScriptRunner {
 
   private handlePythonForLoop(line: string, ctx: ExecutionContext) {
     if (!this.engine.isTechUnlocked('AUTO_4')) {
-      throw new Error("'Loops (while/for)' feature is locked! Research AUTO_4 in the Research Tree.");
+      throw new Error("Recurso 'Loops (while/for)' está bloqueado! Pesquise AUTO_4 na Árvore de Pesquisa.");
     }
 
     const existingIndex = ctx.loopStack.findIndex(l => l.startLineIndex === ctx.currentLineIndex);
@@ -392,7 +499,7 @@ export class ScriptRunner {
 
   private handleJSForLoop(line: string, ctx: ExecutionContext) {
     if (!this.engine.isTechUnlocked('AUTO_4')) {
-      throw new Error("'Loops (while/for)' feature is locked! Research AUTO_4 in the Research Tree.");
+      throw new Error("Recurso 'Loops (while/for)' está bloqueado! Pesquise AUTO_4 na Árvore de Pesquisa.");
     }
 
     const existingIndex = ctx.loopStack.findIndex(l => l.startLineIndex === ctx.currentLineIndex);
@@ -490,9 +597,7 @@ export class ScriptRunner {
         break;
       }
 
-      if (condStr.startsWith('(') && condStr.endsWith(')')) {
-        condStr = condStr.slice(1, -1);
-      }
+      condStr = stripOuterParens(condStr);
 
       const blockStartIdx = currIdx + 1;
       let scanIdx = blockStartIdx;
@@ -548,15 +653,31 @@ export class ScriptRunner {
 
       if (trimmed.includes('if') && !trimmed.includes('else if')) {
         type = 'if';
-        condStr = trimmed.replace(/.*if\s*\(/, '').replace(/\)\s*\{?.*$/, '').trim();
       } else if (trimmed.includes('else if')) {
         type = 'elif';
-        condStr = trimmed.replace(/.*else if\s*\(/, '').replace(/\)\s*\{?.*$/, '').trim();
       } else if (trimmed.includes('else')) {
         type = 'else';
-        condStr = '';
       } else {
         break;
+      }
+
+      if (type === 'if' || type === 'elif') {
+        const openIdx = trimmed.indexOf('(');
+        if (openIdx !== -1) {
+          let parenCount = 0;
+          let closeIdx = -1;
+          for (let i = openIdx; i < trimmed.length; i++) {
+            if (trimmed[i] === '(') parenCount++;
+            else if (trimmed[i] === ')') parenCount--;
+            if (parenCount === 0) {
+              closeIdx = i;
+              break;
+            }
+          }
+          if (closeIdx !== -1) {
+            condStr = trimmed.substring(openIdx + 1, closeIdx).trim();
+          }
+        }
       }
 
       let blockStartIdx = currIdx + 1;
@@ -607,7 +728,7 @@ export class ScriptRunner {
 
   private handleConditional(line: string, ctx: ExecutionContext) {
     if (!this.engine.isTechUnlocked('AUTO_3')) {
-      throw new Error("'Conditionals (if/else)' feature is locked! Research AUTO_3 in the Research Tree.");
+      throw new Error("Recurso 'Condicionais (if/else)' está bloqueado! Pesquise AUTO_3 na Árvore de Pesquisa.");
     }
 
     const chain = ctx.language === 'python'
@@ -642,7 +763,6 @@ export class ScriptRunner {
   }
 
   private parseFunctionDef(line: string, ctx: ExecutionContext) {
-    // Basic def/function parsing
     let name = '';
     const params: string[] = [];
     if (ctx.language === 'python') {
@@ -659,7 +779,6 @@ export class ScriptRunner {
       }
     }
 
-    // Skip over function body
     const startLineIndex = ctx.currentLineIndex;
     let idx = ctx.currentLineIndex + 1;
     const bodyLines: string[] = [];
@@ -728,7 +847,7 @@ export class ScriptRunner {
     // Direct Game API Calls or Assignments
     if (line.includes('=')) {
       if (!this.engine.isTechUnlocked('AUTO_2')) {
-        throw new Error("'Variables & Operators' feature is locked! Research AUTO_2 in the Research Tree.");
+        throw new Error("Recurso 'Variáveis & Operadores' está bloqueado! Pesquise AUTO_2 na Árvore de Pesquisa.");
       }
       const parts = line.split('=');
       const varName = parts[0].trim().replace(/^(let|var|const)\s+/, '');
@@ -743,12 +862,89 @@ export class ScriptRunner {
   }
 
   private evalExpression(expr: string, ctx: ExecutionContext): any {
-    expr = expr.trim();
+    expr = stripOuterParens(expr.trim());
+    if (!expr) return false;
+
     const agent = this.engine.getAgent(ctx.agentId);
     if (!agent) return false;
 
-    // Direct game API invocations
-    // farm.*
+    // 1. Logical OR (||, or)
+    const orMatch = splitTopLevel(expr, '||') || splitTopLevel(expr, ' or ');
+    if (orMatch) {
+      return Boolean(this.evalExpression(orMatch[0], ctx)) || Boolean(this.evalExpression(orMatch[1], ctx));
+    }
+
+    // 2. Logical AND (&&, and)
+    const andMatch = splitTopLevel(expr, '&&') || splitTopLevel(expr, ' and ');
+    if (andMatch) {
+      return Boolean(this.evalExpression(andMatch[0], ctx)) && Boolean(this.evalExpression(andMatch[1], ctx));
+    }
+
+    // 3. Logical NOT (!, not)
+    if (expr.startsWith('not ')) {
+      return !Boolean(this.evalExpression(expr.substring(4), ctx));
+    }
+    if (expr.startsWith('!') && !expr.startsWith('!=')) {
+      return !Boolean(this.evalExpression(expr.substring(1), ctx));
+    }
+
+    // 4. Equality & Relational Comparisons
+    const tripleEq = splitTopLevel(expr, '===');
+    if (tripleEq) {
+      return this.evalExpression(tripleEq[0], ctx) === this.evalExpression(tripleEq[1], ctx);
+    }
+    const tripleNeq = splitTopLevel(expr, '!==');
+    if (tripleNeq) {
+      return this.evalExpression(tripleNeq[0], ctx) !== this.evalExpression(tripleNeq[1], ctx);
+    }
+    const doubleEq = splitTopLevel(expr, '==');
+    if (doubleEq) {
+      return this.evalExpression(doubleEq[0], ctx) == this.evalExpression(doubleEq[1], ctx);
+    }
+    const doubleNeq = splitTopLevel(expr, '!=');
+    if (doubleNeq) {
+      return this.evalExpression(doubleNeq[0], ctx) != this.evalExpression(doubleNeq[1], ctx);
+    }
+    const gte = splitTopLevel(expr, '>=');
+    if (gte) {
+      return Number(this.evalExpression(gte[0], ctx)) >= Number(this.evalExpression(gte[1], ctx));
+    }
+    const lte = splitTopLevel(expr, '<=');
+    if (lte) {
+      return Number(this.evalExpression(lte[0], ctx)) <= Number(this.evalExpression(lte[1], ctx));
+    }
+    const gt = splitTopLevel(expr, '>');
+    if (gt) {
+      return Number(this.evalExpression(gt[0], ctx)) > Number(this.evalExpression(gt[1], ctx));
+    }
+    const lt = splitTopLevel(expr, '<');
+    if (lt) {
+      return Number(this.evalExpression(lt[0], ctx)) < Number(this.evalExpression(lt[1], ctx));
+    }
+
+    // 5. Binary Arithmetic
+    const mod = splitTopLevel(expr, '%');
+    if (mod) {
+      return Number(this.evalExpression(mod[0], ctx)) % Number(this.evalExpression(mod[1], ctx));
+    }
+    const add = splitTopLevel(expr, '+');
+    if (add) {
+      return Number(this.evalExpression(add[0], ctx)) + Number(this.evalExpression(add[1], ctx));
+    }
+    const sub = splitTopLevel(expr, '-');
+    if (sub) {
+      return Number(this.evalExpression(sub[0], ctx)) - Number(this.evalExpression(sub[1], ctx));
+    }
+    const mul = splitTopLevel(expr, '*');
+    if (mul) {
+      return Number(this.evalExpression(mul[0], ctx)) * Number(this.evalExpression(mul[1], ctx));
+    }
+    const div = splitTopLevel(expr, '/');
+    if (div) {
+      return Number(this.evalExpression(div[0], ctx)) / Number(this.evalExpression(div[1], ctx));
+    }
+
+    // 6. Direct game API invocations
     if (expr.includes('farm.can_harvest()') || expr.includes('farm.canHarvest()')) {
       return this.engine.canHarvestTile(agent.x, agent.y);
     }
@@ -758,14 +954,14 @@ export class ScriptRunner {
     }
     if (expr.includes('farm.till()')) {
       if (!this.engine.isTechUnlocked('AGRO_3')) {
-        throw new Error("'Soil & Cultivated Roots' feature is locked! Research AGRO_3 in the Research Tree.");
+        throw new Error("Recurso 'Solo Arado & Raízes Cultivadas' está bloqueado! Pesquise AGRO_3 na Árvore de Pesquisa.");
       }
       ctx.actionsPerformedInRun++;
       return this.engine.tillTile(ctx.agentId, agent.x, agent.y);
     }
     if (expr.includes('farm.water()')) {
       if (!this.engine.isTechUnlocked('AGRO_1')) {
-        throw new Error("'Irrigation' feature is locked! Research AGRO_1 in the Research Tree.");
+        throw new Error("Recurso 'Irrigação' está bloqueado! Pesquise AGRO_1 na Árvore de Pesquisa.");
       }
       ctx.actionsPerformedInRun++;
       return this.engine.waterTile(ctx.agentId, agent.x, agent.y);
@@ -774,22 +970,22 @@ export class ScriptRunner {
       const cropArg = expr.match(/farm\.plant\((.*?)\)/)?.[1]?.replace(/['"]/g, '').trim() || 'WILD_FIBER';
       const upper = cropArg.toUpperCase();
       if ((upper.includes('BUSH') || upper.includes('WOODY')) && !this.engine.isTechUnlocked('AGRO_2')) {
-        throw new Error("'Woody Bush' crop is locked! Research AGRO_2 in the Research Tree.");
+        throw new Error("Cultura 'Arbusto de Madeira' está bloqueada! Pesquise AGRO_2 na Árvore de Pesquisa.");
       }
       if ((upper.includes('ROOT') || upper.includes('CULTIVATED') || upper.includes('CORN')) && !this.engine.isTechUnlocked('AGRO_3')) {
-        throw new Error("'Cultivated Roots' crop is locked! Research AGRO_3 in the Research Tree.");
+        throw new Error("Cultura 'Raízes Cultivadas' está bloqueada! Pesquise AGRO_3 na Árvore de Pesquisa.");
       }
       if ((upper.includes('TREE') || upper.includes('TIMBER')) && !this.engine.isTechUnlocked('AGRO_4')) {
-        throw new Error("'Trees & Timber' crop is locked! Research AGRO_4 in the Research Tree.");
+        throw new Error("Cultura 'Árvores & Madeira Nobre' está bloqueada! Pesquise AGRO_4 na Árvore de Pesquisa.");
       }
       if ((upper.includes('FRUIT') || upper.includes('BERRY')) && !this.engine.isTechUnlocked('AGRO_5')) {
-        throw new Error("'Fruit Colonies' crop is locked! Research AGRO_5 in the Research Tree.");
+        throw new Error("Cultura 'Colônias de Fruta' está bloqueada! Pesquise AGRO_5 na Árvore de Pesquisa.");
       }
       if ((upper.includes('FLOWER') || upper.includes('ENERGY')) && !this.engine.isTechUnlocked('AGRO_6')) {
-        throw new Error("'Energy Flowers' crop is locked! Research AGRO_6 in the Research Tree.");
+        throw new Error("Cultura 'Flores Energéticas' está bloqueada! Pesquise AGRO_6 na Árvore de Pesquisa.");
       }
       if (upper.includes('GRADED') && !this.engine.isTechUnlocked('AGRO_7')) {
-        throw new Error("'Graded Plants' crop is locked! Research AGRO_7 in the Research Tree.");
+        throw new Error("Cultura 'Plantas Graduadas' está bloqueada! Pesquise AGRO_7 na Árvore de Pesquisa.");
       }
       ctx.actionsPerformedInRun++;
       return this.engine.plantCrop(ctx.agentId, agent.x, agent.y, cropArg);
@@ -819,7 +1015,7 @@ export class ScriptRunner {
     }
     if (expr.includes('farm.swap(')) {
       if (!this.engine.isTechUnlocked('AGRO_7')) {
-        throw new Error("'Swap Tiles' feature is locked! Research AGRO_7 in the Research Tree.");
+        throw new Error("Recurso 'Trocar Terrenos (Swap)' está bloqueado! Pesquise AGRO_7 na Árvore de Pesquisa.");
       }
       const dirArg = expr.match(/farm\.swap\((.*?)\)/)?.[1]?.replace(/['"]/g, '').trim() || 'RIGHT';
       ctx.actionsPerformedInRun++;
@@ -846,31 +1042,31 @@ export class ScriptRunner {
     }
     if (expr.includes('world.x()')) {
       if (!this.engine.isTechUnlocked('SYS_2')) {
-        throw new Error("'Basic Sensors & Coords' is locked! Research SYS_2 in the Research Tree.");
+        throw new Error("Recurso 'Sensores Básicos & Coordenadas' está bloqueado! Pesquise SYS_2 na Árvore de Pesquisa.");
       }
       return agent.x;
     }
     if (expr.includes('world.y()')) {
       if (!this.engine.isTechUnlocked('SYS_2')) {
-        throw new Error("'Basic Sensors & Coords' is locked! Research SYS_2 in the Research Tree.");
+        throw new Error("Recurso 'Sensores Básicos & Coordenadas' está bloqueado! Pesquise SYS_2 na Árvore de Pesquisa.");
       }
       return agent.y;
     }
     if (expr.includes('world.width()')) {
       if (!this.engine.isTechUnlocked('SYS_2')) {
-        throw new Error("'Basic Sensors & Coords' is locked! Research SYS_2 in the Research Tree.");
+        throw new Error("Recurso 'Sensores Básicos & Coordenadas' está bloqueado! Pesquise SYS_2 na Árvore de Pesquisa.");
       }
       return this.engine.getGridWidth();
     }
     if (expr.includes('world.height()')) {
       if (!this.engine.isTechUnlocked('SYS_2')) {
-        throw new Error("'Basic Sensors & Coords' is locked! Research SYS_2 in the Research Tree.");
+        throw new Error("Recurso 'Sensores Básicos & Coordenadas' está bloqueado! Pesquise SYS_2 na Árvore de Pesquisa.");
       }
       return this.engine.getGridHeight();
     }
     if (expr.includes('world.area()')) {
       if (!this.engine.isTechUnlocked('SYS_2')) {
-        throw new Error("'Basic Sensors & Coords' is locked! Research SYS_2 in the Research Tree.");
+        throw new Error("Recurso 'Sensores Básicos & Coordenadas' está bloqueado! Pesquise SYS_2 na Árvore de Pesquisa.");
       }
       return this.engine.getGridWidth() * this.engine.getGridHeight();
     }
@@ -879,7 +1075,7 @@ export class ScriptRunner {
       expr.includes('world.get_ground()')
     ) {
       if (!this.engine.isTechUnlocked('SYS_2')) {
-        throw new Error("'Basic Sensors & Coords' is locked! Research SYS_2 in the Research Tree.");
+        throw new Error("Recurso 'Sensores Básicos & Coordenadas' está bloqueado! Pesquise SYS_2 na Árvore de Pesquisa.");
       }
       return this.engine.getTile(agent.x, agent.y).ground;
     }
@@ -888,7 +1084,7 @@ export class ScriptRunner {
       expr.includes('world.get_entity()')
     ) {
       if (!this.engine.isTechUnlocked('SYS_2')) {
-        throw new Error("'Basic Sensors & Coords' is locked! Research SYS_2 in the Research Tree.");
+        throw new Error("Recurso 'Sensores Básicos & Coordenadas' está bloqueado! Pesquise SYS_2 na Árvore de Pesquisa.");
       }
       return this.engine.getTile(agent.x, agent.y).crop;
     }
@@ -897,13 +1093,13 @@ export class ScriptRunner {
       expr.includes('world.get_moisture()')
     ) {
       if (!this.engine.isTechUnlocked('SYS_2')) {
-        throw new Error("'Basic Sensors & Coords' is locked! Research SYS_2 in the Research Tree.");
+        throw new Error("Recurso 'Sensores Básicos & Coordenadas' está bloqueado! Pesquise SYS_2 na Árvore de Pesquisa.");
       }
       return this.engine.getTile(agent.x, agent.y).moisture;
     }
     if (expr.includes('world.measure()')) {
       if (!this.engine.isTechUnlocked('SYS_3')) {
-        throw new Error("'Tile Measurement' is locked! Research SYS_3 in the Research Tree.");
+        throw new Error("Recurso 'Medição de Bloco' está bloqueado! Pesquise SYS_3 na Árvore de Pesquisa.");
       }
       return this.engine.measureTile(agent.x, agent.y);
     }
@@ -912,79 +1108,18 @@ export class ScriptRunner {
     // inventory.*
     if (expr.includes('inventory.count(')) {
       if (!this.engine.isTechUnlocked('SYS_2')) {
-        throw new Error("'Inventory Sensor' is locked! Research SYS_2 in the Research Tree.");
+        throw new Error("Recurso 'Sensor de Inventário' está bloqueado! Pesquise SYS_2 na Árvore de Pesquisa.");
       }
       const res = expr.match(/inventory\.count\((.*?)\)/)?.[1]?.replace(/['"]/g, '').trim() || 'fiber';
       return this.engine.getResourceCount(res);
     }
 
-    // Literal evaluations & variable resolution
+    // 7. Literal evaluations & variable resolution
     if (expr === 'true' || expr === 'True') return true;
     if (expr === 'false' || expr === 'False') return false;
     if (!isNaN(Number(expr))) return Number(expr);
     if ((expr.startsWith('"') && expr.endsWith('"')) || (expr.startsWith("'") && expr.endsWith("'"))) {
       return expr.slice(1, -1);
-    }
-
-    // Logical operators (and, or, not)
-    if (expr.includes(' and ')) {
-      const [l, r] = expr.split(' and ');
-      return Boolean(this.evalExpression(l, ctx)) && Boolean(this.evalExpression(r, ctx));
-    }
-    if (expr.includes(' or ')) {
-      const [l, r] = expr.split(' or ');
-      return Boolean(this.evalExpression(l, ctx)) || Boolean(this.evalExpression(r, ctx));
-    }
-    if (expr.startsWith('not ')) {
-      return !Boolean(this.evalExpression(expr.substring(4), ctx));
-    }
-
-    // Comparisons (==, !=, >, <, >=, <=)
-    if (expr.includes('==')) {
-      const [l, r] = expr.split('==');
-      return this.evalExpression(l, ctx) == this.evalExpression(r, ctx);
-    }
-    if (expr.includes('!=')) {
-      const [l, r] = expr.split('!=');
-      return this.evalExpression(l, ctx) != this.evalExpression(r, ctx);
-    }
-    if (expr.includes('>=')) {
-      const [l, r] = expr.split('>=');
-      return Number(this.evalExpression(l, ctx)) >= Number(this.evalExpression(r, ctx));
-    }
-    if (expr.includes('<=')) {
-      const [l, r] = expr.split('<=');
-      return Number(this.evalExpression(l, ctx)) <= Number(this.evalExpression(r, ctx));
-    }
-    if (expr.includes('>')) {
-      const [l, r] = expr.split('>');
-      return Number(this.evalExpression(l, ctx)) > Number(this.evalExpression(r, ctx));
-    }
-    if (expr.includes('<')) {
-      const [l, r] = expr.split('<');
-      return Number(this.evalExpression(l, ctx)) < Number(this.evalExpression(r, ctx));
-    }
-
-    // Arithmetic operators
-    if (expr.includes(' % ')) {
-      const [l, r] = expr.split(' % ');
-      return Number(this.evalExpression(l, ctx)) % Number(this.evalExpression(r, ctx));
-    }
-    if (expr.includes(' + ')) {
-      const [l, r] = expr.split(' + ');
-      return Number(this.evalExpression(l, ctx)) + Number(this.evalExpression(r, ctx));
-    }
-    if (expr.includes(' - ')) {
-      const [l, r] = expr.split(' - ');
-      return Number(this.evalExpression(l, ctx)) - Number(this.evalExpression(r, ctx));
-    }
-    if (expr.includes(' * ')) {
-      const [l, r] = expr.split(' * ');
-      return Number(this.evalExpression(l, ctx)) * Number(this.evalExpression(r, ctx));
-    }
-    if (expr.includes(' / ')) {
-      const [l, r] = expr.split(' / ');
-      return Number(this.evalExpression(l, ctx)) / Number(this.evalExpression(r, ctx));
     }
 
     // Lookup in local scope

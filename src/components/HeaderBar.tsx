@@ -46,7 +46,7 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({ engine, activeTab, setActi
   const programmerName = typeof window !== 'undefined' ? (localStorage.getItem('terrascript_programmer_name') || 'Dev Master') : 'Dev Master';
 
   const [sfxMuted, setSfxMuted] = useState(audioManager.getSfxMuted());
-  const [bgmMuted, setBgmMuted] = useState(audioManager.getBgmMuted());
+  const [bgmVolume, setBgmVolume] = useState<number>(audioManager.getBgmVolume());
 
   const handleToggleSfx = () => {
     const muted = audioManager.toggleSfx();
@@ -55,8 +55,8 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({ engine, activeTab, setActi
   };
 
   const handleToggleBgm = () => {
-    const muted = audioManager.toggleBgm();
-    setBgmMuted(muted);
+    const newVol = audioManager.cycleBgmVolume();
+    setBgmVolume(newVol);
     if (!audioManager.getSfxMuted()) audioManager.playClick();
   };
 
@@ -210,15 +210,28 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({ engine, activeTab, setActi
 
           <button
             onClick={handleToggleBgm}
-            className={`p-1 rounded-[4px] text-xs transition-all flex items-center gap-1 px-1.5 ${
-              !bgmMuted
+            className={`p-1 rounded-[4px] text-xs transition-all flex items-center gap-1.5 px-2 ${
+              bgmVolume === 1.0
                 ? 'text-[#8b5cf6] bg-[#8b5cf6]/10 border border-[#8b5cf6]/30'
-                : 'text-[#8a8f98] hover:text-[#d0d6e0]'
+                : bgmVolume === 0.5
+                ? 'text-[#a78bfa] bg-[#8b5cf6]/10 border border-[#8b5cf6]/20'
+                : 'text-[#8a8f98] hover:text-[#d0d6e0] bg-[#161718] border border-[#23252a]'
             }`}
-            title={bgmMuted ? 'Ativar Música de Fundo (Lo-Fi)' : 'Pausar Música de Fundo (Lo-Fi)'}
+            title={
+              bgmVolume === 1.0
+                ? 'Música de Fundo: 100% (Clique para 50%)'
+                : bgmVolume === 0.5
+                ? 'Música de Fundo: 50% (Clique para Mudo)'
+                : 'Música de Fundo: Mudo (Clique para 100%)'
+            }
           >
-            <Music className="w-3.5 h-3.5" />
-            <span className="text-[10px] font-normal hidden md:inline">Música</span>
+            <Music className={`w-3.5 h-3.5 ${bgmVolume === 0 ? 'text-[#eb5757]' : ''}`} />
+            <span className="text-[10px] font-mono hidden md:inline">
+              {bgmVolume === 1.0 ? 'Música 100%' : bgmVolume === 0.5 ? 'Música 50%' : 'Música Mudo'}
+            </span>
+            <span className="text-[10px] font-mono md:hidden">
+              {bgmVolume === 1.0 ? '100%' : bgmVolume === 0.5 ? '50%' : 'OFF'}
+            </span>
           </button>
         </div>
 

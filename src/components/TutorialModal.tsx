@@ -83,8 +83,12 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ engine, onNavigate
         };
       case 'AUTO_3':
         return {
-          capabilities: ['Lógica condicional: if ... else', 'Avaliação de estado e tomada de decisão'],
-          snippet: 'if farm.can_harvest():\n    farm.harvest()\nelse:\n    farm.plant("WILD_FIBER")'
+          capabilities: [
+            'Lógica condicional: if ... elif ... else (Python) e if ... else if ... else (JS)',
+            'Operadores Lógicos e/ou liberados simultaneamente: Python (and, or) | JavaScript (&&, ||)',
+            'Avaliação combinada de múltiplas condições e tomada de decisão dinâmica'
+          ],
+          snippet: 'if world.ground() == "NATURAL" and world.moisture() < 0.5:\n    farm.till()\n    farm.water()\nelse:\n    farm.plant("WILD_FIBER")'
         };
       case 'AUTO_4':
         return {

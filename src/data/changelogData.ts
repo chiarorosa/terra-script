@@ -8,10 +8,23 @@ export interface ChangelogRelease {
 
 export const CHANGELOG_HISTORY: ChangelogRelease[] = [
   {
+    version: 'v2.2.1',
+    date: '2026-07-30',
+    title: 'Trilha Sonora Lo-Fi Marcante, Interpretador de Sintaxe Estrita & Autocomplete Inteligente',
+    isCurrent: true,
+    changes: [
+      'Nova Trilha Sonora Lo-Fi Oficial ("Tema do Claudio"): Composição procedural icônica e marcante com arranjo de teclados Rhodes (Cmaj9 -> Am9 -> Fmaj7 -> G11), batida de bateria Lo-Fi Hip Hop (Kick, Snare, Hi-Hats), sub-baixo profundo e textura de vinil.',
+      'Separação Estrita de Sintaxes (Python vs JavaScript): O interpretador agora valida rigorosamente a linguagem de cada arquivo (.py / .js) e exibe erros de sintaxe claros em português quando comandos de linguagens opostas são utilizados.',
+      'Aprimoramento das Estruturas Condicionais (if/elif/else e if/else if/else): Correção do parser de expressões e atualização do Guia do Jogo explicitando que os operadores lógicos (and, or em Python; &&, || em JavaScript) são liberados simultaneamente com a pesquisa de Condicionais (AUTO_3).',
+      'Avaliador de Expressões Robusto (Tick Sync): Avaliação precisa de múltiplos operadores lógicos (and, or, &&, ||) e relacionais sem discrepâncias entre leituras de print e avaliação no bloco condicional.',
+      'Melhoria do Autocomplete de Código: Sugestões de autocompletar sincronizadas com o arquivo ativo, com extensão de regex mantida para evitar que o menu desapareça ao digitar parâmetros, aspas ou métodos com ponto.'
+    ]
+  },
+  {
     version: 'v2.2.0',
     date: '2026-07-30',
     title: 'Redesign do Jogador: UI/UX Linear, Guia Refatorado & Experiência de Programação',
-    isCurrent: true,
+    isCurrent: false,
     changes: [
       'Novo Design System inspirado no Linear: Interface escura e sóbria de alto contraste com cantos arredondados matemáticos e tipografia técnica.',
       'Remoção de Emojis em Títulos e Modais: Substituição de emojis decorativos por ícones vetoriais do Lucide para uma estética de IDE limpa e profissional.',

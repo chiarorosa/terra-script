@@ -433,15 +433,15 @@ export const API_CATALOG: ApiItem[] = [
     id: 'syntax_conditionals',
     namespace: 'syntax',
     methodName: 'conditionals',
-    displayText: 'Condicionais (if / else)',
-    signature: 'if condição: ... else: ... | if (condição) { ... }',
-    pythonSnippet: 'if farm.can_harvest():\n    farm.harvest()',
-    jsSnippet: 'if (farm.can_harvest()) {\n  farm.harvest();\n}',
-    description: 'Lógica de ramificação e verificações condicionais.',
+    displayText: 'Condicionais & Operadores Lógicos (and/or/&&/||)',
+    signature: 'if c1 and c2: ... else: ... | if (c1 && c2) { ... }',
+    pythonSnippet: 'if farm.can_harvest() and world.moisture() > 0.5:\n    farm.harvest()',
+    jsSnippet: 'if (farm.can_harvest() && world.moisture() > 0.5) {\n  farm.harvest();\n}',
+    description: 'Lógica condicional (if/elif/else) e operadores lógicos e/ou (Python: and, or | JS: &&, ||).',
     techId: 'AUTO_3',
     category: 'Language Features',
-    docDetail: 'Permite decisões no script com base em dados de sensores.',
-    exampleCode: 'if world.ground() == "NATURAL":\n    farm.till()'
+    docDetail: 'Liberado com AUTO_3. Permite tomar decisões no script combinando múltiplas condições com os operadores lógicos e/ou (Python: and, or | JS: &&, ||).',
+    exampleCode: 'if world.ground() == "NATURAL" and world.moisture() < 0.5:\n    farm.till()\n    farm.water()'
   },
   {
     id: 'syntax_loops',

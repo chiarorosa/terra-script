@@ -18,7 +18,7 @@ const SYNTAX_KEYWORDS: KeywordSpec[] = [
     lang: 'python',
     techId: 'AUTO_3',
     signature: 'if condição:',
-    description: 'Estrutura condicional. Executa o bloco se a condição for verdadeira.',
+    description: 'Estrutura condicional Python. Executa o bloco se a condição for verdadeira.',
     snippet: 'if '
   },
   {
@@ -26,7 +26,7 @@ const SYNTAX_KEYWORDS: KeywordSpec[] = [
     lang: 'js',
     techId: 'AUTO_3',
     signature: 'if (condição) { ... }',
-    description: 'Estrutura condicional. Executa o bloco se a condição for verdadeira.',
+    description: 'Estrutura condicional JavaScript. Executa o bloco se a condição for verdadeira.',
     snippet: 'if ('
   },
   {
@@ -34,7 +34,7 @@ const SYNTAX_KEYWORDS: KeywordSpec[] = [
     lang: 'python',
     techId: 'AUTO_3',
     signature: 'else:',
-    description: 'Ramo alternativo executado quando a condição do if for falsa.',
+    description: 'Ramo alternativo executado quando a condição do if for falsa em Python.',
     snippet: 'else:\n    '
   },
   {
@@ -42,7 +42,7 @@ const SYNTAX_KEYWORDS: KeywordSpec[] = [
     lang: 'js',
     techId: 'AUTO_3',
     signature: 'else { ... }',
-    description: 'Ramo alternativo executado quando a condição do if for falsa.',
+    description: 'Ramo alternativo executado quando a condição do if for falsa em JavaScript.',
     snippet: 'else {\n  '
   },
   {
@@ -50,8 +50,16 @@ const SYNTAX_KEYWORDS: KeywordSpec[] = [
     lang: 'python',
     techId: 'AUTO_3',
     signature: 'elif condição:',
-    description: 'Condição alternativa adicional no fluxo condicional.',
+    description: 'Condição alternativa adicional no fluxo condicional em Python.',
     snippet: 'elif '
+  },
+  {
+    keyword: 'else if',
+    lang: 'js',
+    techId: 'AUTO_3',
+    signature: 'else if (condição) { ... }',
+    description: 'Condição alternativa adicional no fluxo condicional em JavaScript.',
+    snippet: 'else if ('
   },
 
   // Loops (AUTO_4)
@@ -94,7 +102,7 @@ const SYNTAX_KEYWORDS: KeywordSpec[] = [
     lang: 'python',
     techId: 'AUTO_5',
     signature: 'def nome_função(parâmetros):',
-    description: 'Define uma função personalizada reutilizável.',
+    description: 'Define uma função personalizada em Python.',
     snippet: 'def '
   },
   {
@@ -102,7 +110,7 @@ const SYNTAX_KEYWORDS: KeywordSpec[] = [
     lang: 'js',
     techId: 'AUTO_5',
     signature: 'function nomeFunção(parâmetros) { ... }',
-    description: 'Define uma função personalizada reutilizável.',
+    description: 'Define uma função personalizada em JavaScript.',
     snippet: 'function '
   },
   {
@@ -117,10 +125,10 @@ const SYNTAX_KEYWORDS: KeywordSpec[] = [
   // Print (SYS_1)
   {
     keyword: 'print',
-    lang: 'both',
+    lang: 'python',
     techId: 'SYS_1',
     signature: 'print(mensagem)',
-    description: 'Imprime mensagens de log no console stdout.',
+    description: 'Imprime mensagens de log no console stdout em Python.',
     snippet: 'print('
   },
   {
@@ -128,7 +136,7 @@ const SYNTAX_KEYWORDS: KeywordSpec[] = [
     lang: 'js',
     techId: 'SYS_1',
     signature: 'console.log(mensagem)',
-    description: 'Imprime mensagens de log no console stdout.',
+    description: 'Imprime mensagens de log no console stdout em JavaScript.',
     snippet: 'console.log('
   },
 
@@ -138,7 +146,7 @@ const SYNTAX_KEYWORDS: KeywordSpec[] = [
     lang: 'js',
     techId: 'AUTO_2',
     signature: 'let x = valor;',
-    description: 'Declara uma variável local no escopo de bloco.',
+    description: 'Declara uma variável local em JavaScript.',
     snippet: 'let '
   },
   {
@@ -146,8 +154,16 @@ const SYNTAX_KEYWORDS: KeywordSpec[] = [
     lang: 'js',
     techId: 'AUTO_2',
     signature: 'const x = valor;',
-    description: 'Declara uma constante imutável.',
+    description: 'Declara uma constante imutável em JavaScript.',
     snippet: 'const '
+  },
+  {
+    keyword: 'var',
+    lang: 'js',
+    techId: 'AUTO_2',
+    signature: 'var x = valor;',
+    description: 'Declara uma variável em JavaScript.',
+    snippet: 'var '
   }
 ];
 
@@ -161,7 +177,7 @@ export function createGameEngineCompletionExtension(engine: GameEngine, isPython
         // Verifica se o cursor está após notação de ponto, ex: "farm." ou "world." ou "inventory."
         const matchDot = textUntilPosition.match(/(farm|world|inventory)\.([a-zA-Z0-9_]*)$/);
         
-        // Verifica se o usuário está digitando palavras-chave
+        // Verifica se o usuário está digitando palavras-chave ou métodos sem ponto
         const matchWord = textUntilPosition.match(/([a-zA-Z0-9_.]+)$/);
 
         if (!matchDot && !matchWord && !context.explicit) return null;
@@ -186,15 +202,17 @@ export function createGameEngineCompletionExtension(engine: GameEngine, isPython
           items.forEach(item => {
             const unlocked = isTechUnlocked(item.techId, techTree);
             const techNode = getTechForApiItem(item.techId, techTree);
-            const methodOnly = item.displayText.replace(/^(farm|world|inventory)\./, '');
+            const rawSnippet = isPython ? item.pythonSnippet : item.jsSnippet;
+            const methodSnippet = rawSnippet.replace(/^(farm|world|inventory)\./, '');
+            const methodNameOnly = item.methodName;
 
-            if (!prefix || methodOnly.toLowerCase().includes(prefix.toLowerCase())) {
+            if (!prefix || methodSnippet.toLowerCase().includes(prefix.toLowerCase()) || methodNameOnly.toLowerCase().includes(prefix.toLowerCase())) {
               options.push({
-                label: methodOnly,
+                label: methodSnippet,
                 type: unlocked ? 'method' : 'text',
                 detail: item.signature,
                 info: `Sintaxe: ${item.signature}\nUso: ${item.displayText}\n\n${item.description}\n\n${unlocked ? 'STATUS: Desbloqueado e pronto para uso!' : `STATUS: Bloqueado (Requer pesquisa: ${techNode?.name || item.techId} - Nível ${techNode?.tier})`}`,
-                apply: methodOnly,
+                apply: methodSnippet,
                 boost: unlocked ? 50 : -20
               });
             }
@@ -203,7 +221,7 @@ export function createGameEngineCompletionExtension(engine: GameEngine, isPython
           return {
             from,
             options,
-            validFor: /^[a-zA-Z0-9_]*$/
+            validFor: /^[a-zA-Z0-9_"'()]*$/
           };
         }
 
@@ -212,7 +230,7 @@ export function createGameEngineCompletionExtension(engine: GameEngine, isPython
           const from = context.pos - word.length;
           const currentLang = isPython ? 'python' : 'js';
 
-          // 1. Palavras-chave de linguagem (FOR, WHILE, IF, DEF, etc)
+          // 1. Palavras-chave de linguagem atreladas ao arquivo atual
           SYNTAX_KEYWORDS.forEach(kw => {
             if ((kw.lang === 'both' || kw.lang === currentLang) && kw.keyword.toLowerCase().startsWith(word.toLowerCase())) {
               const unlocked = isTechUnlocked(kw.techId, techTree);
@@ -229,7 +247,7 @@ export function createGameEngineCompletionExtension(engine: GameEngine, isPython
             }
           });
 
-          // 2. Se estiver digitando farm / world / inventory
+          // 2. Namespaces da API
           if ('farm'.startsWith(word.toLowerCase())) {
             options.push({ label: 'farm', type: 'namespace', detail: 'API de Comandos da Fazenda', boost: 20 });
           }
@@ -240,17 +258,18 @@ export function createGameEngineCompletionExtension(engine: GameEngine, isPython
             options.push({ label: 'inventory', type: 'namespace', detail: 'API do Inventário', boost: 20 });
           }
 
-          // 3. Sugere também assinaturas de API (somente farm / world / inventory)
+          // 3. Assinaturas de API completas com base na linguagem do arquivo
           API_CATALOG.forEach(item => {
-            if (item.namespace !== 'syntax' && item.displayText.toLowerCase().includes(word.toLowerCase())) {
+            const rawSnippet = isPython ? item.pythonSnippet : item.jsSnippet;
+            if (item.namespace !== 'syntax' && (item.displayText.toLowerCase().includes(word.toLowerCase()) || rawSnippet.toLowerCase().includes(word.toLowerCase()))) {
               const unlocked = isTechUnlocked(item.techId, techTree);
               const techNode = getTechForApiItem(item.techId, techTree);
               options.push({
-                label: item.displayText,
+                label: rawSnippet,
                 type: unlocked ? 'function' : 'text',
                 detail: item.signature,
                 info: `Sintaxe: ${item.signature}\n\n${item.description}\n\n${unlocked ? 'API Desbloqueada' : `Bloqueado (Requer pesquisa: ${techNode?.name})`}`,
-                apply: item.displayText,
+                apply: rawSnippet,
                 boost: unlocked ? 10 : -30
               });
             }
@@ -270,4 +289,5 @@ export function createGameEngineCompletionExtension(engine: GameEngine, isPython
     ]
   });
 }
+
 
