@@ -55,6 +55,48 @@ function stripOuterParens(str: string): string {
   return s;
 }
 
+function splitCommaTopLevel(str: string): string[] {
+  const result: string[] = [];
+  let current = '';
+  let parenDepth = 0;
+  let bracketDepth = 0;
+  let braceDepth = 0;
+  let inString: string | null = null;
+
+  for (let i = 0; i < str.length; i++) {
+    const char = str[i];
+    if (inString) {
+      current += char;
+      if (char === inString && str[i - 1] !== '\\') {
+        inString = null;
+      }
+      continue;
+    }
+    if (char === '"' || char === "'" || char === '`') {
+      inString = char;
+      current += char;
+      continue;
+    }
+    if (char === '(') parenDepth++;
+    else if (char === ')') parenDepth--;
+    else if (char === '[') bracketDepth++;
+    else if (char === ']') bracketDepth--;
+    else if (char === '{') braceDepth++;
+    else if (char === '}') braceDepth--;
+
+    if (char === ',' && parenDepth === 0 && bracketDepth === 0 && braceDepth === 0) {
+      result.push(current.trim());
+      current = '';
+    } else {
+      current += char;
+    }
+  }
+  if (current.trim()) {
+    result.push(current.trim());
+  }
+  return result;
+}
+
 function splitTopLevel(expr: string, op: string): [string, string] | null {
   let parenDepth = 0;
   let inString: string | null = null;
@@ -68,7 +110,7 @@ function splitTopLevel(expr: string, op: string): [string, string] | null {
       }
       continue;
     }
-    if (char === '"' || char === "'") {
+    if (char === '"' || char === "'" || char === '`') {
       inString = char;
       continue;
     }
@@ -676,7 +718,11 @@ export class ScriptRunner {
           }
           if (closeIdx !== -1) {
             condStr = trimmed.substring(openIdx + 1, closeIdx).trim();
+          } else {
+            throw new Error(`Erro de Sintaxe (linha ${currIdx + 1}): Parêntese de fechamento ')' ausente na instrução '${type}'.`);
           }
+        } else {
+          throw new Error(`Erro de Sintaxe (linha ${currIdx + 1}): Parêntese de abertura '(' ausente na instrução '${type}'.`);
         }
       }
 
@@ -813,9 +859,14 @@ export class ScriptRunner {
     if (line.startsWith('print(') || line.startsWith('console.log(')) {
       const match = line.match(/(?:print|console\.log)\((.*)\)/);
       if (match) {
-        const expr = match[1].trim();
-        const val = this.evalExpression(expr, ctx);
-        this.engine.addLog(ctx.agentId, 'stdout', String(val), ctx.currentLineIndex + 1, ctx.filePath);
+        const rawArgsStr = match[1].trim();
+        const args = splitCommaTopLevel(rawArgsStr);
+        const evaluatedValues = args.map(arg => {
+          const val = this.evalExpression(arg, ctx);
+          return val !== undefined && val !== null ? String(val) : '';
+        });
+        const output = evaluatedValues.join(' ');
+        this.engine.addLog(ctx.agentId, 'stdout', output, ctx.currentLineIndex + 1, ctx.filePath);
       }
       return;
     }
@@ -929,7 +980,12 @@ export class ScriptRunner {
     }
     const add = splitTopLevel(expr, '+');
     if (add) {
-      return Number(this.evalExpression(add[0], ctx)) + Number(this.evalExpression(add[1], ctx));
+      const leftVal = this.evalExpression(add[0], ctx);
+      const rightVal = this.evalExpression(add[1], ctx);
+      if (typeof leftVal === 'string' || typeof rightVal === 'string') {
+        return String(leftVal) + String(rightVal);
+      }
+      return Number(leftVal) + Number(rightVal);
     }
     const sub = splitTopLevel(expr, '-');
     if (sub) {
@@ -1115,6 +1171,22 @@ export class ScriptRunner {
     }
 
     // 7. Literal evaluations & variable resolution
+    if (expr.startsWith('`') && expr.endsWith('`')) {
+      const raw = expr.slice(1, -1);
+      return raw.replace(/\$\{([^}]+)\}/g, (_, subExpr) => {
+        const val = this.evalExpression(subExpr, ctx);
+        return val !== undefined && val !== null ? String(val) : '';
+      });
+    }
+
+    if ((expr.startsWith('f"') && expr.endsWith('"')) || (expr.startsWith("f'") && expr.endsWith("'"))) {
+      const raw = expr.slice(2, -1);
+      return raw.replace(/\{([^}]+)\}/g, (_, subExpr) => {
+        const val = this.evalExpression(subExpr, ctx);
+        return val !== undefined && val !== null ? String(val) : '';
+      });
+    }
+
     if (expr === 'true' || expr === 'True') return true;
     if (expr === 'false' || expr === 'False') return false;
     if (!isNaN(Number(expr))) return Number(expr);
