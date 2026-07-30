@@ -77,7 +77,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({ engine, onClose }) =
               </span>
             </p>
             <p className="text-[#8a8f98]">
-              Você acaba de assumir o comando da Estação de Automação. Agora na versão <span className="text-[#27a644] font-mono font-semibold">v2.3.0</span>, seus scripts de <span className="text-[#ffffff] font-mono font-medium">Python</span> e <span className="text-[#ffffff] font-mono font-medium">JavaScript</span> são executados diretamente por motores nativos (<span className="text-[#02b8cc] font-mono">Pyodide WASM</span> e <span className="text-[#02b8cc] font-mono">V8 JS Sandbox</span>) no seu navegador, suportando algoritmos complexos, estruturas aninhadas e recursão!
+              Você acaba de assumir o comando da Estação de Automação. Sua missão é criar scripts em <span className="text-[#ffffff] font-mono font-medium">Python</span> e <span className="text-[#ffffff] font-mono font-medium">JavaScript</span> para automatizar nossos drones e transformar este quadrante num próspero ecossistema biotecnológico.
             </p>
           </div>
 
