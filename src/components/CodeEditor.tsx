@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import CodeMirror from '@uiw/react-codemirror';
+import { EditorView } from '@codemirror/view';
 import { javascript } from '@codemirror/lang-javascript';
 import { python } from '@codemirror/lang-python';
 import { oneDark } from '@codemirror/theme-one-dark';
@@ -10,6 +11,27 @@ import { Play, Star, Tag, Lock, CheckCircle2, Copy, Filter } from 'lucide-react'
 import { API_CATALOG, isTechUnlocked, getTechForApiItem } from '../engine/techApiMap';
 import { createGameEngineCompletionExtension } from './editorAutocompletion';
 import { activeLineExtension } from './editorActiveLine';
+
+// High-contrast text selection theme using Theme Palette Violet (#8b5cf6)
+const customSelectionTheme = EditorView.theme({
+  '.cm-selectionBackground': {
+    backgroundColor: 'rgba(139, 92, 246, 0.5) !important',
+    borderRadius: '2px',
+  },
+  '&.cm-focused .cm-selectionBackground': {
+    backgroundColor: 'rgba(139, 92, 246, 0.65) !important',
+    borderRadius: '2px',
+  },
+  // Hide full-width block native selection on cm-line to ensure character-by-character precision
+  '& .cm-line::selection, &.cm-focused .cm-line::selection': {
+    backgroundColor: 'transparent !important',
+  },
+  '.cm-selectionMatch': {
+    backgroundColor: 'rgba(234, 179, 8, 0.3) !important',
+    outline: '1px solid rgba(234, 179, 8, 0.7) !important',
+    borderRadius: '2px',
+  }
+});
 
 interface CodeEditorProps {
   file: VirtualFile;
@@ -65,7 +87,8 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
   const editorExtensions = useMemo(() => [
     langExt,
     completionExt,
-    activeLineExt
+    activeLineExt,
+    customSelectionTheme
   ], [langExt, completionExt, activeLineExt]);
 
   return (

@@ -260,6 +260,40 @@ code, kbd, samp, pre {
   background-color: #161718 !important;
 }
 
+/* High-Contrast Code Selection in Theme Palette Violet (#8b5cf6) */
+::selection {
+  background-color: rgba(139, 92, 246, 0.55) !important;
+  color: #ffffff !important;
+}
+
+.cm-editor ::selection,
+.cm-content ::selection {
+  background-color: rgba(139, 92, 246, 0.55) !important;
+  color: #ffffff !important;
+}
+
+/* Prevent native line selection from highlighting full block width */
+.cm-line::selection {
+  background-color: transparent !important;
+}
+
+.cm-selectionBackground,
+.cm-focused .cm-selectionBackground {
+  background-color: rgba(139, 92, 246, 0.5) !important;
+  border-radius: 2px !important;
+}
+
+.cm-editor.cm-focused .cm-selectionBackground {
+  background-color: rgba(139, 92, 246, 0.65) !important;
+}
+
+/* Matching word occurrences highlight using Theme Yellow (#eab308) */
+.cm-selectionMatch {
+  background-color: rgba(234, 179, 8, 0.3) !important;
+  outline: 1px solid rgba(234, 179, 8, 0.7) !important;
+  border-radius: 2px !important;
+}
+
 /* Custom Linear Dark Scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
