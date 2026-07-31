@@ -15,6 +15,7 @@ import {
   Sprout,
   Apple,
   Flame,
+  Gem,
   RotateCcw,
   Save,
   Download,
@@ -151,7 +152,7 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({ engine, activeTab, setActi
           <span>{resources.fiber}</span>
         </div>
 
-        {(resources.wood > 0 || engine.isTechUnlocked('AGRO_3')) && (
+        {(resources.wood > 0 || engine.isTechUnlocked('AGRO_2')) && (
           <>
             <div className="w-px h-3 bg-[#23252a]" />
             <div className="flex items-center gap-1.5 text-[#27a644]" title="Madeira">
@@ -161,7 +162,7 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({ engine, activeTab, setActi
           </>
         )}
 
-        {(resources.roots > 0 || engine.isTechUnlocked('AGRO_4')) && (
+        {(resources.roots > 0 || engine.isTechUnlocked('AGRO_3')) && (
           <>
             <div className="w-px h-3 bg-[#23252a]" />
             <div className="flex items-center gap-1.5 text-[#f97316]" title="Raízes Cultivadas">
@@ -197,6 +198,16 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({ engine, activeTab, setActi
             <div className="flex items-center gap-1.5 text-[#8b5cf6]" title="Biomassa">
               <Flame className="w-3.5 h-3.5 text-[#8b5cf6]" />
               <span>{resources.biomass}</span>
+            </div>
+          </>
+        )}
+
+        {(resources.crystals > 0 || engine.isTechUnlocked('AGRO_8')) && (
+          <>
+            <div className="w-px h-3 bg-[#23252a]" />
+            <div className="flex items-center gap-1.5 text-[#3b82f6]" title="Cristais">
+              <Gem className="w-3.5 h-3.5 text-[#3b82f6]" />
+              <span>{resources.crystals}</span>
             </div>
           </>
         )}

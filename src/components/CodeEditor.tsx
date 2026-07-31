@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import CodeMirror from '@uiw/react-codemirror';
-import { EditorView } from '@codemirror/view';
+import { EditorView, keymap } from '@codemirror/view';
 import { javascript } from '@codemirror/lang-javascript';
 import { python } from '@codemirror/lang-python';
 import { oneDark } from '@codemirror/theme-one-dark';
@@ -84,12 +84,25 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
     return activeLineExtension(activeLine);
   }, [activeLine]);
 
+  const runKeymapExt = useMemo(() => {
+    return keymap.of([
+      {
+        key: 'Mod-Enter',
+        run: () => {
+          engine.runScriptOnPrimaryAgent(file.path);
+          return true;
+        }
+      }
+    ]);
+  }, [engine, file.path]);
+
   const editorExtensions = useMemo(() => [
     langExt,
     completionExt,
     activeLineExt,
-    customSelectionTheme
-  ], [langExt, completionExt, activeLineExt]);
+    customSelectionTheme,
+    runKeymapExt
+  ], [langExt, completionExt, activeLineExt, runKeymapExt]);
 
   return (
     <div className="flex-1 flex flex-col bg-[#0d1117] h-full overflow-hidden border-r border-[#30363d]">
@@ -111,6 +124,10 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
         </div>
 
         <div className="flex items-center gap-3 text-[#8b949e] text-[11px]">
+          <span className="text-[10px] text-[#8a8f98] font-mono hidden sm:flex items-center gap-1" title="Atalho para executar este arquivo aberto no Agente Principal">
+            <kbd className="px-1.5 py-0.5 bg-[#21262d] border border-[#30363d] rounded text-[9px] text-[#c9d1d9] font-sans font-medium">Ctrl/Cmd + Enter</kbd>
+            <span>Executar</span>
+          </span>
           {activeLine && (
             <span className="text-[#5e6ad2] font-bold animate-pulse flex items-center gap-1">
               <Play className="w-3 h-3 fill-current" />

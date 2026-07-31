@@ -117,7 +117,13 @@ export default function App() {
   // Global Keyboard Shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'F5') {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        e.preventDefault();
+        const fileToRun = activeFilePath || vfs.getEntrypoint().path;
+        if (fileToRun) {
+          engine.runScriptOnPrimaryAgent(fileToRun);
+        }
+      } else if (e.key === 'F5') {
         e.preventDefault();
         if (e.shiftKey) {
           engine.stopSimulation();
@@ -132,7 +138,7 @@ export default function App() {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [engine]);
+  }, [engine, activeFilePath, vfs]);
 
   const activeFile = vfs.getFile(activeFilePath) || vfs.getEntrypoint();
 

@@ -397,7 +397,7 @@ export const ExplorerPanel: React.FC<ExplorerPanelProps> = ({
                       engine.runScriptOnPrimaryAgent(file.path);
                     }}
                     className="p-1 text-[#5e6ad2] hover:text-[#707eff] transition-all rounded-[4px]"
-                    title={`Executar Script no Agente Principal (${primaryAgent.name})`}
+                    title={`Executar Script no Agente Principal (${primaryAgent.name}) [Ctrl/Cmd + Enter]`}
                   >
                     <Play className="w-3 h-3 fill-current" />
                   </button>
