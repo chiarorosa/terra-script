@@ -14,7 +14,9 @@ import {
   Download,
   Upload,
   Save,
-  Play
+  Play,
+  Sparkles,
+  X
 } from 'lucide-react';
 import { VirtualFS } from '../engine/virtualFs';
 import { VirtualFile } from '../types/game';
@@ -43,6 +45,20 @@ export const ExplorerPanel: React.FC<ExplorerPanelProps> = ({
 
   const [editingPath, setEditingPath] = useState<string | null>(null);
   const [editingName, setEditingName] = useState<string>('');
+
+  const [showOnboardingTip, setShowOnboardingTip] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('terrascript_onboarding_tip_dismissed') !== 'true';
+    }
+    return true;
+  });
+
+  const dismissOnboardingTip = () => {
+    setShowOnboardingTip(false);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('terrascript_onboarding_tip_dismissed', 'true');
+    }
+  };
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -226,10 +242,36 @@ export const ExplorerPanel: React.FC<ExplorerPanelProps> = ({
 
       {/* File Tree List */}
       <div className="flex-1 overflow-y-auto py-2 px-1">
-        <div className="text-[11px] font-mono text-[#8a8f98] px-2 py-1 flex items-center gap-1 uppercase tracking-wider">
-          <ChevronDown className="w-3 h-3 text-[#62666d]" />
-          workspace /
+        <div className="text-[11px] font-mono text-[#8a8f98] px-2 py-1 flex items-center justify-between uppercase tracking-wider">
+          <span className="flex items-center gap-1">
+            <ChevronDown className="w-3 h-3 text-[#62666d]" />
+            workspace /
+          </span>
         </div>
+
+        {/* Beginner Onboarding Quick Start Banner */}
+        {showOnboardingTip && engine.getTechTree().filter(t => t.unlocked).length === 0 && (
+          <div className="mx-1 my-2 p-2.5 bg-[#8b5cf6]/10 border border-[#8b5cf6]/30 rounded-[8px] text-[11px] font-sans text-[#d0d6e0] space-y-1.5">
+            <div className="flex items-center justify-between text-[#8b5cf6] font-semibold text-xs">
+              <span className="flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>Guia Rápido</span>
+              </span>
+              <button 
+                onClick={dismissOnboardingTip}
+                className="text-[#8a8f98] hover:text-[#ffffff] text-[10px] p-0.5 hover:bg-[#161718] rounded"
+                title="Fechar guia rápido"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+            <ol className="list-decimal pl-4 space-y-1 text-[#8a8f98] text-[11px] leading-tight font-sans">
+              <li>Edite o código em <strong className="text-[#ffffff]">main.py</strong></li>
+              <li>Clique no botão <strong className="text-[#27a644]">▶ Executar (F5)</strong></li>
+              <li>Acompanhe seu drone colher e libere novas <strong className="text-[#e4f222]">Pesquisas</strong>!</li>
+            </ol>
+          </div>
+        )}
 
         <div className="space-y-0.5 mt-1">
           {files.map((file) => {

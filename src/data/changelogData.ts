@@ -8,10 +8,24 @@ export interface ChangelogRelease {
 
 export const CHANGELOG_HISTORY: ChangelogRelease[] = [
   {
+    version: 'v2.4.0',
+    date: '2026-07-31',
+    title: 'UI Limpa, Revelação Progressiva & Onboarding Amigável para Iniciantes',
+    isCurrent: true,
+    changes: [
+      'Revelação Progressiva de Interface (Progressive Disclosure): Elementos avançados da UI (como a barra de Prestígio, aba de Agentes/Frota e indicadores de recursos avançados) iniciam ocultos e são revelados organicamente conforme o jogador desbrava a árvore de tecnologias.',
+      'Suporte Educativo a Erros de Código (Modo Iniciante): Quando ocorrem erros de sintaxe ou tempo de execução no console, o jogo exibe um card educativo em roxo explicando em português claro qual foi a causa do erro e como corrigi-lo.',
+      'Controle de Preferências de Auxílio: Chave de ativação/desativação do Auxílio Educativo disponível tanto no menu inicial de perfil/tema quanto no próprio card de erro e na aba do Guia.',
+      'Guia Rápido de Início no Explorador: Card expansível "Primeiros Passos" no topo do Explorador de Arquivos para orientar o novo jogador nos 3 passos essenciais para colocar o primeiro drone em ação.',
+      'Revelação Gradual no Inspetor de Bloco: Propriedades avançadas como Valor de Energia e Nota do Solo no Inspetor 3D permanecem ocultas até o desbloqueio das respectivas culturas graduadas e flores de energia na pesquisa.',
+      'Seleção de Código Violeta (#8b5cf6): Destaque de seleção de código atualizado para violeta harmônico em conformidade com a paleta visual do jogo.'
+    ]
+  },
+  {
     version: 'v2.3.1',
     date: '2026-07-31',
     title: 'Reformulação do Guia em Wiki de API Didática & Otimização de UI',
-    isCurrent: true,
+    isCurrent: false,
     changes: [
       'Nova Estrutura do Guia em Formato Wiki de API: Reformulação completa do Guia Técnico para uma documentação no estilo Wiki/API, focada no ensino didático de programação com interface dividida (Navegação + Leitura em Foco).',
       'Navegação e Busca Integrada por Tópicos: Menu lateral com agrupamento por Namespace (farm, world, inventory, syntax, mecânicas) e campo de pesquisa dinâmica com filtros de estado (Todos, Desbloqueados, Bloqueados).',

@@ -117,17 +117,19 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({ engine, activeTab, setActi
           )}
         </button>
 
-        <button
-          onClick={() => setActiveTab('agents')}
-          className={`flex items-center gap-1.5 px-3 py-1 rounded-[6px] text-xs font-normal transition-all ${
-            activeTab === 'agents' 
-              ? 'bg-[#161718] text-[#ffffff] border border-[#23252a]' 
-              : 'text-[#8a8f98] hover:text-[#ffffff] hover:bg-[#0f1011]'
-          }`}
-        >
-          <Bot className="w-3.5 h-3.5 text-[#8b5cf6]" />
-          Agentes ({engine.getAgents().length})
-        </button>
+        {(engine.isTechUnlocked('AUTO_1') || engine.getAgents().length > 1) && (
+          <button
+            onClick={() => setActiveTab('agents')}
+            className={`flex items-center gap-1.5 px-3 py-1 rounded-[6px] text-xs font-normal transition-all ${
+              activeTab === 'agents' 
+                ? 'bg-[#161718] text-[#ffffff] border border-[#23252a]' 
+                : 'text-[#8a8f98] hover:text-[#ffffff] hover:bg-[#0f1011]'
+            }`}
+          >
+            <Bot className="w-3.5 h-3.5 text-[#8b5cf6]" />
+            Agentes ({engine.getAgents().length})
+          </button>
+        )}
 
         <button
           onClick={() => setActiveTab('tutorial')}
@@ -142,37 +144,62 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({ engine, activeTab, setActi
         </button>
       </div>
 
-      {/* Resource Indicators Bar */}
+      {/* Resource Indicators Bar (Progressive Disclosure) */}
       <div className="hidden lg:flex items-center gap-3 bg-[#08090a] px-3 py-1 rounded-[6px] border border-[#23252a] text-xs font-mono">
         <div className="flex items-center gap-1.5 text-[#e4f222]" title="Fibra Selvagem">
           <Wheat className="w-3.5 h-3.5 text-[#e4f222]" />
           <span>{resources.fiber}</span>
         </div>
-        <div className="w-px h-3 bg-[#23252a]" />
-        <div className="flex items-center gap-1.5 text-[#27a644]" title="Madeira">
-          <TreePine className="w-3.5 h-3.5 text-[#27a644]" />
-          <span>{resources.wood}</span>
-        </div>
-        <div className="w-px h-3 bg-[#23252a]" />
-        <div className="flex items-center gap-1.5 text-[#f97316]" title="Raízes Cultivadas">
-          <Sprout className="w-3.5 h-3.5 text-[#f97316]" />
-          <span>{resources.roots}</span>
-        </div>
-        <div className="w-px h-3 bg-[#23252a]" />
-        <div className="flex items-center gap-1.5 text-[#eb5757]" title="Frutas">
-          <Apple className="w-3.5 h-3.5 text-[#eb5757]" />
-          <span>{resources.fruits}</span>
-        </div>
-        <div className="w-px h-3 bg-[#23252a]" />
-        <div className="flex items-center gap-1.5 text-[#02b8cc]" title="Flor de Energia">
-          <Zap className="w-3.5 h-3.5 text-[#02b8cc]" />
-          <span>{resources.energy}</span>
-        </div>
-        <div className="w-px h-3 bg-[#23252a]" />
-        <div className="flex items-center gap-1.5 text-[#8b5cf6]" title="Biomassa">
-          <Flame className="w-3.5 h-3.5 text-[#8b5cf6]" />
-          <span>{resources.biomass}</span>
-        </div>
+
+        {(resources.wood > 0 || engine.isTechUnlocked('AGRO_3')) && (
+          <>
+            <div className="w-px h-3 bg-[#23252a]" />
+            <div className="flex items-center gap-1.5 text-[#27a644]" title="Madeira">
+              <TreePine className="w-3.5 h-3.5 text-[#27a644]" />
+              <span>{resources.wood}</span>
+            </div>
+          </>
+        )}
+
+        {(resources.roots > 0 || engine.isTechUnlocked('AGRO_4')) && (
+          <>
+            <div className="w-px h-3 bg-[#23252a]" />
+            <div className="flex items-center gap-1.5 text-[#f97316]" title="Raízes Cultivadas">
+              <Sprout className="w-3.5 h-3.5 text-[#f97316]" />
+              <span>{resources.roots}</span>
+            </div>
+          </>
+        )}
+
+        {(resources.fruits > 0 || engine.isTechUnlocked('AGRO_5')) && (
+          <>
+            <div className="w-px h-3 bg-[#23252a]" />
+            <div className="flex items-center gap-1.5 text-[#eb5757]" title="Frutas">
+              <Apple className="w-3.5 h-3.5 text-[#eb5757]" />
+              <span>{resources.fruits}</span>
+            </div>
+          </>
+        )}
+
+        {(resources.energy > 0 || engine.isTechUnlocked('AGRO_6')) && (
+          <>
+            <div className="w-px h-3 bg-[#23252a]" />
+            <div className="flex items-center gap-1.5 text-[#02b8cc]" title="Flor de Energia">
+              <Zap className="w-3.5 h-3.5 text-[#02b8cc]" />
+              <span>{resources.energy}</span>
+            </div>
+          </>
+        )}
+
+        {(resources.biomass > 0 || engine.isTechUnlocked('AGRO_7')) && (
+          <>
+            <div className="w-px h-3 bg-[#23252a]" />
+            <div className="flex items-center gap-1.5 text-[#8b5cf6]" title="Biomassa">
+              <Flame className="w-3.5 h-3.5 text-[#8b5cf6]" />
+              <span>{resources.biomass}</span>
+            </div>
+          </>
+        )}
       </div>
 
       {/* Execution Controls */}

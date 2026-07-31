@@ -113,8 +113,10 @@ export default function App() {
         onOpenWelcome={() => setIsWelcomeModalOpen(true)}
       />
 
-      {/* Prestige Progress Bar (v2.1.0) */}
-      <PrestigeBar engine={engine} />
+      {/* Prestige Progress Bar (v2.1.0 - Progressive Disclosure) */}
+      {(engine.getPrestige().points > 0 || engine.getPrestige().level > 1 || engine.getTechTree().some(t => t.unlocked) || engine.getPrestige().worldChangeUnlocked) && (
+        <PrestigeBar engine={engine} />
+      )}
 
       {/* Main Content Area */}
       <div className="flex-1 flex overflow-hidden relative">
