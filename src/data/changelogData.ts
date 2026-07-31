@@ -13,12 +13,12 @@ export const CHANGELOG_HISTORY: ChangelogRelease[] = [
     title: 'UI Limpa, Revelação Progressiva & Onboarding Amigável para Iniciantes',
     isCurrent: true,
     changes: [
-      'Revelação Progressiva de Interface (Progressive Disclosure): Elementos avançados da UI (como a barra de Prestígio, aba de Agentes/Frota e indicadores de recursos avançados) iniciam ocultos e são revelados organicamente conforme o jogador desbrava a árvore de tecnologias.',
-      'Suporte Educativo a Erros de Código (Modo Iniciante): Quando ocorrem erros de sintaxe ou tempo de execução no console, o jogo exibe um card educativo em roxo explicando em português claro qual foi a causa do erro e como corrigi-lo.',
-      'Controle de Preferências de Auxílio: Chave de ativação/desativação do Auxílio Educativo disponível tanto no menu inicial de perfil/tema quanto no próprio card de erro e na aba do Guia.',
-      'Guia Rápido de Início no Explorador: Card expansível "Primeiros Passos" no topo do Explorador de Arquivos para orientar o novo jogador nos 3 passos essenciais para colocar o primeiro drone em ação.',
-      'Revelação Gradual no Inspetor de Bloco: Propriedades avançadas como Valor de Energia e Nota do Solo no Inspetor 3D permanecem ocultas até o desbloqueio das respectivas culturas graduadas e flores de energia na pesquisa.',
-      'Seleção de Código Violeta (#8b5cf6): Destaque de seleção de código atualizado para violeta harmônico em conformidade com a paleta visual do jogo.'
+      'Revelação Progressiva de Interface (Progressive Disclosure): Elementos avançados da UI (como a barra de Prestígio, aba de Agentes/Frota e indicadores de recursos avançados) iniciam ocultos e são revelados organicamente à medida que o jogador avança na árvore de tecnologias (Aba de Agentes liberada com Frota de Autômatos / Expansão).',
+      'Guia Rápido "Primeiros Passos" no Explorador: Card expansível e pulsante no topo do Explorador de Arquivos com borda Indigo (#5e6ad2) e brilho no padrão do Tema Linear, orientando o jogador nos 3 passos fundamentais até que ele decida fechá-lo.',
+      'Notificações Toast de Desbloqueio de Pesquisa: Pop-up contextual no canto inferior direito notificando instantaneamente cada pesquisa desbloqueada com atalho direto para a documentação técnica no Guia de API.',
+      'Suporte Educativo a Erros de Código (Modo Iniciante): Quando ocorrem erros de sintaxe ou tempo de execução no console, o jogo exibe um card educativo explicando em português claro a causa do erro e como corrigi-lo.',
+      'Controle de Preferências de Auxílio: Chave de ativação/desativação do Auxílio Educativo no menu de perfil, no card de erro e no Guia de API.',
+      'Ajustes de Nomenclatura e Identidade: Padronização completa do termo "Agente" em toda a interface e mensagens do sistema.'
     ]
   },
   {

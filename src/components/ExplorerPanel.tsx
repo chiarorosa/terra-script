@@ -247,15 +247,29 @@ export const ExplorerPanel: React.FC<ExplorerPanelProps> = ({
             <ChevronDown className="w-3 h-3 text-[#62666d]" />
             workspace /
           </span>
+          <button
+            onClick={() => {
+              const next = !showOnboardingTip;
+              setShowOnboardingTip(next);
+              if (typeof window !== 'undefined') {
+                localStorage.setItem('terrascript_onboarding_tip_dismissed', next ? 'false' : 'true');
+              }
+            }}
+            className="text-[10px] text-[#5e6ad2] hover:text-[#707ee6] flex items-center gap-1 cursor-pointer font-sans normal-case lowercase hover:underline"
+            title="Exibir/Ocultar Dicas de Início"
+          >
+            <Sparkles className="w-3 h-3 text-[#5e6ad2]" />
+            <span>Guia Rápido</span>
+          </button>
         </div>
 
-        {/* Beginner Onboarding Quick Start Banner */}
-        {showOnboardingTip && engine.getTechTree().filter(t => t.unlocked).length === 0 && (
-          <div className="mx-1 my-2 p-2.5 bg-[#8b5cf6]/10 border border-[#8b5cf6]/30 rounded-[8px] text-[11px] font-sans text-[#d0d6e0] space-y-1.5">
-            <div className="flex items-center justify-between text-[#8b5cf6] font-semibold text-xs">
+        {/* Beginner Onboarding Quick Start Banner with Linear Theme & Pulsing Glow */}
+        {showOnboardingTip && (
+          <div className="mx-1 my-2 p-2.5 bg-[#0f1011] border border-[#5e6ad2]/60 rounded-[8px] text-[11px] font-sans text-[#d0d6e0] space-y-1.5 shadow-[0_0_12px_rgba(94,106,210,0.25)] animate-pulse hover:animate-none transition-all">
+            <div className="flex items-center justify-between text-[#5e6ad2] font-semibold text-xs">
               <span className="flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5" />
-                <span>Guia Rápido</span>
+                <Sparkles className="w-3.5 h-3.5 text-[#5e6ad2]" />
+                <span className="text-[#ffffff]">Primeiros Passos</span>
               </span>
               <button 
                 onClick={dismissOnboardingTip}
@@ -268,7 +282,7 @@ export const ExplorerPanel: React.FC<ExplorerPanelProps> = ({
             <ol className="list-decimal pl-4 space-y-1 text-[#8a8f98] text-[11px] leading-tight font-sans">
               <li>Edite o código em <strong className="text-[#ffffff]">main.py</strong></li>
               <li>Clique no botão <strong className="text-[#27a644]">▶ Executar (F5)</strong></li>
-              <li>Acompanhe seu drone colher e libere novas <strong className="text-[#e4f222]">Pesquisas</strong>!</li>
+              <li>Acompanhe seu agente colher e libere novas <strong className="text-[#e4f222]">Pesquisas</strong>!</li>
             </ol>
           </div>
         )}

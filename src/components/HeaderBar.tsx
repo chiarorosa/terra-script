@@ -117,7 +117,7 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({ engine, activeTab, setActi
           )}
         </button>
 
-        {(engine.isTechUnlocked('AUTO_1') || engine.getAgents().length > 1) && (
+        {(engine.isTechUnlocked('SCALE_5') || engine.isTechUnlocked('AUTO_6') || engine.getAgents().length > 1) && (
           <button
             onClick={() => setActiveTab('agents')}
             className={`flex items-center gap-1.5 px-3 py-1 rounded-[6px] text-xs font-normal transition-all ${

@@ -108,6 +108,7 @@ export class GameEngine {
   private idleTicks: number = 0;
   private messageQueue: AgentMessage[] = [];
   private primaryAgentId: number = 1;
+  private latestUnlockedTech: TechNode | null = null;
 
   private listeners: Array<() => void> = [];
 
@@ -1108,6 +1109,7 @@ export class GameEngine {
     }
 
     node.unlocked = true;
+    this.latestUnlockedTech = node;
     audioManager.playResearch();
     this.addLog(1, 'system', `TECH UNLOCKED: ${node.name}!`);
 
@@ -1330,6 +1332,11 @@ export class GameEngine {
   public getMode() { return this.mode; }
   public getSpeed() { return this.speed; }
   public getCurrentTick() { return this.currentTick; }
+  public popLatestUnlockedTech(): TechNode | null {
+    const node = this.latestUnlockedTech;
+    this.latestUnlockedTech = null;
+    return node;
+  }
   public getBreakpoints(file: string): Set<number> {
     return new Set();
   }
