@@ -154,15 +154,6 @@ export interface VariableScope {
   [key: string]: any;
 }
 
-export interface ProfilerMetrics {
-  ticksExecuted: number;
-  actionsPerformed: number;
-  idleTicks: number;
-  opsPerSecond: number;
-  throughputPerTile: number;
-  activeAgentsCount: number;
-}
-
 export type ExecutionMode = 'IDLE' | 'RUNNING' | 'PAUSED' | 'STEPPING';
 
 export interface AgentMessage {

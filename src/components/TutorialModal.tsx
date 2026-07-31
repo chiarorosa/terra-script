@@ -19,7 +19,8 @@ import {
   Info,
   Sparkles,
   HelpCircle,
-  FileText
+  FileText,
+  GraduationCap
 } from 'lucide-react';
 import { GameEngine } from '../engine/GameEngine';
 import { VirtualFS } from '../engine/virtualFs';
@@ -39,6 +40,21 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ engine, onNavigate
   const [filterMode, setFilterMode] = useState<'all' | 'unlocked' | 'locked'>('all');
   const [copiedSnippet, setCopiedSnippet] = useState<string | null>(null);
   const [activeCodeLang, setActiveCodeLang] = useState<'python' | 'javascript'>('python');
+
+  const [educationalErrors, setEducationalErrors] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('terrascript_educational_errors') !== 'false';
+    }
+    return true;
+  });
+
+  const toggleEducationalErrors = () => {
+    const nextVal = !educationalErrors;
+    setEducationalErrors(nextVal);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('terrascript_educational_errors', nextVal ? 'true' : 'false');
+    }
+  };
 
   const totalTech = techTree.length;
   const unlockedTechCount = techTree.filter(t => t.unlocked).length;
@@ -112,30 +128,46 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ engine, onNavigate
             </p>
           </div>
 
-          {/* Research Progress Badge */}
-          <div className="flex items-center gap-4 bg-[#08090a] border border-[#23252a] px-3.5 py-2 rounded-[8px] shrink-0">
-            <div className="space-y-1">
-              <div className="flex items-center justify-between text-[11px] font-mono">
-                <span className="text-[#8a8f98]">Progresso de Pesquisas:</span>
-                <span className="text-[#27a644] font-bold ml-2">{unlockedTechCount} / {totalTech} ({unlockPercentage}%)</span>
-              </div>
-              <div className="w-40 h-1.5 bg-[#161718] rounded-full overflow-hidden border border-[#23252a]">
-                <div 
-                  className="h-full bg-[#27a644] transition-all duration-500 rounded-full" 
-                  style={{ width: `${unlockPercentage}%` }}
-                />
-              </div>
-            </div>
+          {/* Research Progress Badge & Educational Errors Toggle */}
+          <div className="flex flex-wrap items-center gap-3 shrink-0">
+            {/* Beginner Educational Help Badge */}
+            <button
+              onClick={toggleEducationalErrors}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-[8px] border text-xs font-medium transition-all ${
+                educationalErrors
+                  ? 'bg-[#8b5cf6]/10 text-[#8b5cf6] border-[#8b5cf6]/30 hover:bg-[#8b5cf6]/20'
+                  : 'bg-[#161718] text-[#8a8f98] border-[#23252a] hover:text-[#d0d6e0]'
+              }`}
+              title="Clique para ativar/desativar dicas amigáveis de erros de código no console"
+            >
+              <GraduationCap className="w-4 h-4 text-[#8b5cf6]" />
+              <span>Dicas de Erro: <strong className="font-mono">{educationalErrors ? 'ATIVADO' : 'DESATIVADO'}</strong></span>
+            </button>
 
-            {onNavigateToTab && (
-              <button
-                onClick={() => onNavigateToTab('research')}
-                className="px-2.5 py-1.5 bg-[#238636] hover:bg-[#2ea043] text-white rounded text-xs font-semibold transition-all flex items-center gap-1 shadow-sm active:scale-95 shrink-0 border border-[#3fb950]/30"
-              >
-                <FlaskConical className="w-3.5 h-3.5" />
-                <span>Pesquisas</span>
-              </button>
-            )}
+            <div className="flex items-center gap-4 bg-[#08090a] border border-[#23252a] px-3.5 py-2 rounded-[8px]">
+              <div className="space-y-1">
+                <div className="flex items-center justify-between text-[11px] font-mono">
+                  <span className="text-[#8a8f98]">Progresso de Pesquisas:</span>
+                  <span className="text-[#27a644] font-bold ml-2">{unlockedTechCount} / {totalTech} ({unlockPercentage}%)</span>
+                </div>
+                <div className="w-40 h-1.5 bg-[#161718] rounded-full overflow-hidden border border-[#23252a]">
+                  <div 
+                    className="h-full bg-[#27a644] transition-all duration-500 rounded-full" 
+                    style={{ width: `${unlockPercentage}%` }}
+                  />
+                </div>
+              </div>
+
+              {onNavigateToTab && (
+                <button
+                  onClick={() => onNavigateToTab('research')}
+                  className="px-2.5 py-1.5 bg-[#238636] hover:bg-[#2ea043] text-white rounded text-xs font-semibold transition-all flex items-center gap-1 shadow-sm active:scale-95 shrink-0 border border-[#3fb950]/30"
+                >
+                  <FlaskConical className="w-3.5 h-3.5" />
+                  <span>Pesquisas</span>
+                </button>
+              )}
+            </div>
           </div>
         </div>
 

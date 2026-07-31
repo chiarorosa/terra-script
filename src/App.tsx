@@ -149,7 +149,7 @@ export default function App() {
               <World3DCanvas engine={engine} />
             </div>
 
-            {/* Bottom Toggleable Output & Profiler Panel */}
+            {/* Bottom Toggleable Console & Output Panel */}
             <BottomPanel engine={engine} />
           </div>
         )}

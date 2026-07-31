@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Bot, Terminal, Code2, Rocket, User, Palette } from 'lucide-react';
+import { Bot, Terminal, Code2, Rocket, User, Palette, GraduationCap, Check } from 'lucide-react';
 import { GameEngine } from '../engine/GameEngine';
 import { audioManager } from '../utils/audioManager';
 
@@ -11,6 +11,12 @@ interface WelcomeModalProps {
 export const WelcomeModal: React.FC<WelcomeModalProps> = ({ engine, onClose }) => {
   const [nameInput, setNameInput] = useState<string>('Dev Master');
   const [selectedStyle, setSelectedStyle] = useState<string>('default');
+  const [educationalErrors, setEducationalErrors] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('terrascript_educational_errors') !== 'false';
+    }
+    return true;
+  });
 
   const presetTitles = [
     'Dev Master',
@@ -29,6 +35,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({ engine, onClose }) =
       localStorage.setItem('terrascript_programmer_name', finalName);
       localStorage.setItem('terrascript_welcome_seen', 'true');
       localStorage.setItem('terrascript_ui_style', selectedStyle);
+      localStorage.setItem('terrascript_educational_errors', educationalErrors ? 'true' : 'false');
     }
 
     engine.addLog(
@@ -158,6 +165,42 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({ engine, onClose }) =
                   (Seleção única disponível)
                 </span>
               </div>
+            </div>
+
+            {/* Educational Errors Toggle */}
+            <div className="pt-1">
+              <label className="block text-xs font-medium text-[#ffffff] mb-1.5 flex items-center justify-between">
+                <span className="flex items-center gap-1.5">
+                  <GraduationCap className="w-3.5 h-3.5 text-[#8b5cf6]" />
+                  <span>Auxílio Educativo para Erros (Modo Iniciante)</span>
+                </span>
+              </label>
+
+              <button
+                type="button"
+                onClick={() => setEducationalErrors(!educationalErrors)}
+                className={`w-full p-3 bg-[#08090a] border rounded-[8px] flex items-start gap-3 transition-all text-left cursor-pointer ${
+                  educationalErrors
+                    ? 'border-[#8b5cf6]/50 bg-[#8b5cf6]/5'
+                    : 'border-[#23252a] hover:border-[#383b3f]'
+                }`}
+              >
+                <div className={`mt-0.5 w-4 h-4 rounded-[4px] border flex items-center justify-center shrink-0 transition-all ${
+                  educationalErrors
+                    ? 'bg-[#8b5cf6] border-[#8b5cf6] text-white'
+                    : 'border-[#383b3f] bg-[#161718]'
+                }`}>
+                  {educationalErrors && <Check className="w-3 h-3 stroke-[3]" />}
+                </div>
+                <div>
+                  <div className="font-medium text-xs text-[#ffffff]">
+                    Exibir dicas explicativas quando ocorrem erros no código
+                  </div>
+                  <div className="text-[11px] text-[#8a8f98] mt-0.5 leading-normal">
+                    Se ativado, ao encontrar um erro no console, o jogo mostrará uma explicação em português fácil de entender e como resolver.
+                  </div>
+                </div>
+              </button>
             </div>
 
             {/* Action Button */}

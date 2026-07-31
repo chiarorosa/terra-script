@@ -781,13 +781,13 @@ export const World3DCanvas: React.FC<World3DCanvasProps> = ({ engine }) => {
                 {Math.round(inspectedTile.moisture * 100)}%
               </span>
             </div>
-            {inspectedTile.energyValue && (
+            {(inspectedTile.crop === 'ENERGY_FLOWER' || engine.isTechUnlocked('AGRO_6')) && inspectedTile.energyValue !== undefined && (
               <div className="flex justify-between">
                 <span className="text-slate-400">Valor de Energia:</span>
                 <span className="font-semibold text-purple-400">{inspectedTile.energyValue}</span>
               </div>
             )}
-            {inspectedTile.grade && (
+            {(inspectedTile.crop === 'GRADED_PLANT' || engine.isTechUnlocked('AGRO_7')) && inspectedTile.grade !== undefined && (
               <div className="flex justify-between">
                 <span className="text-slate-400">Nota:</span>
                 <span className="font-semibold text-rose-400">Nível {inspectedTile.grade}</span>

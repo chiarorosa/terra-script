@@ -6,7 +6,6 @@ import {
   Diagnostic, 
   ExecutionMode, 
   GroundType, 
-  ProfilerMetrics, 
   ResourceMap, 
   TechBranch, 
   TechNode, 
@@ -1333,17 +1332,6 @@ export class GameEngine {
   public getCurrentTick() { return this.currentTick; }
   public getBreakpoints(file: string): Set<number> {
     return new Set();
-  }
-
-  public getProfilerMetrics(): ProfilerMetrics {
-    return {
-      ticksExecuted: this.currentTick,
-      actionsPerformed: this.totalActionsPerformed,
-      idleTicks: this.idleTicks,
-      opsPerSecond: Math.round((this.totalActionsPerformed / Math.max(1, this.currentTick)) * 100),
-      throughputPerTile: Number((this.totalActionsPerformed / Math.max(1, this.width * this.height)).toFixed(2)),
-      activeAgentsCount: this.agents.filter(a => a.status === 'RUNNING').length
-    };
   }
 
   public assignAgentFile(agentId: number, filePath: string) {
