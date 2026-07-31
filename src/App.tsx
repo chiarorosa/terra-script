@@ -13,6 +13,7 @@ import { AgentsPanel } from './components/AgentsPanel';
 import { TutorialModal } from './components/TutorialModal';
 import { SaveManagerModal } from './components/SaveManagerModal';
 import { WelcomeModal } from './components/WelcomeModal';
+import { QuickStartModal } from './components/QuickStartModal';
 import { PrestigeBar } from './components/PrestigeBar';
 import { audioManager } from './utils/audioManager';
 
@@ -30,7 +31,22 @@ export default function App() {
     }
     return false;
   });
-  const [toastTech, setToastTech] = useState<TechNode | null>(null);
+  const [isQuickStartModalOpen, setIsQuickStartModalOpen] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      const welcomeSeen = localStorage.getItem('terrascript_welcome_seen') === 'true';
+      const milestones = engine.getMilestones();
+      return welcomeSeen && !milestones.quickStartProminentDone;
+    }
+    return false;
+  });
+  const [selectedGuideDocId, setSelectedGuideDocId] = useState<string | null>(null);
+  const [toastNotification, setToastNotification] = useState<{ 
+    title: string; 
+    subtitle: string; 
+    description: string; 
+    type: 'tech' | 'milestone'; 
+    techId?: string;
+  } | null>(null);
 
   // Kickstart audio on initial user interaction
   useEffect(() => {
@@ -53,7 +69,23 @@ export default function App() {
     const unsubscribe = engine.subscribe(() => {
       const newlyUnlocked = engine.popLatestUnlockedTech();
       if (newlyUnlocked) {
-        setToastTech(newlyUnlocked);
+        setToastNotification({
+          title: 'Pesquisa Desbloqueada!',
+          subtitle: newlyUnlocked.name,
+          description: newlyUnlocked.description,
+          type: 'tech',
+          techId: newlyUnlocked.id
+        });
+      }
+
+      const newlyMilestone = engine.popLatestMilestone();
+      if (newlyMilestone) {
+        setToastNotification({
+          title: newlyMilestone.title,
+          subtitle: 'Conquista de Progresso',
+          description: newlyMilestone.description,
+          type: 'milestone'
+        });
       }
 
       if (!isPending) {
@@ -111,7 +143,7 @@ export default function App() {
   const activeLine = activeAgent ? activeAgent.currentLine : undefined;
 
   return (
-    <div className="w-screen h-screen flex flex-col bg-[#0d1117] text-[#c9d1d9] font-sans overflow-hidden select-none">
+    <div className="w-screen h-screen flex flex-col bg-[#08090a] text-[#d0d6e0] font-sans overflow-hidden select-none">
       {/* Top Header Toolbar */}
       <HeaderBar
         engine={engine}
@@ -122,7 +154,7 @@ export default function App() {
       />
 
       {/* Prestige Progress Bar (v2.1.0 - Progressive Disclosure) */}
-      {(engine.getPrestige().points > 0 || engine.getPrestige().level > 1 || engine.getTechTree().some(t => t.unlocked) || engine.getPrestige().worldChangeUnlocked) && (
+      {(engine.getPrestige().level >= 2 || engine.getPrestige().worldChangeUnlocked || engine.getMilestones().prestigeUnlocked) && (
         <PrestigeBar engine={engine} />
       )}
 
@@ -164,7 +196,15 @@ export default function App() {
           </div>
         )}
 
-        {activeTab === 'research' && <TechTreeModal engine={engine} />}
+        {activeTab === 'research' && (
+          <TechTreeModal 
+            engine={engine} 
+            onOpenGuideForTech={(techId) => {
+              setSelectedGuideDocId(techId);
+              setActiveTab('tutorial');
+            }}
+          />
+        )}
 
         {activeTab === 'agents' && <AgentsPanel engine={engine} vfs={vfs} />}
 
@@ -172,6 +212,7 @@ export default function App() {
           <TutorialModal 
             engine={engine} 
             vfs={vfs} 
+            initialSelectedItemId={selectedGuideDocId}
             onNavigateToTab={(tab) => setActiveTab(tab)} 
           />
         )}
@@ -190,6 +231,7 @@ export default function App() {
           }}
           onResetGame={() => {
             setIsWelcomeModalOpen(true);
+            setIsQuickStartModalOpen(false);
             setRenderTick(t => t + 1);
           }}
         />
@@ -201,40 +243,59 @@ export default function App() {
           engine={engine}
           onClose={() => {
             setIsWelcomeModalOpen(false);
+            setIsQuickStartModalOpen(true);
             setRenderTick(t => t + 1);
           }}
         />
       )}
 
-      {/* Research Unlock Toast Notification */}
-      {toastTech && (
+      {/* Quick Start Spotlight Pop-Up Modal */}
+      {isQuickStartModalOpen && !isWelcomeModalOpen && (
+        <QuickStartModal
+          engine={engine}
+          onClose={() => {
+            setIsQuickStartModalOpen(false);
+            setRenderTick(t => t + 1);
+          }}
+        />
+      )}
+
+      {/* Unlock / Milestone Toast Notification */}
+      {toastNotification && (
         <div className="fixed bottom-14 right-6 z-50 max-w-sm bg-[#08090a] border border-[#5e6ad2]/60 shadow-[0_0_20px_rgba(94,106,210,0.3)] rounded-[12px] p-4 text-white animate-in slide-in-from-bottom-5 duration-300 flex items-start gap-3">
           <div className="p-2 bg-[#5e6ad2]/20 text-[#5e6ad2] rounded-[8px] shrink-0">
             <Sparkles className="w-5 h-5 text-[#5e6ad2]" />
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between gap-2">
-              <span className="text-[10px] uppercase font-mono tracking-wider text-[#5e6ad2] font-bold">Pesquisa Desbloqueada!</span>
+              <span className="text-[10px] uppercase font-mono tracking-wider text-[#5e6ad2] font-bold">
+                {toastNotification.title}
+              </span>
               <button 
-                onClick={() => setToastTech(null)} 
+                onClick={() => setToastNotification(null)} 
                 className="text-[#8a8f98] hover:text-white p-0.5 rounded hover:bg-[#161718] transition-all"
                 title="Fechar notificação"
               >
                 <X className="w-3.5 h-3.5" />
               </button>
             </div>
-            <div className="font-semibold text-sm text-white mt-0.5">{toastTech.name}</div>
-            <p className="text-xs text-[#8a8f98] mt-1 leading-snug">{toastTech.description}</p>
-            <button
-              onClick={() => {
-                setActiveTab('tutorial');
-                setToastTech(null);
-              }}
-              className="mt-2.5 px-3 py-1.5 bg-[#5e6ad2] hover:bg-[#4f52b2] text-white rounded-[6px] text-xs font-medium transition-all flex items-center gap-1.5 shadow-sm active:scale-95 cursor-pointer"
-            >
-              <BookOpen className="w-3.5 h-3.5" />
-              <span>Ver no Guia de API ➔</span>
-            </button>
+            <div className="font-semibold text-sm text-white mt-0.5">{toastNotification.subtitle}</div>
+            <p className="text-xs text-[#8a8f98] mt-1 leading-snug">{toastNotification.description}</p>
+            {toastNotification.type === 'tech' && (
+              <button
+                onClick={() => {
+                  if (toastNotification.techId) {
+                    setSelectedGuideDocId(toastNotification.techId);
+                  }
+                  setActiveTab('tutorial');
+                  setToastNotification(null);
+                }}
+                className="mt-2.5 px-3 py-1.5 bg-[#5e6ad2] hover:bg-[#4f52b2] text-white rounded-[6px] text-xs font-medium transition-all flex items-center gap-1.5 shadow-sm active:scale-95 cursor-pointer"
+              >
+                <BookOpen className="w-3.5 h-3.5" />
+                <span>Ver no Guia de API ➔</span>
+              </button>
+            )}
           </div>
         </div>
       )}

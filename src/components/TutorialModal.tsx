@@ -24,18 +24,34 @@ import {
 } from 'lucide-react';
 import { GameEngine } from '../engine/GameEngine';
 import { VirtualFS } from '../engine/virtualFs';
-import { API_CATALOG, isTechUnlocked, getTechForApiItem, ApiItem } from '../engine/techApiMap';
+import { API_CATALOG, isTechUnlocked, getTechForApiItem, ApiItem, getPrimaryApiItemForTech } from '../engine/techApiMap';
 import { TechNode } from '../types/game';
 
 interface TutorialModalProps {
   engine: GameEngine;
   vfs?: VirtualFS;
+  initialSelectedItemId?: string | null;
   onNavigateToTab?: (tab: 'workspace' | 'research' | 'agents' | 'tutorial') => void;
 }
 
-export const TutorialModal: React.FC<TutorialModalProps> = ({ engine, onNavigateToTab }) => {
+export const TutorialModal: React.FC<TutorialModalProps> = ({ engine, initialSelectedItemId, onNavigateToTab }) => {
   const techTree = engine.getTechTree();
-  const [selectedItemId, setSelectedItemId] = useState<string>('mech_soil_water');
+  const [selectedItemId, setSelectedItemId] = useState<string>(() => {
+    if (initialSelectedItemId) {
+      const item = getPrimaryApiItemForTech(initialSelectedItemId);
+      if (item) return item.id;
+    }
+    return 'mech_soil_water';
+  });
+
+  React.useEffect(() => {
+    if (initialSelectedItemId) {
+      const item = getPrimaryApiItemForTech(initialSelectedItemId);
+      if (item) {
+        setSelectedItemId(item.id);
+      }
+    }
+  }, [initialSelectedItemId]);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [filterMode, setFilterMode] = useState<'all' | 'unlocked' | 'locked'>('all');
   const [copiedSnippet, setCopiedSnippet] = useState<string | null>(null);

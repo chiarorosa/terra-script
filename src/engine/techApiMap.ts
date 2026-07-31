@@ -57,6 +57,16 @@ export interface ApiItem {
  *    - A interface (`TutorialModal.tsx`) identificará automaticamente os campos
  *      vazios e ocultará totalmente os blocos sem criar espaços em branco.
  * 
+ * 4. MAPEAMENTO DE PESQUISAS (TECH TREE) PARA O GUIA DE API:
+ *    - Toda pesquisa na Árvore de Pesquisa (ex: 'AUTO_3', 'AGRO_2', 'SCALE_5') possui
+ *      um nó com ID único em `INITIAL_TECH_TREE`.
+ *    - Para vincular uma pesquisa a um item do Guia de API, configure `techId: 'ID_DA_PESQUISA'`
+ *      no respectivo `ApiItem` dentro do `API_CATALOG`.
+ *    - Ao clicar em "Ver no Guia de API" (na notificação de desbloqueio ou no nó da Árvore),
+ *      o sistema invoca `getPrimaryApiItemForTech(techId)`, que resolve a página exata da
+ *      documentação referente àquela pesquisa.
+ *    - Para novos updates/pesquisas: basta declarar o novo `ApiItem` com o `techId` da pesquisa.
+ * 
  * =========================================================================
  */
 export const API_ITEM_TEMPLATE_SAMPLE: ApiItem = {
@@ -1075,6 +1085,27 @@ export const API_CATALOG: ApiItem[] = [
       'Consulte world.ground() == "PRESTIGE" para detectar a célula de prestígio dinamicamente no seu código.'
     ],
     expectedOutput: 'Recursos consumidos e Pontos de Prestígio concedidos.'
+  },
+  {
+    id: 'mech_scale_expansion',
+    namespace: 'mechanics',
+    methodName: 'Expansão de Terreno & Frotas (Scale)',
+    displayText: 'Expansão de Terreno & Naves Agentes',
+    signature: 'Aumento da Matriz Agrícola e Desbloqueio de Múltiplas Naves',
+    pythonSnippet: '',
+    jsSnippet: '',
+    description: 'Expanda o tamanho da matriz agrícola da fazenda e libere novas naves robóticas autônomas para executar scripts em paralelo.',
+    techId: 'SCALE_1',
+    category: 'Mecânicas de Jogo',
+    docDetail: 'Conforme novas tecnologias do ramo de Escala (SCALE) são pesquisadas na Árvore de Pesquisa, a dimensão da matriz da fazenda é ampliada dinamicamente (variando de 1x1 até 12x12). Além disso, pesquisas como "Segundo Agente" e "Terceiro Agente" liberam novas naves autônomas na frota (Gepeto, Gemilson), permitindo execução concorrente de múltiplos arquivos Python/JavaScript em paralelo.',
+    exampleCode: '',
+    parameters: [],
+    returns: undefined,
+    usabilityNotes: [
+      'Naves adicionais possuem arquivos de código próprios atrelados no editor de código.',
+      'Utilize IPC (Comunicação Inter-Agentes) para coordenar o envio de mensagens e sincronizar tarefas entre as naves.'
+    ],
+    expectedOutput: 'Matriz expandida e novas naves operacionais.'
   }
 ];
 
@@ -1089,4 +1120,36 @@ export function getUnlockedApiCatalog(techTree: TechNode[]): ApiItem[] {
 
 export function getTechForApiItem(techId: string, techTree: TechNode[]): TechNode | undefined {
   return techTree.find(n => n.id === techId);
+}
+
+/**
+ * Resolve o ApiItem correspondente para uma pesquisa ou identificador de documento.
+ * Permite navegação direta do "Ver no Guia" para a página exata da documentação.
+ */
+export function getPrimaryApiItemForTech(techIdOrItemId: string): ApiItem | undefined {
+  if (!techIdOrItemId) return undefined;
+
+  // 1. Tentar correspondência exata por ID do ApiItem (ex: 'farm_harvest', 'syntax_loops')
+  const exactItem = API_CATALOG.find(item => item.id === techIdOrItemId);
+  if (exactItem) return exactItem;
+
+  // 2. Tentar correspondência por techId (ex: 'AUTO_3', 'AGRO_2', 'SYS_4')
+  const matchTech = API_CATALOG.find(item => item.techId === techIdOrItemId);
+  if (matchTech) return matchTech;
+
+  // 3. Fallbacks inteligentes por prefixo de família tecnológica
+  if (techIdOrItemId.startsWith('SCALE_')) {
+    return API_CATALOG.find(item => item.id === 'mech_scale_expansion') || API_CATALOG.find(item => item.id === 'mech_world_change');
+  }
+  if (techIdOrItemId.startsWith('AGRO_')) {
+    return API_CATALOG.find(item => item.techId === 'AGRO_1');
+  }
+  if (techIdOrItemId.startsWith('AUTO_')) {
+    return API_CATALOG.find(item => item.techId === 'AUTO_1');
+  }
+  if (techIdOrItemId.startsWith('SYS_')) {
+    return API_CATALOG.find(item => item.techId === 'SYS_1');
+  }
+
+  return API_CATALOG[0];
 }

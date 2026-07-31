@@ -94,7 +94,7 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({ engine, activeTab, setActi
               : 'text-[#8a8f98] hover:text-[#ffffff] hover:bg-[#0f1011]'
           }`}
         >
-          <Cpu className="w-3.5 h-3.5 text-[#02b8cc]" />
+          <Cpu className="w-3.5 h-3.5 text-[#5e6ad2]" />
           IDE
         </button>
 
@@ -104,14 +104,14 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({ engine, activeTab, setActi
             activeTab === 'research' 
               ? 'bg-[#161718] text-[#ffffff] border border-[#23252a]' 
               : hasUpgrades
-                ? 'bg-[#e4f222]/10 text-[#ffffff] border border-[#e4f222]/40 hover:bg-[#e4f222]/20'
+                ? 'bg-[#5e6ad2]/15 text-[#ffffff] border border-[#5e6ad2]/40 hover:bg-[#5e6ad2]/25'
                 : 'text-[#8a8f98] hover:text-[#ffffff] hover:bg-[#0f1011]'
           }`}
         >
-          <FlaskConical className={`w-3.5 h-3.5 ${hasUpgrades ? 'text-[#e4f222]' : 'text-[#8a8f98]'}`} />
+          <FlaskConical className={`w-3.5 h-3.5 ${hasUpgrades ? 'text-[#5e6ad2]' : 'text-[#8a8f98]'}`} />
           <span>Árvore de Pesquisa</span>
           {hasUpgrades && (
-            <span className="ml-0.5 px-1.5 py-0.2 rounded-[4px] text-[10px] font-medium bg-[#e4f222] text-[#08090a]">
+            <span className="ml-0.5 px-1.5 py-0.2 rounded-[4px] text-[10px] font-mono font-bold bg-[#5e6ad2] text-white">
               {unlockableCount}
             </span>
           )}

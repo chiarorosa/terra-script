@@ -13,8 +13,11 @@ export const CHANGELOG_HISTORY: ChangelogRelease[] = [
     title: 'UI Limpa, Revelação Progressiva & Onboarding Amigável para Iniciantes',
     isCurrent: true,
     changes: [
-      'Revelação Progressiva de Interface (Progressive Disclosure): Elementos avançados da UI (como a barra de Prestígio, aba de Agentes/Frota e indicadores de recursos avançados) iniciam ocultos e são revelados organicamente à medida que o jogador avança na árvore de tecnologias (Aba de Agentes liberada com Frota de Autômatos / Expansão).',
-      'Guia Rápido "Primeiros Passos" no Explorador: Card expansível e pulsante no topo do Explorador de Arquivos com borda Indigo (#5e6ad2) e brilho no padrão do Tema Linear, orientando o jogador nos 3 passos fundamentais até que ele decida fechá-lo.',
+      'Sistema de Marcos do Jogador (Player Milestones Engine): Nova estrutura dedicada para salvar o progresso de conquistas do jogador (Primeira execução do script, desbloqueio de novo arquivo +, revelação da barra de Prestígio Nível 2 e destaques de onboarding).',
+      'Pop-up de Boas-Vindas "Primeiros Passos" com Áudio: Modal em destaque na primeira visita com efeito sonoro alegre, apresentando os 3 passos fundamentais para colocar o primeiro Agente em ação.',
+      'Guia Rápido no Explorador (Tema Linear): Card pulsante no topo do Explorador de Arquivos com paleta de cores do Tema Linear (#5e6ad2), permitindo consulta constante aos passos iniciais sem distração.',
+      'Desbloqueio Progressivo de Arquivos: A criação de novos scripts (+) e arquivos padrão adicionais permanecem ocultos até que o jogador execute o main.py/main.js pela 1ª vez.',
+      'Revelação Progressiva de Prestígio e Interface: A barra de Prestígio superior e a Mudança do Mundo são reveladas automaticamente a partir do Nível 2 de Prestígio, com notificação Toast contextual.',
       'Notificações Toast de Desbloqueio de Pesquisa: Pop-up contextual no canto inferior direito notificando instantaneamente cada pesquisa desbloqueada com atalho direto para a documentação técnica no Guia de API.',
       'Suporte Educativo a Erros de Código (Modo Iniciante): Quando ocorrem erros de sintaxe ou tempo de execução no console, o jogo exibe um card educativo explicando em português claro a causa do erro e como corrigi-lo.',
       'Controle de Preferências de Auxílio: Chave de ativação/desativação do Auxílio Educativo no menu de perfil, no card de erro e no Guia de API.',

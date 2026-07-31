@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Terminal, 
   AlertCircle, 
@@ -19,7 +19,21 @@ interface BottomPanelProps {
 
 export const BottomPanel: React.FC<BottomPanelProps> = ({ engine }) => {
   const [activeTab, setActiveTab] = useState<'console' | 'problems' | 'variables' | 'changelog'>('console');
-  const [isExpanded, setIsExpanded] = useState<boolean>(false);
+  const [isExpanded, setIsExpanded] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('terrascript_bottom_panel_expanded');
+      if (saved !== null) {
+        return saved === 'true';
+      }
+    }
+    return false; // Padrão: Painel fechado/minimizado
+  });
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('terrascript_bottom_panel_expanded', String(isExpanded));
+    }
+  }, [isExpanded]);
   const [educationalErrors, setEducationalErrors] = useState<boolean>(() => {
     if (typeof window !== 'undefined') {
       return localStorage.getItem('terrascript_educational_errors') !== 'false';

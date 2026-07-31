@@ -55,6 +55,8 @@ export const ExplorerPanel: React.FC<ExplorerPanelProps> = ({
 
   const dismissOnboardingTip = () => {
     setShowOnboardingTip(false);
+    engine.markQuickStartProminentDone();
+    engine.markQuickStartSeen();
     if (typeof window !== 'undefined') {
       localStorage.setItem('terrascript_onboarding_tip_dismissed', 'true');
     }
@@ -148,6 +150,14 @@ export const ExplorerPanel: React.FC<ExplorerPanelProps> = ({
 
   const agents = engine.getAgents();
   const primaryAgent = engine.getPrimaryAgent();
+  const milestones = engine.getMilestones();
+
+  const visibleFiles = files.filter(file => {
+    if (milestones.firstExecutionDone) return true;
+    return file.path === 'main.py' || file.path === 'main.js';
+  });
+
+  const isProminent = !milestones.quickStartProminentDone;
 
   return (
     <div className="w-64 bg-[#0f1011] border-r border-[#23252a] flex flex-col h-full text-[#d0d6e0] select-none shrink-0 font-sans text-xs">
@@ -168,9 +178,14 @@ export const ExplorerPanel: React.FC<ExplorerPanelProps> = ({
         </span>
         <div className="flex items-center gap-1">
           <button
-            onClick={() => setIsCreating(true)}
-            className="p-1 hover:bg-[#161718] text-[#8a8f98] hover:text-[#27a644] rounded-[4px] transition-all"
-            title="Novo Arquivo de Script"
+            onClick={() => milestones.createFileUnlocked && setIsCreating(true)}
+            disabled={!milestones.createFileUnlocked}
+            className={`p-1 rounded-[4px] transition-all ${
+              milestones.createFileUnlocked 
+                ? 'hover:bg-[#161718] text-[#8a8f98] hover:text-[#27a644] cursor-pointer' 
+                : 'opacity-40 cursor-not-allowed text-[#62666d]'
+            }`}
+            title={milestones.createFileUnlocked ? "Novo Arquivo de Script" : "Execute seu código pela 1ª vez para liberar a criação de arquivos!"}
           >
             <Plus className="w-3.5 h-3.5" />
           </button>
@@ -263,17 +278,22 @@ export const ExplorerPanel: React.FC<ExplorerPanelProps> = ({
           </button>
         </div>
 
-        {/* Beginner Onboarding Quick Start Banner with Linear Theme & Pulsing Glow */}
+        {/* Beginner Onboarding Quick Start Banner in Linear Theme */}
         {showOnboardingTip && (
-          <div className="mx-1 my-2 p-2.5 bg-[#0f1011] border border-[#5e6ad2]/60 rounded-[8px] text-[11px] font-sans text-[#d0d6e0] space-y-1.5 shadow-[0_0_12px_rgba(94,106,210,0.25)] animate-pulse hover:animate-none transition-all">
+          <div 
+            className="mx-1 my-2 p-2.5 bg-[#0f1011] border border-[#5e6ad2]/70 shadow-[0_0_15px_rgba(94,106,210,0.25)] rounded-[8px] text-[11px] font-sans text-[#d0d6e0] space-y-1.5 animate-pulse hover:animate-none transition-all"
+          >
             <div className="flex items-center justify-between text-[#5e6ad2] font-semibold text-xs">
               <span className="flex items-center gap-1.5">
                 <Sparkles className="w-3.5 h-3.5 text-[#5e6ad2]" />
                 <span className="text-[#ffffff]">Primeiros Passos</span>
               </span>
               <button 
-                onClick={dismissOnboardingTip}
-                className="text-[#8a8f98] hover:text-[#ffffff] text-[10px] p-0.5 hover:bg-[#161718] rounded"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  dismissOnboardingTip();
+                }}
+                className="text-[#8a8f98] hover:text-[#ffffff] text-[10px] p-0.5 hover:bg-[#161718] rounded cursor-pointer"
                 title="Fechar guia rápido"
               >
                 <X className="w-3.5 h-3.5" />
@@ -288,7 +308,7 @@ export const ExplorerPanel: React.FC<ExplorerPanelProps> = ({
         )}
 
         <div className="space-y-0.5 mt-1">
-          {files.map((file) => {
+          {visibleFiles.map((file) => {
             const isActive = file.path === activeFilePath;
             const isPy = file.language === 'python';
             const assignedAgents = agents.filter(a => a.assignedFile === file.path);

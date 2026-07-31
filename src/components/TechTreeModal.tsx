@@ -13,16 +13,18 @@ import {
   Grid3X3, 
   Terminal, 
   Bot, 
-  Maximize2 
+  Maximize2,
+  BookOpen
 } from 'lucide-react';
 import { GameEngine } from '../engine/GameEngine';
 import { TechBranch, TechNode } from '../types/game';
 
 interface TechTreeModalProps {
   engine: GameEngine;
+  onOpenGuideForTech?: (techId: string) => void;
 }
 
-export const TechTreeModal: React.FC<TechTreeModalProps> = ({ engine }) => {
+export const TechTreeModal: React.FC<TechTreeModalProps> = ({ engine, onOpenGuideForTech }) => {
   const techTree = engine.getTechTree();
   const resources = engine.getResources();
 
@@ -90,6 +92,20 @@ export const TechTreeModal: React.FC<TechTreeModalProps> = ({ engine }) => {
                 </div>
 
                 <p className="text-[11px] text-[#8a8f98] mb-2 leading-relaxed font-sans">{node.description}</p>
+
+                {/* Ver no Guia Button for Unlocked Techs */}
+                {isUnlocked && onOpenGuideForTech && (
+                  <div className="flex items-center justify-end mt-2 pt-2 border-t border-[#27a644]/20">
+                    <button
+                      onClick={() => onOpenGuideForTech(node.id)}
+                      className="flex items-center gap-1.5 px-2.5 py-1 rounded-[6px] bg-[#27a644]/15 hover:bg-[#27a644]/25 text-[#27a644] border border-[#27a644]/30 text-[11px] font-medium transition-all active:scale-95 cursor-pointer"
+                      title="Ver documentação técnica no Guia de API"
+                    >
+                      <BookOpen className="w-3.5 h-3.5" />
+                      <span>Ver no Guia ➔</span>
+                    </button>
+                  </div>
+                )}
 
                 {/* Costs & Unlock Button */}
                 {!isUnlocked && (

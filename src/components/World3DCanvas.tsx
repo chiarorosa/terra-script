@@ -92,7 +92,21 @@ function dispose3DObject(obj: THREE.Object3D) {
 export const World3DCanvas: React.FC<World3DCanvasProps> = ({ engine }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [inspectedCoords, setInspectedCoords] = useState<{ x: number; y: number } | null>({ x: 0, y: 0 });
-  const [followAgent, setFollowAgent] = useState<boolean>(true);
+  const [followAgent, setFollowAgent] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('terrascript_follow_agent');
+      if (saved !== null) {
+        return saved === 'true';
+      }
+    }
+    return true; // Padrão: Seguir ON
+  });
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('terrascript_follow_agent', String(followAgent));
+    }
+  }, [followAgent]);
   const [cameraAngle, setCameraAngle] = useState<number>(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('terrascript_camera_angle');

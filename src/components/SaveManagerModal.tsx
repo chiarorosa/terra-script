@@ -62,6 +62,10 @@ export const SaveManagerModal: React.FC<SaveManagerModalProps> = ({
       localStorage.removeItem('terrascript_welcome_seen');
       localStorage.removeItem('terrascript_programmer_name');
       localStorage.removeItem('terrascript_programmer_avatar');
+      localStorage.removeItem('terrascript_onboarding_tip_dismissed');
+      localStorage.removeItem('terrascript_ui_style');
+      localStorage.removeItem('terrascript_follow_agent');
+      localStorage.removeItem('terrascript_bottom_panel_expanded');
     }
     engine.resetEverything(vfs);
     const ep = vfs.getEntrypoint();

@@ -11,6 +11,7 @@ import {
   TechNode, 
   TileState,
   PrestigeState,
+  PlayerMilestones,
   createDefaultAgentStats
 } from '../types/game';
 
@@ -109,6 +110,16 @@ export class GameEngine {
   private messageQueue: AgentMessage[] = [];
   private primaryAgentId: number = 1;
   private latestUnlockedTech: TechNode | null = null;
+  private latestMilestoneUnlocked: { title: string; description: string } | null = null;
+
+  private milestones: PlayerMilestones = {
+    quickStartSeen: false,
+    quickStartProminentDone: false,
+    firstExecutionDone: false,
+    createFileUnlocked: false,
+    prestigeUnlocked: false,
+    apiReferenceUnlocked: false
+  };
 
   private listeners: Array<() => void> = [];
 
@@ -234,6 +245,7 @@ export class GameEngine {
         height: this.height,
         resources: this.resources,
         prestige: this.prestige,
+        milestones: this.milestones,
         techTree: this.techTree.map(n => ({ id: n.id, unlocked: n.unlocked })),
         currentTick: this.currentTick,
         totalActions: this.totalActionsPerformed,
@@ -330,7 +342,7 @@ export class GameEngine {
           this.totalActionsPerformed = Math.floor(parsed.totalActions);
         }
 
-        // 5. Restore Prestige State
+        // 5. Restore Prestige State & Milestones
         if (parsed.prestige && typeof parsed.prestige === 'object') {
           this.prestige = {
             level: typeof parsed.prestige.level === 'number' ? Math.max(1, Math.min(100, parsed.prestige.level)) : 1,
@@ -339,6 +351,19 @@ export class GameEngine {
             worldChangeUnlocked: Boolean(parsed.prestige.worldChangeUnlocked)
           };
         }
+
+        if (parsed.milestones && typeof parsed.milestones === 'object') {
+          this.milestones = {
+            quickStartSeen: Boolean(parsed.milestones.quickStartSeen),
+            quickStartProminentDone: Boolean(parsed.milestones.quickStartProminentDone),
+            firstExecutionDone: Boolean(parsed.milestones.firstExecutionDone),
+            createFileUnlocked: Boolean(parsed.milestones.createFileUnlocked),
+            prestigeUnlocked: Boolean(parsed.milestones.prestigeUnlocked),
+            apiReferenceUnlocked: Boolean(parsed.milestones.apiReferenceUnlocked)
+          };
+        }
+        this.checkPrestigeMilestone();
+        this.checkApiReferenceMilestone();
 
         // 6. Sync Agents & World Change Trigger
         this.syncAgentsWithTechTree();
@@ -410,6 +435,7 @@ export class GameEngine {
   public startSimulation() {
     this.mode = 'RUNNING';
     audioManager.playExecute();
+    this.handleFirstScriptExecuted();
     this.agents.forEach(agent => {
       const ctx = this.agentContexts.get(agent.id);
       if (!ctx || ctx.isCompleted) {
@@ -528,12 +554,21 @@ export class GameEngine {
     // Reset Tech Tree with clean unmutated template
     this.techTree = getInitialTechTree();
 
-    // Reset Prestige
+    // Reset Prestige & Milestones
     this.prestige = {
       level: 1,
       points: 0,
       totalPoints: 0,
       worldChangeUnlocked: false
+    };
+
+    this.milestones = {
+      quickStartSeen: false,
+      quickStartProminentDone: false,
+      firstExecutionDone: false,
+      createFileUnlocked: false,
+      prestigeUnlocked: false,
+      apiReferenceUnlocked: false
     };
 
     // Reset Agents to Claudio only
@@ -568,6 +603,8 @@ export class GameEngine {
       localStorage.removeItem(ENGINE_STORAGE_KEY);
       localStorage.removeItem('terrascript_welcome_seen');
       localStorage.removeItem('terrascript_programmer_name');
+      localStorage.removeItem('terrascript_follow_agent');
+      localStorage.removeItem('terrascript_bottom_panel_expanded');
     }
 
     this.saveEngineState();
@@ -1133,6 +1170,7 @@ export class GameEngine {
     } else if (node.id === 'SCALE_9') this.rebuildGrid(12, 12);
 
     this.checkWorldChangeTrigger();
+    this.checkApiReferenceMilestone();
     this.saveEngineState();
     this.notify();
     return true;
@@ -1173,6 +1211,7 @@ export class GameEngine {
       audioManager.playLevelUp();
     }
 
+    this.checkPrestigeMilestone();
     this.saveEngineState();
     this.notify();
   }
@@ -1337,6 +1376,82 @@ export class GameEngine {
     this.latestUnlockedTech = null;
     return node;
   }
+
+  public getMilestones(): PlayerMilestones {
+    return { ...this.milestones };
+  }
+
+  public markQuickStartSeen() {
+    if (!this.milestones.quickStartSeen) {
+      this.milestones.quickStartSeen = true;
+      this.saveEngineState();
+      this.notify();
+    }
+  }
+
+  public markQuickStartProminentDone() {
+    if (!this.milestones.quickStartProminentDone) {
+      this.milestones.quickStartProminentDone = true;
+      this.saveEngineState();
+      this.notify();
+    }
+  }
+
+  public handleFirstScriptExecuted() {
+    if (!this.milestones.firstExecutionDone) {
+      this.milestones.firstExecutionDone = true;
+      this.milestones.createFileUnlocked = true;
+      this.milestones.quickStartProminentDone = true;
+
+      this.latestMilestoneUnlocked = {
+        title: 'Editor Expandido!',
+        description: 'Você executou seu primeiro script! O Explorador de Arquivos agora possui o botão Novo Arquivo (+) e scripts modelo liberados.'
+      };
+
+      this.addLog(1, 'system', '🎉 PASSO DE JOGADOR: Primeiro script executado! Editor de código expandido e criação de arquivos liberada.');
+      audioManager.playLevelUp();
+      this.saveEngineState();
+      this.notify();
+    }
+  }
+
+  public checkPrestigeMilestone() {
+    if (!this.milestones.prestigeUnlocked && (this.prestige.level >= 2 || this.prestige.worldChangeUnlocked)) {
+      this.milestones.prestigeUnlocked = true;
+      this.latestMilestoneUnlocked = {
+        title: 'Prestígio Desbloqueado!',
+        description: 'Você alcançou o Nível 2 de Prestígio! A barra de evolução superior e a Mudança do Mundo foram reveladas.'
+      };
+      this.addLog(1, 'system', '⭐ PASSO DE JOGADOR: Nível 2 de Prestígio alcançado! Painel de evolução superior revelado.');
+      audioManager.playLevelUp();
+      this.saveEngineState();
+      this.notify();
+    }
+  }
+
+  public getGridSize(): { cols: number; rows: number } {
+    return { cols: this.width, rows: this.height };
+  }
+
+  public checkApiReferenceMilestone() {
+    if (!this.milestones.apiReferenceUnlocked && (this.isTechUnlocked('SCALE_2') || this.width > 1 || this.height > 1)) {
+      this.milestones.apiReferenceUnlocked = true;
+      this.latestMilestoneUnlocked = {
+        title: 'Referência de API Liberada!',
+        description: 'Você expandiu o terreno pela primeira vez! A barra de Referência da API na base do editor de código foi ativada.'
+      };
+      this.addLog(1, 'system', '🧭 PASSO DE JOGADOR: Terreno expandido! Barra de Referência da API ativada no editor de código.');
+      audioManager.playLevelUp();
+      this.saveEngineState();
+      this.notify();
+    }
+  }
+
+  public popLatestMilestone(): { title: string; description: string } | null {
+    const m = this.latestMilestoneUnlocked;
+    this.latestMilestoneUnlocked = null;
+    return m;
+  }
   public getBreakpoints(file: string): Set<number> {
     return new Set();
   }
@@ -1394,6 +1509,7 @@ export class GameEngine {
     // Start simulation mode if not running
     this.mode = 'RUNNING';
     audioManager.playExecute();
+    this.handleFirstScriptExecuted();
 
     this.addLog(
       primaryAgent.id,

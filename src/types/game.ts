@@ -22,6 +22,15 @@ export interface PrestigeState {
   worldChangeUnlocked: boolean; // whether World Change has been triggered
 }
 
+export interface PlayerMilestones {
+  quickStartSeen: boolean;            // Has seen Quick Start banner
+  quickStartProminentDone: boolean;  // Has experienced the prominent eye-catcher highlight
+  firstExecutionDone: boolean;       // Has executed main.py/main.js for the first time
+  createFileUnlocked: boolean;       // Has unlocked custom file creation (+) & template scripts
+  prestigeUnlocked: boolean;         // Has unlocked Prestige Level >= 2
+  apiReferenceUnlocked: boolean;     // Has unlocked API Reference bar by expanding land for the first time
+}
+
 export type Direction = 'NORTH' | 'EAST' | 'SOUTH' | 'WEST';
 
 export interface ResourceMap {

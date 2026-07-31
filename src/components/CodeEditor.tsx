@@ -158,72 +158,74 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
         />
       </div>
 
-      {/* Dynamic API Quick Reference Footer */}
-      <div className="p-2 bg-[#161b22] border-t border-[#30363d] text-[11px] font-mono text-[#8b949e] flex flex-col gap-1.5 shrink-0 select-none">
-        <div className="flex items-center justify-between gap-2 overflow-x-auto">
-          <div className="flex items-center gap-2 shrink-0">
-            <span className="text-[#f0f6fc] font-bold">
-              Referência da API:
-            </span>
-            <span className="text-[10px] px-1.5 py-0.2 rounded bg-[#238636]/20 text-[#3fb950] border border-[#238636]/40">
-              {unlockedCount} / {API_CATALOG.length} Desbloqueados
-            </span>
-          </div>
+      {/* Dynamic API Quick Reference Footer (v2.4.0 - Progressive Disclosure: Unlocked upon 1st terrain expansion) */}
+      {(engine.getMilestones().apiReferenceUnlocked || engine.isTechUnlocked('SCALE_2') || engine.getGridSize().cols > 1 || engine.getGridSize().rows > 1) && (
+        <div className="p-2 bg-[#161b22] border-t border-[#30363d] text-[11px] font-mono text-[#8b949e] flex flex-col gap-1.5 shrink-0 select-none">
+          <div className="flex items-center justify-between gap-2 overflow-x-auto">
+            <div className="flex items-center gap-2 shrink-0">
+              <span className="text-[#f0f6fc] font-bold">
+                Referência da API:
+              </span>
+              <span className="text-[10px] px-1.5 py-0.2 rounded bg-[#238636]/20 text-[#3fb950] border border-[#238636]/40">
+                {unlockedCount} / {API_CATALOG.length} Desbloqueados
+              </span>
+            </div>
 
-          <div className="flex items-center gap-2 shrink-0">
-            <button
-              onClick={() => setFilterUnlockedOnly(!filterUnlockedOnly)}
-              className={`flex items-center gap-1 px-2 py-0.5 rounded text-[10px] transition-all border ${
-                filterUnlockedOnly 
-                  ? 'bg-[#238636]/20 text-[#3fb950] border-[#238636]/50' 
-                  : 'bg-[#21262d] text-[#c9d1d9] border-[#30363d] hover:bg-[#30363d]'
-              }`}
-            >
-              <Filter className="w-2.5 h-2.5" />
-              {filterUnlockedOnly ? 'Apenas Desbloqueados' : 'Mostrar Todos'}
-            </button>
-          </div>
-        </div>
-
-        {/* API Chips List */}
-        <div className="flex items-center gap-1.5 overflow-x-auto whitespace-nowrap pb-0.5 scrollbar-thin">
-          {filteredApis.map(api => {
-            const unlocked = isTechUnlocked(api.techId, techTree);
-            const techNode = getTechForApiItem(api.techId, techTree);
-
-            return (
+            <div className="flex items-center gap-2 shrink-0">
               <button
-                key={api.id}
-                onClick={() => unlocked && copyToClipboard(api.displayText)}
-                title={
-                  unlocked 
-                    ? `Sintaxe: ${api.signature}\nDescrição: ${api.description}\n\n(Clique para copiar: ${api.displayText})` 
-                    : `Sintaxe: ${api.signature}\nDescrição: ${api.description}\n\nBloqueado na Árvore de Pesquisa\nRequer: ${techNode?.name} (Nível ${techNode?.tier})`
-                }
-                className={`flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-mono transition-all border ${
-                  unlocked
-                    ? api.namespace === 'farm'
-                      ? 'bg-[#238636]/15 text-[#3fb950] border-[#238636]/40 hover:border-[#3fb950] cursor-pointer'
-                      : api.namespace === 'world'
-                      ? 'bg-[#388bfd]/15 text-[#58a6ff] border-[#388bfd]/40 hover:border-[#58a6ff] cursor-pointer'
-                      : 'bg-[#d29922]/15 text-[#d29922] border-[#d29922]/40 hover:border-[#d29922] cursor-pointer'
-                    : 'bg-[#010409] text-[#6e7681] border-[#21262d] opacity-60 cursor-not-allowed'
+                onClick={() => setFilterUnlockedOnly(!filterUnlockedOnly)}
+                className={`flex items-center gap-1 px-2 py-0.5 rounded text-[10px] transition-all border ${
+                  filterUnlockedOnly 
+                    ? 'bg-[#238636]/20 text-[#3fb950] border-[#238636]/50' 
+                    : 'bg-[#21262d] text-[#c9d1d9] border-[#30363d] hover:bg-[#30363d]'
                 }`}
               >
-                {unlocked ? (
-                  <CheckCircle2 className="w-2.5 h-2.5 text-[#3fb950] shrink-0" />
-                ) : (
-                  <Lock className="w-2.5 h-2.5 text-[#6e7681] shrink-0" />
-                )}
-                <span>{api.displayText}</span>
-                {copiedItem === api.displayText && (
-                  <span className="text-[9px] text-[#3fb950] font-sans ml-1">Copiado!</span>
-                )}
+                <Filter className="w-2.5 h-2.5" />
+                {filterUnlockedOnly ? 'Apenas Desbloqueados' : 'Mostrar Todos'}
               </button>
-            );
-          })}
+            </div>
+          </div>
+
+          {/* API Chips List */}
+          <div className="flex items-center gap-1.5 overflow-x-auto whitespace-nowrap pb-0.5 scrollbar-thin">
+            {filteredApis.map(api => {
+              const unlocked = isTechUnlocked(api.techId, techTree);
+              const techNode = getTechForApiItem(api.techId, techTree);
+
+              return (
+                <button
+                  key={api.id}
+                  onClick={() => unlocked && copyToClipboard(api.displayText)}
+                  title={
+                    unlocked 
+                      ? `Sintaxe: ${api.signature}\nDescrição: ${api.description}\n\n(Clique para copiar: ${api.displayText})` 
+                      : `Sintaxe: ${api.signature}\nDescrição: ${api.description}\n\nBloqueado na Árvore de Pesquisa\nRequer: ${techNode?.name} (Nível ${techNode?.tier})`
+                  }
+                  className={`flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-mono transition-all border ${
+                    unlocked
+                      ? api.namespace === 'farm'
+                        ? 'bg-[#238636]/15 text-[#3fb950] border-[#238636]/40 hover:border-[#3fb950] cursor-pointer'
+                        : api.namespace === 'world'
+                        ? 'bg-[#388bfd]/15 text-[#58a6ff] border-[#388bfd]/40 hover:border-[#58a6ff] cursor-pointer'
+                        : 'bg-[#d29922]/15 text-[#d29922] border-[#d29922]/40 hover:border-[#d29922] cursor-pointer'
+                      : 'bg-[#010409] text-[#6e7681] border-[#21262d] opacity-60 cursor-not-allowed'
+                  }`}
+                >
+                  {unlocked ? (
+                    <CheckCircle2 className="w-2.5 h-2.5 text-[#3fb950] shrink-0" />
+                  ) : (
+                    <Lock className="w-2.5 h-2.5 text-[#6e7681] shrink-0" />
+                  )}
+                  <span>{api.displayText}</span>
+                  {copiedItem === api.displayText && (
+                    <span className="text-[9px] text-[#3fb950] font-sans ml-1">Copiado!</span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };
