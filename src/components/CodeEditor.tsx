@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import CodeMirror from '@uiw/react-codemirror';
 import { EditorView, keymap } from '@codemirror/view';
+import { Prec } from '@codemirror/state';
 import { javascript } from '@codemirror/lang-javascript';
 import { python } from '@codemirror/lang-python';
 import { oneDark } from '@codemirror/theme-one-dark';
@@ -85,15 +86,17 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
   }, [activeLine]);
 
   const runKeymapExt = useMemo(() => {
-    return keymap.of([
-      {
-        key: 'Mod-Enter',
-        run: () => {
-          engine.runScriptOnPrimaryAgent(file.path);
-          return true;
+    return Prec.highest(
+      keymap.of([
+        {
+          key: 'Mod-Enter',
+          run: () => {
+            engine.runScriptOnPrimaryAgent(file.path);
+            return true;
+          }
         }
-      }
-    ]);
+      ])
+    );
   }, [engine, file.path]);
 
   const editorExtensions = useMemo(() => [
