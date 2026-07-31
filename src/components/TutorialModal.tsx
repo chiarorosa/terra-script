@@ -103,11 +103,11 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ engine, onNavigate
       case 'AUTO_6':
         return {
           capabilities: [
-            'Barramento de Comunicação Inter-Drones (IPC)',
-            'Envio de sinais e mensagens entre robôs: sys.send(drone_id, msg)',
+            'Barramento de Comunicação Inter-Agentes (IPC)',
+            'Envio de sinais e mensagens entre naves: sys.send(agent_id, msg)',
             'Sincronização de tarefas coordenadas em tempo real'
           ],
-          snippet: '# Drone 1 notifica o Drone 2 quando concluir a linha:\nif farm.can_harvest():\n    farm.harvest()\nsys.send(2, "ROW_COMPLETED")'
+          snippet: '# Agente 1 notifica o Agente 2 quando concluir a linha:\nif farm.can_harvest():\n    farm.harvest()\nsys.send(2, "ROW_COMPLETED")'
         };
 
       // AGRONOMY
@@ -156,7 +156,7 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ engine, onNavigate
       case 'SYS_1':
         return {
           capabilities: ['Imprimir mensagens no stdout: print(...) ou console.log(...)', 'Visualizar logs de execução no console do Painel Inferior'],
-          snippet: 'print("Drone ativo em", world.x(), world.y())'
+          snippet: 'print("Agente ativo em", world.x(), world.y())'
         };
       case 'SYS_2':
         return {
@@ -177,13 +177,8 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ engine, onNavigate
         };
       case 'SYS_4':
         return {
-          capabilities: ['Depurador Interativo de Passos', 'F9 para alternar pontos de interrupção (breakpoints)', 'F10 para avançar linha a linha no código'],
-          snippet: '# Clique na margem ou pressione F9 na linha para definir breakpoint'
-        };
-      case 'SYS_5':
-        return {
-          capabilities: ['Métricas de Desempenho', 'Acompanhe ticks executados e ações realizadas por minuto'],
-          snippet: '# Métricas ativas no Painel Inferior'
+          capabilities: ['Telemetria & Estatísticas do Agente', 'Inspecione contadores de passos e ações via sys.get_agent_stats() ou agent.get_stats()'],
+          snippet: 'stats = sys.get_agent_stats()'
         };
 
       // SCALE
@@ -196,13 +191,13 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ engine, onNavigate
       case 'SCALE_4':
         return { capabilities: ['Expandir terreno para zona agrícola 5x5 (25 blocos)'], snippet: '# Tamanho da Grade: 5x5' };
       case 'SCALE_5':
-        return { capabilities: ['Desbloquear Drone #2 (Gepeto)', 'Implantar múltiplos drones simultaneamente na grade'], snippet: '# Drones Ativos: 2 (Claudio & Gepeto)' };
+        return { capabilities: ['Desbloquear Agente #2 (Gepeto)', 'Implantar múltiplos agentes simultaneamente na grade'], snippet: '# Agentes Ativos: 2 (Claudio & Gepeto)' };
       case 'SCALE_6':
         return { capabilities: ['Expandir terreno para grade industrial 7x7 (49 blocos)'], snippet: '# Tamanho da Grade: 7x7' };
       case 'SCALE_7':
         return { capabilities: ['Expandir terreno para matriz complexa 9x9 (81 blocos)'], snippet: '# Tamanho da Grade: 9x9' };
       case 'SCALE_8':
-        return { capabilities: ['Desbloquear Drone #3 (Gemilson)', 'Ativar 3 drones operando em paralelo na fazenda'], snippet: '# Drones Ativos: 3 (Claudio, Gepeto & Gemilson)' };
+        return { capabilities: ['Desbloquear Agente #3 (Gemilson)', 'Ativar 3 agentes operando em paralelo na fazenda'], snippet: '# Agentes Ativos: 3 (Claudio, Gepeto & Gemilson)' };
       case 'SCALE_9':
         return { capabilities: ['Expandir terreno para mega lote 12x12 (144 blocos)'], snippet: '# Tamanho da Grade: 12x12' };
 
@@ -862,7 +857,7 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ engine, onNavigate
                         <Boxes className="w-3.5 h-3.5 text-[#e3b341]" />
                         Fonte 2: Upload de Recursos
                       </span>
-                      <span className="text-[#8b949e]">Com o drone sobre o <strong>Bloco Dourado</strong>, execute <code className="text-[#e3b341] font-mono">farm.prestige("recurso", qtd)</code> para realizar o upload de itens do seu Estoque para a rede de Prestígio.</span>
+                      <span className="text-[#8b949e]">Com o agente sobre o <strong>Bloco Dourado</strong>, execute <code className="text-[#e3b341] font-mono">farm.prestige("recurso", qtd)</code> para realizar o upload de itens do seu Estoque para a rede de Prestígio.</span>
                     </div>
                   </div>
                   <div className="bg-[#161b22] p-3 rounded-lg border border-[#d29922]/30 text-xs text-[#c9d1d9] space-y-1">
@@ -934,13 +929,13 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ engine, onNavigate
                 <div className="bg-[#010409] p-4 rounded-xl border border-[#bc8cff]/50 space-y-2">
                   <div className="flex items-center gap-2 font-bold text-xs text-[#bc8cff]">
                     <Bot className="w-4 h-4 text-[#bc8cff]" />
-                    6. Drone Principal e Execução Instantânea
+                    6. Agente Principal e Execução Instantânea
                   </div>
                   <p className="text-xs text-[#c9d1d9] leading-relaxed">
-                    <Star className="w-3.5 h-3.5 text-[#e3b341] fill-[#e3b341] inline shrink-0 mr-1" /> <strong>Execução direta pelo Explorador:</strong> Na lista de arquivos do Explorador, o botão <strong>PLAY</strong> executa o script diretamente no <strong>Drone Principal</strong>.<br/>
-                    • O Drone Principal atual é indicado com um ícone de estrela.<br/>
-                    • Alterne qual drone é o Principal na aba <strong>Drones</strong> a qualquer momento.<br/>
-                    • <strong>Rastreamento do Drone no Painel INFO:</strong> Na janela de informações do bloco (canto inferior direito do visualizador 3D), alterne o botão <strong>Seguir: ON/OFF</strong> para que o inspetor acompanhe a posição do Drone Principal em tempo real. Clicar em qualquer bloco fixa a inspeção naquele bloco.
+                    <Star className="w-3.5 h-3.5 text-[#e3b341] fill-[#e3b341] inline shrink-0 mr-1" /> <strong>Execução direta pelo Explorador:</strong> Na lista de arquivos do Explorador, o botão <strong>PLAY</strong> executa o script diretamente no <strong>Agente Principal</strong>.<br/>
+                    • O Agente Principal atual é indicado com um ícone de estrela.<br/>
+                    • Alterne qual agente é o Principal na aba <strong>Agentes</strong> a qualquer momento.<br/>
+                    • <strong>Rastreamento do Agente no Painel INFO:</strong> Na janela de informações do bloco (canto inferior direito do visualizador 3D), alterne o botão <strong>Seguir: ON/OFF</strong> para que o inspetor acompanhe a posição do Agente Principal em tempo real. Clicar em qualquer bloco fixa a inspeção naquele bloco.
                   </p>
                 </div>
 

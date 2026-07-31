@@ -174,8 +174,8 @@ export function createGameEngineCompletionExtension(engine: GameEngine, isPython
         const line = context.state.doc.lineAt(context.pos);
         const textUntilPosition = line.text.slice(0, context.pos - line.from);
 
-        // Verifica se o cursor está após notação de ponto, ex: "farm." ou "world." ou "inventory."
-        const matchDot = textUntilPosition.match(/(farm|world|inventory)\.([a-zA-Z0-9_]*)$/);
+        // Verifica se o cursor está após notação de ponto, ex: "farm." ou "world." ou "inventory." ou "sys." ou "agent."
+        const matchDot = textUntilPosition.match(/(farm|world|inventory|sys|agent)\.([a-zA-Z0-9_]*)$/);
         
         // Verifica se o usuário está digitando palavras-chave ou métodos sem ponto
         const matchWord = textUntilPosition.match(/([a-zA-Z0-9_.]+)$/);
@@ -193,30 +193,46 @@ export function createGameEngineCompletionExtension(engine: GameEngine, isPython
         }> = [];
 
         if (matchDot) {
-          const namespace = matchDot[1] as 'farm' | 'world' | 'inventory';
+          const namespace = matchDot[1] as 'farm' | 'world' | 'inventory' | 'sys' | 'agent';
           const prefix = matchDot[2] || '';
           const from = context.pos - prefix.length;
 
-          const items = API_CATALOG.filter(a => a.namespace === namespace);
-
-          items.forEach(item => {
-            const unlocked = isTechUnlocked(item.techId, techTree);
-            const techNode = getTechForApiItem(item.techId, techTree);
-            const rawSnippet = isPython ? item.pythonSnippet : item.jsSnippet;
-            const methodSnippet = rawSnippet.replace(/^(farm|world|inventory)\./, '');
-            const methodNameOnly = item.methodName;
-
-            if (!prefix || methodSnippet.toLowerCase().includes(prefix.toLowerCase()) || methodNameOnly.toLowerCase().includes(prefix.toLowerCase())) {
+          if (namespace === 'sys' || namespace === 'agent') {
+            const unlocked = isTechUnlocked('SYS_4', techTree);
+            const techNode = getTechForApiItem('SYS_4', techTree);
+            const statMethod = isPython ? 'get_agent_stats()' : 'getAgentStats()';
+            if (!prefix || statMethod.toLowerCase().includes(prefix.toLowerCase())) {
               options.push({
-                label: methodSnippet,
+                label: statMethod,
                 type: unlocked ? 'method' : 'text',
-                detail: item.signature,
-                info: `Sintaxe: ${item.signature}\nUso: ${item.displayText}\n\n${item.description}\n\n${unlocked ? 'STATUS: Desbloqueado e pronto para uso!' : `STATUS: Bloqueado (Requer pesquisa: ${techNode?.name || item.techId} - Nível ${techNode?.tier})`}`,
-                apply: methodSnippet,
+                detail: `${namespace}.${statMethod}: object`,
+                info: `Retorna o dicionário/objeto com as estatísticas e métricas do agente.\n\n${unlocked ? 'STATUS: Desbloqueado' : `STATUS: Bloqueado (Requer pesquisa: ${techNode?.name || 'SYS_4'})`}`,
+                apply: statMethod,
                 boost: unlocked ? 50 : -20
               });
             }
-          });
+          } else {
+            const items = API_CATALOG.filter(a => a.namespace === namespace);
+
+            items.forEach(item => {
+              const unlocked = isTechUnlocked(item.techId, techTree);
+              const techNode = getTechForApiItem(item.techId, techTree);
+              const rawSnippet = isPython ? item.pythonSnippet : item.jsSnippet;
+              const methodSnippet = rawSnippet.replace(/^(farm|world|inventory)\./, '');
+              const methodNameOnly = item.methodName;
+
+              if (!prefix || methodSnippet.toLowerCase().includes(prefix.toLowerCase()) || methodNameOnly.toLowerCase().includes(prefix.toLowerCase())) {
+                options.push({
+                  label: methodSnippet,
+                  type: unlocked ? 'method' : 'text',
+                  detail: item.signature,
+                  info: `Sintaxe: ${item.signature}\nUso: ${item.displayText}\n\n${item.description}\n\n${unlocked ? 'STATUS: Desbloqueado e pronto para uso!' : `STATUS: Bloqueado (Requer pesquisa: ${techNode?.name || item.techId} - Nível ${techNode?.tier})`}`,
+                  apply: methodSnippet,
+                  boost: unlocked ? 50 : -20
+                });
+              }
+            });
+          }
 
           return {
             from,
@@ -256,6 +272,12 @@ export function createGameEngineCompletionExtension(engine: GameEngine, isPython
           }
           if ('inventory'.startsWith(word.toLowerCase())) {
             options.push({ label: 'inventory', type: 'namespace', detail: 'API do Inventário', boost: 20 });
+          }
+          if ('sys'.startsWith(word.toLowerCase())) {
+            options.push({ label: 'sys', type: 'namespace', detail: 'API de Telemetria e IPC', boost: 20 });
+          }
+          if ('agent'.startsWith(word.toLowerCase())) {
+            options.push({ label: 'agent', type: 'namespace', detail: 'API do Agente', boost: 20 });
           }
 
           // 3. Assinaturas de API completas com base na linguagem do arquivo

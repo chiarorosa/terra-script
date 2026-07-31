@@ -204,7 +204,7 @@ export class ScriptRunner {
     return ctx;
   }
 
-  public executeStep(ctx: ExecutionContext, breakpoints: Set<number>): { paused: boolean; hitBreakpoint?: boolean; error?: string; completed?: boolean } {
+  public executeStep(ctx: ExecutionContext): { paused: boolean; error?: string; completed?: boolean } {
     if (ctx.isCompleted) {
       return { paused: true, completed: true };
     }
@@ -249,9 +249,6 @@ export class ScriptRunner {
           if (typeof res.value === 'number' && res.value > 0) {
             ctx.currentLineIndex = res.value - 1;
           }
-          if (breakpoints.has(ctx.currentLineIndex + 1)) {
-            return { paused: true, hitBreakpoint: true };
-          }
           return { paused: false };
         } catch (err: any) {
           const errMsg = err?.message || String(err);
@@ -262,10 +259,10 @@ export class ScriptRunner {
       }
     }
 
-    return this.executeFallbackStep(ctx, breakpoints);
+    return this.executeFallbackStep(ctx);
   }
 
-  public executeFallbackStep(ctx: ExecutionContext, breakpoints: Set<number>): { paused: boolean; hitBreakpoint?: boolean; error?: string; completed?: boolean } {
+  public executeFallbackStep(ctx: ExecutionContext): { paused: boolean; error?: string; completed?: boolean } {
     if (ctx.isCompleted || ctx.currentLineIndex >= ctx.lines.length) {
       if (ctx.loopStack.length > 0) {
         ctx.currentLineIndex = ctx.loopStack[ctx.loopStack.length - 1].startLineIndex;
@@ -342,12 +339,6 @@ export class ScriptRunner {
         ctx.isCompleted = true;
         return { paused: true, completed: true };
       }
-    }
-
-    // Check Breakpoint hit
-    const nextLineNum = ctx.currentLineIndex + 1;
-    if (breakpoints.has(nextLineNum)) {
-      return { paused: true, hitBreakpoint: true };
     }
 
     return { paused: false };
@@ -1255,6 +1246,17 @@ export class ScriptRunner {
     if (expr.includes('world.clear()') || expr.includes('farm.clear()') || expr === 'clear()' || expr === 'clear') {
       this.engine.clearWorld();
       return true;
+    }
+
+    if (
+      expr.includes('sys.get_agent_stats(') ||
+      expr.includes('sys.getAgentStats(') ||
+      expr.includes('agent.get_stats(') ||
+      expr.includes('agent.getStats(') ||
+      expr.includes('sys.get_stats(') ||
+      expr.includes('sys.getStats(')
+    ) {
+      return this.engine.getAgentStats(ctx.agentId);
     }
 
     // world.*

@@ -67,11 +67,9 @@ export class PyodideManager {
       throw new Error('Pyodide WASM não está pronto.');
     }
 
-    const agent = engine.getAgent(agentId);
-    if (!agent) {
-      throw new Error('Agente não encontrado.');
-    }
+    const getAg = () => engine.getAgent(agentId);
 
+    // Setup bridge callbacks in JS namespace
     const jsBridge = {
       print: (...args: any[]) => {
         const msg = args.map(a => (a === null || a === undefined ? '' : String(a))).join(' ');
@@ -81,115 +79,86 @@ export class PyodideManager {
         if (!engine.isTechUnlocked('AGRO_1')) {
           throw new Error("Recurso 'Fibra Selvagem' bloqueado! Pesquise na Árvore de Pesquisa.");
         }
-        return engine.plantCrop(agentId, agent.x, agent.y, crop || 'WILD_FIBER');
+        const ag = getAg();
+        return engine.plantCrop(agentId, ag?.x ?? 0, ag?.y ?? 0, crop || 'WILD_FIBER');
       },
-      farm_harvest: () => engine.harvestTile(agentId, agent.x, agent.y),
-      farm_can_harvest: () => engine.canHarvestTile(agent.x, agent.y),
+      farm_harvest: () => {
+        const ag = getAg();
+        return engine.harvestTile(agentId, ag?.x ?? 0, ag?.y ?? 0);
+      },
+      farm_can_harvest: () => {
+        const ag = getAg();
+        return engine.canHarvestTile(ag?.x ?? 0, ag?.y ?? 0);
+      },
       farm_water: () => {
         if (!engine.isTechUnlocked('AGRO_1')) {
           throw new Error("Recurso 'Irrigação' bloqueado!");
         }
-        return engine.waterTile(agentId, agent.x, agent.y);
+        const ag = getAg();
+        return engine.waterTile(agentId, ag?.x ?? 0, ag?.y ?? 0);
       },
       farm_till: () => {
         if (!engine.isTechUnlocked('AGRO_3')) {
           throw new Error("Recurso 'Solo Arado' bloqueado!");
         }
-        return engine.tillTile(agentId, agent.x, agent.y);
+        const ag = getAg();
+        return engine.tillTile(agentId, ag?.x ?? 0, ag?.y ?? 0);
       },
       farm_swap: (dir: string) => {
         if (!engine.isTechUnlocked('AGRO_7')) {
           throw new Error("Recurso 'Swap' bloqueado!");
         }
-        return engine.swapTiles(agentId, agent.x, agent.y, dir || 'RIGHT');
+        const ag = getAg();
+        return engine.swapTiles(agentId, ag?.x ?? 0, ag?.y ?? 0, dir || 'RIGHT');
       },
-      farm_prestige: (resource: string, amount: number) => engine.offerPrestigeResource(agentId, agent.x, agent.y, resource || 'fiber', amount || 1),
-      world_clear: () => { engine.clearWorld(); return true; },
+      farm_prestige: (resource: string, amount: number) => {
+        const ag = getAg();
+        return engine.offerPrestigeResource(agentId, ag?.x ?? 0, ag?.y ?? 0, resource || 'fiber', amount || 1);
+      },
+      world_clear: () => {
+        engine.clearWorld();
+        return true;
+      },
       world_move: (dir: string) => engine.moveAgent(agentId, dir || 'RIGHT'),
       world_can_move: (dir: string) => engine.canMoveAgent(agentId, dir || 'RIGHT'),
-      world_x: () => agent.x,
-      world_y: () => agent.y,
+      world_x: () => getAg()?.x ?? 0,
+      world_y: () => getAg()?.y ?? 0,
       world_width: () => engine.getGridWidth(),
       world_height: () => engine.getGridHeight(),
-      world_ground: () => engine.getTile(agent.x, agent.y).ground,
-      world_entity: () => engine.getTile(agent.x, agent.y).crop,
-      world_crop: () => engine.getTile(agent.x, agent.y).crop,
-      world_moisture: () => engine.getTile(agent.x, agent.y).moisture,
-      world_growth: () => engine.getTile(agent.x, agent.y).growth,
-      world_measure: () => engine.measureTile(agent.x, agent.y),
-      world_companion: () => engine.getCompanionRequest(agent.x, agent.y),
-      inventory_count: (res: string) => engine.getResourceCount(res || 'fiber')
+      world_ground: () => {
+        const ag = getAg();
+        return engine.getTile(ag?.x ?? 0, ag?.y ?? 0).ground;
+      },
+      world_entity: () => {
+        const ag = getAg();
+        return engine.getTile(ag?.x ?? 0, ag?.y ?? 0).crop;
+      },
+      world_crop: () => {
+        const ag = getAg();
+        return engine.getTile(ag?.x ?? 0, ag?.y ?? 0).crop;
+      },
+      world_moisture: () => {
+        const ag = getAg();
+        return engine.getTile(ag?.x ?? 0, ag?.y ?? 0).moisture;
+      },
+      world_growth: () => {
+        const ag = getAg();
+        return engine.getTile(ag?.x ?? 0, ag?.y ?? 0).growth;
+      },
+      world_measure: () => {
+        const ag = getAg();
+        return engine.measureTile(ag?.x ?? 0, ag?.y ?? 0);
+      },
+      world_companion: () => {
+        const ag = getAg();
+        return engine.getCompanionRequest(ag?.x ?? 0, ag?.y ?? 0);
+      },
+      inventory_count: (res: string) => engine.getResourceCount(res || 'fiber'),
+      sys_get_agent_stats: () => engine.getAgentStats(agentId)
     };
 
-    py.globals.set('_jsBridge', jsBridge);
-
     const initScript = `
-import ast, js
-
-class FarmAPI:
-    def plant(self, crop="WILD_FIBER"):
-        return _jsBridge.farm_plant(str(crop))
-    def harvest(self):
-        return _jsBridge.farm_harvest()
-    def can_harvest(self):
-        return _jsBridge.farm_can_harvest()
-    def canHarvest(self):
-        return _jsBridge.farm_can_harvest()
-    def water(self):
-        return _jsBridge.farm_water()
-    def till(self):
-        return _jsBridge.farm_till()
-    def swap(self, dir="RIGHT"):
-        return _jsBridge.farm_swap(str(dir))
-    def prestige(self, resource="fiber", amount=1):
-        return _jsBridge.farm_prestige(str(resource), int(amount))
-    def clear(self):
-        return _jsBridge.world_clear()
-
-class WorldAPI:
-    def move(self, direction="RIGHT"):
-        return _jsBridge.world_move(str(direction))
-    def can_move(self, direction="RIGHT"):
-        return _jsBridge.world_can_move(str(direction))
-    def canMove(self, direction="RIGHT"):
-        return _jsBridge.world_can_move(str(direction))
-    def x(self):
-        return _jsBridge.world_x()
-    def y(self):
-        return _jsBridge.world_y()
-    def width(self):
-        return _jsBridge.world_width()
-    def height(self):
-        return _jsBridge.world_height()
-    def ground(self):
-        return _jsBridge.world_ground()
-    def entity(self):
-        return _jsBridge.world_entity()
-    def crop(self):
-        return _jsBridge.world_crop()
-    def moisture(self):
-        return _jsBridge.world_moisture()
-    def growth(self):
-        return _jsBridge.world_growth()
-    def measure(self):
-        return _jsBridge.world_measure()
-    def get_companion(self):
-        return _jsBridge.world_companion()
-    def getCompanion(self):
-        return _jsBridge.world_companion()
-    def clear(self):
-        return _jsBridge.world_clear()
-
-class InventoryAPI:
-    def count(self, item="fiber"):
-        return _jsBridge.inventory_count(str(item))
-
-farm = FarmAPI()
-world = WorldAPI()
-inventory = InventoryAPI()
-
-def print(*args, **kwargs):
-    _jsBridge.print(*[str(a) for a in args])
+import ast
 
 class _StepInserter(ast.NodeTransformer):
     def generic_visit(self, node):
@@ -214,7 +183,106 @@ class _StepInserter(ast.NodeTransformer):
             node.orelse = new_orelse
         return node
 
-def _create_py_step_generator(code_str):
+def _create_py_step_generator(code_str, _jsBridge):
+    class FarmAPI:
+        def plant(self, crop="WILD_FIBER"):
+            return _jsBridge.farm_plant(str(crop))
+        def harvest(self):
+            return _jsBridge.farm_harvest()
+        def can_harvest(self):
+            return _jsBridge.farm_can_harvest()
+        def canHarvest(self):
+            return _jsBridge.farm_can_harvest()
+        def water(self):
+            return _jsBridge.farm_water()
+        def till(self):
+            return _jsBridge.farm_till()
+        def swap(self, dir="RIGHT"):
+            return _jsBridge.farm_swap(str(dir))
+        def prestige(self, resource="fiber", amount=1):
+            return _jsBridge.farm_prestige(str(resource), int(amount))
+        def clear(self):
+            return _jsBridge.world_clear()
+
+    class WorldAPI:
+        def move(self, direction="RIGHT"):
+            return _jsBridge.world_move(str(direction))
+        def can_move(self, direction="RIGHT"):
+            return _jsBridge.world_can_move(str(direction))
+        def canMove(self, direction="RIGHT"):
+            return _jsBridge.world_can_move(str(direction))
+        def x(self):
+            return _jsBridge.world_x()
+        def y(self):
+            return _jsBridge.world_y()
+        def width(self):
+            return _jsBridge.world_width()
+        def height(self):
+            return _jsBridge.world_height()
+        def ground(self):
+            return _jsBridge.world_ground()
+        def entity(self):
+            return _jsBridge.world_entity()
+        def crop(self):
+            return _jsBridge.world_crop()
+        def moisture(self):
+            return _jsBridge.world_moisture()
+        def growth(self):
+            return _jsBridge.world_growth()
+        def measure(self):
+            return _jsBridge.world_measure()
+        def get_companion(self):
+            return _jsBridge.world_companion()
+        def getCompanion(self):
+            return _jsBridge.world_companion()
+        def clear(self):
+            return _jsBridge.world_clear()
+
+    class InventoryAPI:
+        def count(self, item="fiber"):
+            return _jsBridge.inventory_count(str(item))
+
+    class SysAPI:
+        def get_agent_stats(self):
+            res = _jsBridge.sys_get_agent_stats()
+            if hasattr(res, 'to_py'):
+                return res.to_py()
+            return dict(res)
+        def getAgentStats(self):
+            return self.get_agent_stats()
+        def get_stats(self):
+            return self.get_agent_stats()
+        def getStats(self):
+            return self.get_agent_stats()
+
+    class AgentAPI:
+        def get_stats(self):
+            res = _jsBridge.sys_get_agent_stats()
+            if hasattr(res, 'to_py'):
+                return res.to_py()
+            return dict(res)
+        def getStats(self):
+            return self.get_stats()
+
+    farm = FarmAPI()
+    world = WorldAPI()
+    inventory = InventoryAPI()
+    sys = SysAPI()
+    agent = AgentAPI()
+
+    def print(*args, **kwargs):
+        _jsBridge.print(*[str(a) for a in args])
+
+    env = {
+        'farm': farm,
+        'world': world,
+        'inventory': inventory,
+        'sys': sys,
+        'agent': agent,
+        'print': print,
+        '__builtins__': __builtins__
+    }
+
     parsed = ast.parse(code_str)
     transformed = _StepInserter().visit(parsed)
     gen_func_def = ast.FunctionDef(
@@ -230,15 +298,14 @@ def _create_py_step_generator(code_str):
     module = ast.Module(body=[gen_func_def], type_ignores=[])
     ast.fix_missing_locations(module)
     compiled = compile(module, filename="<user_script>", mode="exec")
-    namespace = {}
-    exec(compiled, globals(), namespace)
-    return namespace['__user_step_gen__']()
+    exec(compiled, env)
+    return env['__user_step_gen__']()
 `;
 
     py.runPython(initScript);
 
-    py.globals.set('_user_code_raw', code);
-    const pyGen = py.runPython(`_create_py_step_generator(_user_code_raw)`);
+    const pyGenFunc = py.globals.get('_create_py_step_generator');
+    const pyGen = pyGenFunc(code, jsBridge);
 
     return {
       next: () => {
@@ -266,8 +333,8 @@ def _create_py_step_generator(code_str):
       throw new Error('Pyodide WASM não está carregado. Usando interpretador padrão.');
     }
 
-    const agent = engine.getAgent(agentId);
-    if (!agent) return { success: false, error: 'Agente não encontrado' };
+    const getAg = () => engine.getAgent(agentId);
+    if (!getAg()) return { success: false, error: 'Agente não encontrado' };
 
     // Setup bridge callbacks in JS namespace
     const jsBridge = {
@@ -279,34 +346,41 @@ def _create_py_step_generator(code_str):
         if (!engine.isTechUnlocked('AGRO_1')) {
           throw new Error("Recurso 'Fibra Selvagem' bloqueado! Pesquise na Árvore de Pesquisa.");
         }
-        return engine.plantCrop(agentId, agent.x, agent.y, crop || 'WILD_FIBER');
+        const ag = getAg();
+        return engine.plantCrop(agentId, ag?.x ?? 0, ag?.y ?? 0, crop || 'WILD_FIBER');
       },
       farm_harvest: () => {
-        return engine.harvestTile(agentId, agent.x, agent.y);
+        const ag = getAg();
+        return engine.harvestTile(agentId, ag?.x ?? 0, ag?.y ?? 0);
       },
       farm_can_harvest: () => {
-        return engine.canHarvestTile(agent.x, agent.y);
+        const ag = getAg();
+        return engine.canHarvestTile(ag?.x ?? 0, ag?.y ?? 0);
       },
       farm_water: () => {
         if (!engine.isTechUnlocked('AGRO_1')) {
           throw new Error("Recurso 'Irrigação' bloqueado!");
         }
-        return engine.waterTile(agentId, agent.x, agent.y);
+        const ag = getAg();
+        return engine.waterTile(agentId, ag?.x ?? 0, ag?.y ?? 0);
       },
       farm_till: () => {
         if (!engine.isTechUnlocked('AGRO_3')) {
           throw new Error("Recurso 'Solo Arado' bloqueado!");
         }
-        return engine.tillTile(agentId, agent.x, agent.y);
+        const ag = getAg();
+        return engine.tillTile(agentId, ag?.x ?? 0, ag?.y ?? 0);
       },
       farm_swap: (dir: string) => {
         if (!engine.isTechUnlocked('AGRO_7')) {
           throw new Error("Recurso 'Swap' bloqueado!");
         }
-        return engine.swapTiles(agentId, agent.x, agent.y, dir || 'RIGHT');
+        const ag = getAg();
+        return engine.swapTiles(agentId, ag?.x ?? 0, ag?.y ?? 0, dir || 'RIGHT');
       },
       farm_prestige: (resource: string, amount: number) => {
-        return engine.offerPrestigeResource(agentId, agent.x, agent.y, resource || 'fiber', amount || 1);
+        const ag = getAg();
+        return engine.offerPrestigeResource(agentId, ag?.x ?? 0, ag?.y ?? 0, resource || 'fiber', amount || 1);
       },
       world_clear: () => {
         engine.clearWorld();
@@ -318,96 +392,150 @@ def _create_py_step_generator(code_str):
       world_can_move: (dir: string) => {
         return engine.canMoveAgent(agentId, dir || 'RIGHT');
       },
-      world_x: () => agent.x,
-      world_y: () => agent.y,
+      world_x: () => getAg()?.x ?? 0,
+      world_y: () => getAg()?.y ?? 0,
       world_width: () => engine.getGridWidth(),
       world_height: () => engine.getGridHeight(),
-      world_ground: () => engine.getTile(agent.x, agent.y).ground,
-      world_entity: () => engine.getTile(agent.x, agent.y).crop,
-      world_crop: () => engine.getTile(agent.x, agent.y).crop,
-      world_moisture: () => engine.getTile(agent.x, agent.y).moisture,
-      world_growth: () => engine.getTile(agent.x, agent.y).growth,
-      world_measure: () => engine.measureTile(agent.x, agent.y),
-      world_companion: () => engine.getCompanionRequest(agent.x, agent.y),
-      inventory_count: (res: string) => engine.getResourceCount(res || 'fiber')
+      world_ground: () => {
+        const ag = getAg();
+        return engine.getTile(ag?.x ?? 0, ag?.y ?? 0).ground;
+      },
+      world_entity: () => {
+        const ag = getAg();
+        return engine.getTile(ag?.x ?? 0, ag?.y ?? 0).crop;
+      },
+      world_crop: () => {
+        const ag = getAg();
+        return engine.getTile(ag?.x ?? 0, ag?.y ?? 0).crop;
+      },
+      world_moisture: () => {
+        const ag = getAg();
+        return engine.getTile(ag?.x ?? 0, ag?.y ?? 0).moisture;
+      },
+      world_growth: () => {
+        const ag = getAg();
+        return engine.getTile(ag?.x ?? 0, ag?.y ?? 0).growth;
+      },
+      world_measure: () => {
+        const ag = getAg();
+        return engine.measureTile(ag?.x ?? 0, ag?.y ?? 0);
+      },
+      world_companion: () => {
+        const ag = getAg();
+        return engine.getCompanionRequest(ag?.x ?? 0, ag?.y ?? 0);
+      },
+      inventory_count: (res: string) => engine.getResourceCount(res || 'fiber'),
+      sys_get_agent_stats: () => engine.getAgentStats(agentId)
     };
 
-    py.globals.set('_jsBridge', jsBridge);
+    const pythonIsolatedExec = `
+def _exec_isolated_py(code_str, _jsBridge):
+    class FarmAPI:
+        def plant(self, crop="WILD_FIBER"):
+            return _jsBridge.farm_plant(str(crop))
+        def harvest(self):
+            return _jsBridge.farm_harvest()
+        def can_harvest(self):
+            return _jsBridge.farm_can_harvest()
+        def canHarvest(self):
+            return _jsBridge.farm_can_harvest()
+        def water(self):
+            return _jsBridge.farm_water()
+        def till(self):
+            return _jsBridge.farm_till()
+        def swap(self, dir="RIGHT"):
+            return _jsBridge.farm_swap(str(dir))
+        def prestige(self, resource="fiber", amount=1):
+            return _jsBridge.farm_prestige(str(resource), int(amount))
+        def clear(self):
+            return _jsBridge.world_clear()
 
-    // Define Python wrapper classes/modules inside Pyodide environment
-    const pythonEnvInit = `
-import js
-from pyodide.ffi import JsProxy
+    class WorldAPI:
+        def move(self, direction="RIGHT"):
+            return _jsBridge.world_move(str(direction))
+        def can_move(self, direction="RIGHT"):
+            return _jsBridge.world_can_move(str(direction))
+        def canMove(self, direction="RIGHT"):
+            return _jsBridge.world_can_move(str(direction))
+        def x(self):
+            return _jsBridge.world_x()
+        def y(self):
+            return _jsBridge.world_y()
+        def width(self):
+            return _jsBridge.world_width()
+        def height(self):
+            return _jsBridge.world_height()
+        def ground(self):
+            return _jsBridge.world_ground()
+        def entity(self):
+            return _jsBridge.world_entity()
+        def crop(self):
+            return _jsBridge.world_crop()
+        def moisture(self):
+            return _jsBridge.world_moisture()
+        def growth(self):
+            return _jsBridge.world_growth()
+        def measure(self):
+            return _jsBridge.world_measure()
+        def get_companion(self):
+            return _jsBridge.world_companion()
+        def getCompanion(self):
+            return _jsBridge.world_companion()
+        def clear(self):
+            return _jsBridge.world_clear()
 
-class FarmAPI:
-    def plant(self, crop="WILD_FIBER"):
-        return _jsBridge.farm_plant(str(crop))
-    def harvest(self):
-        return _jsBridge.farm_harvest()
-    def can_harvest(self):
-        return _jsBridge.farm_can_harvest()
-    def canHarvest(self):
-        return _jsBridge.farm_can_harvest()
-    def water(self):
-        return _jsBridge.farm_water()
-    def till(self):
-        return _jsBridge.farm_till()
-    def swap(self, dir="RIGHT"):
-        return _jsBridge.farm_swap(str(dir))
-    def prestige(self, resource="fiber", amount=1):
-        return _jsBridge.farm_prestige(str(resource), int(amount))
-    def clear(self):
-        return _jsBridge.world_clear()
+    class InventoryAPI:
+        def count(self, item="fiber"):
+            return _jsBridge.inventory_count(str(item))
 
-class WorldAPI:
-    def move(self, direction="RIGHT"):
-        return _jsBridge.world_move(str(direction))
-    def can_move(self, direction="RIGHT"):
-        return _jsBridge.world_can_move(str(direction))
-    def canMove(self, direction="RIGHT"):
-        return _jsBridge.world_can_move(str(direction))
-    def x(self):
-        return _jsBridge.world_x()
-    def y(self):
-        return _jsBridge.world_y()
-    def width(self):
-        return _jsBridge.world_width()
-    def height(self):
-        return _jsBridge.world_height()
-    def ground(self):
-        return _jsBridge.world_ground()
-    def entity(self):
-        return _jsBridge.world_entity()
-    def crop(self):
-        return _jsBridge.world_crop()
-    def moisture(self):
-        return _jsBridge.world_moisture()
-    def growth(self):
-        return _jsBridge.world_growth()
-    def measure(self):
-        return _jsBridge.world_measure()
-    def get_companion(self):
-        return _jsBridge.world_companion()
-    def getCompanion(self):
-        return _jsBridge.world_companion()
-    def clear(self):
-        return _jsBridge.world_clear()
+    class SysAPI:
+        def get_agent_stats(self):
+            res = _jsBridge.sys_get_agent_stats()
+            if hasattr(res, 'to_py'):
+                return res.to_py()
+            return dict(res)
+        def getAgentStats(self):
+            return self.get_agent_stats()
+        def get_stats(self):
+            return self.get_agent_stats()
+        def getStats(self):
+            return self.get_agent_stats()
 
-class InventoryAPI:
-    def count(self, item="fiber"):
-        return _jsBridge.inventory_count(str(item))
+    class AgentAPI:
+        def get_stats(self):
+            res = _jsBridge.sys_get_agent_stats()
+            if hasattr(res, 'to_py'):
+                return res.to_py()
+            return dict(res)
+        def getStats(self):
+            return self.get_stats()
 
-farm = FarmAPI()
-world = WorldAPI()
-inventory = InventoryAPI()
+    farm = FarmAPI()
+    world = WorldAPI()
+    inventory = InventoryAPI()
+    sys = SysAPI()
+    agent = AgentAPI()
 
-def print(*args, **kwargs):
-    _jsBridge.print(*[str(a) for a in args])
+    def print(*args, **kwargs):
+        _jsBridge.print(*[str(a) for a in args])
+
+    env = {
+        'farm': farm,
+        'world': world,
+        'inventory': inventory,
+        'sys': sys,
+        'agent': agent,
+        'print': print,
+        '__builtins__': __builtins__
+    }
+
+    exec(code_str, env)
 `;
 
     try {
-      await py.runPythonAsync(pythonEnvInit);
-      await py.runPythonAsync(code);
+      await py.runPythonAsync(pythonIsolatedExec);
+      const runner = py.globals.get('_exec_isolated_py');
+      runner(code, jsBridge);
       return { success: true };
     } catch (err: any) {
       const errMsg = err?.message || String(err);

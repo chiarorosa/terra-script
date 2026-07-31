@@ -56,7 +56,7 @@ export const API_CATALOG: ApiItem[] = [
     description: 'Entrega recursos ao Bloco de Prestígio Dourado para ganhar Pontos e subir o Nível de Prestígio (1 a 100).',
     techId: 'AUTO_2',
     category: 'Farm Commands',
-    docDetail: 'Disponível após a Mudança do Mundo (World Change) ao desbloquear os 4 nós de Nível 1. O drone deve estar sobre o Bloco Dourado.',
+    docDetail: 'Disponível após a Mudança do Mundo (World Change) ao desbloquear os 4 nós de Nível 1. O agente deve estar sobre o Bloco Dourado.',
     exampleCode: 'if world.ground() == "PRESTIGE":\n    farm.prestige("fiber", 50)'
   },
   {
@@ -126,7 +126,7 @@ export const API_CATALOG: ApiItem[] = [
     description: 'Planta raízes que prosperam em solo arado.',
     techId: 'AGRO_3',
     category: 'Farm Commands',
-    docDetail: 'Gera o recurso raízes, usado para ramos de tecnologia avançada e melhorias de drones.',
+    docDetail: 'Gera o recurso raízes, usado para ramos de tecnologia avançada e melhorias de agentes.',
     exampleCode: 'farm.till()\nfarm.plant("CULTIVATED_ROOT")'
   },
   {
@@ -223,10 +223,10 @@ export const API_CATALOG: ApiItem[] = [
     signature: 'world.clear(): void',
     pythonSnippet: 'world.clear()',
     jsSnippet: 'world.clear()',
-    description: 'Limpa todos os blocos da fazenda e retorna o Drone para (0,0).',
+    description: 'Limpa todos os blocos da fazenda e retorna o Agente para (0,0).',
     techId: 'AUTO_1',
     category: 'World Sensors',
-    docDetail: 'Remove todas as culturas plantadas e solo arado (retornando ao terreno natural) e reposiciona os Drones de volta para (0,0). Inventário, pesquisas e arquivos permanecem intocados.',
+    docDetail: 'Remove todas as culturas plantadas e solo arado (retornando ao terreno natural) e reposiciona os Agentes de volta para (0,0). Inventário, pesquisas e arquivos permanecem intocados.',
     exampleCode: 'world.clear()'
   },
   {
@@ -237,7 +237,7 @@ export const API_CATALOG: ApiItem[] = [
     signature: 'world.move(direction: string): boolean',
     pythonSnippet: 'world.move("RIGHT")',
     jsSnippet: 'world.move("RIGHT")',
-    description: 'Move o drone 1 passo ("FORWARD", "BACKWARD", "LEFT", "RIGHT" ou "NORTH", "SOUTH", "WEST", "EAST").',
+    description: 'Move o agente 1 passo ("FORWARD", "BACKWARD", "LEFT", "RIGHT" ou "NORTH", "SOUTH", "WEST", "EAST").',
     techId: 'AUTO_1',
     category: 'World Sensors',
     docDetail: 'Navega o agente na grade. Suporta direções intuitivas ("FORWARD", "BACKWARD", "LEFT", "RIGHT") e cardinais ("NORTH", "SOUTH", "WEST", "EAST"). Retorna true se o movimento foi bem-sucedido.',
@@ -413,7 +413,7 @@ export const API_CATALOG: ApiItem[] = [
     techId: 'SYS_1',
     category: 'Language Features',
     docDetail: 'Saída básica de mensagens no console.',
-    exampleCode: 'print("Drone ativo em", world.x(), world.y())'
+    exampleCode: 'print("Agente ativo em", world.x(), world.y())'
   },
   {
     id: 'syntax_vars',
@@ -476,14 +476,28 @@ export const API_CATALOG: ApiItem[] = [
     namespace: 'syntax',
     methodName: 'ipc_messages',
     displayText: 'Sinais Inter-Processos (IPC / Transmissão)',
-    signature: 'sys.send(drone_id, msg) / sys.receive()',
+    signature: 'sys.send(agent_id, msg) / sys.receive()',
     pythonSnippet: 'sys.send(2, "HARVEST_READY")\nmsg = sys.receive()',
     jsSnippet: 'sys.send(2, "HARVEST_READY");\nconst msg = sys.receive();',
-    description: 'Comunicação e sincronização por mensagens entre drones em tempo real.',
+    description: 'Comunicação e sincronização por mensagens entre agentes em tempo real.',
     techId: 'AUTO_6',
     category: 'Language Features',
-    docDetail: 'Permite que múltiplos drones troquem mensagens, sinais de conclusão e coordenadas em tempo real através de um barramento de mensagens IPC.',
+    docDetail: 'Permite que múltiplos agentes troquem mensagens, sinais de conclusão e coordenadas em tempo real através de um barramento de mensagens IPC.',
     exampleCode: 'if farm.can_harvest():\n    farm.harvest()\n    sys.send(2, "TASK_COMPLETE")'
+  },
+  {
+    id: 'sys_get_agent_stats',
+    namespace: 'syntax',
+    methodName: 'get_agent_stats',
+    displayText: 'sys.get_agent_stats() / agent.get_stats()',
+    signature: 'sys.get_agent_stats(): object',
+    pythonSnippet: 'stats = sys.get_agent_stats()\nprint(stats["harvested_count"])',
+    jsSnippet: 'const stats = sys.getAgentStats();\nconsole.log(stats.harvested_count);',
+    description: 'Acessa o dicionário chave-valor com métricas e estatísticas individuais do agente.',
+    techId: 'SYS_4',
+    category: 'Language Features',
+    docDetail: 'Retorna um dicionário/objeto contendo contadores de ações (planted_count, harvested_count, watered_count, tilled_count, steps_count) e recursos coletados individualmente por este agente (harvested_fiber, harvested_wood, etc.).',
+    exampleCode: 'stats = sys.get_agent_stats()\nprint("Plantou:", stats["planted_count"])\nprint("Colheu:", stats["harvested_count"])\nprint("Passos:", stats["steps_count"])'
   }
 ];
 

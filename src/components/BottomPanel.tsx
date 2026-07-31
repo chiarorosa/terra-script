@@ -3,7 +3,6 @@ import {
   Terminal, 
   AlertCircle, 
   Variable, 
-  Layers, 
   History,
   Trash2, 
   ChevronDown, 
@@ -17,8 +16,8 @@ interface BottomPanelProps {
 }
 
 export const BottomPanel: React.FC<BottomPanelProps> = ({ engine }) => {
-  const [activeTab, setActiveTab] = useState<'console' | 'problems' | 'variables' | 'stack' | 'changelog'>('console');
-  const [isExpanded, setIsExpanded] = useState<boolean>(true);
+  const [activeTab, setActiveTab] = useState<'console' | 'problems' | 'variables' | 'changelog'>('console');
+  const [isExpanded, setIsExpanded] = useState<boolean>(false);
 
   const logs = engine.getLogs();
   const agents = engine.getAgents();
@@ -64,18 +63,6 @@ export const BottomPanel: React.FC<BottomPanelProps> = ({ engine }) => {
           >
             <Variable className="w-3.5 h-3.5 text-[#02b8cc]" />
             Variáveis e Estado
-          </button>
-
-          <button
-            onClick={() => { setActiveTab('stack'); setIsExpanded(true); }}
-            className={`flex items-center gap-1.5 px-3 py-1 rounded-t text-xs font-medium transition-all ${
-              activeTab === 'stack' && isExpanded 
-                ? 'border-b-2 border-[#8b5cf6] text-[#8b5cf6] bg-[#0f1011]' 
-                : 'border-b-2 border-transparent text-[#8a8f98] hover:text-[#ffffff]'
-            }`}
-          >
-            <Layers className="w-3.5 h-3.5 text-[#8b5cf6]" />
-            Pilha de Chamadas
           </button>
 
           <button
@@ -183,20 +170,6 @@ export const BottomPanel: React.FC<BottomPanelProps> = ({ engine }) => {
                     <div className="flex justify-between"><span className="text-[#8a8f98]">Posição Y:</span> <span>{ag.y}</span></div>
                     <div className="flex justify-between"><span className="text-[#8a8f98]">Limites da Grade:</span> <span>{engine.getGridWidth()}x{engine.getGridHeight()}</span></div>
                     <div className="flex justify-between"><span className="text-[#8a8f98]">Arquivo Atribuído:</span> <span className="text-[#27a644]">{ag.assignedFile}</span></div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {activeTab === 'stack' && (
-            <div className="space-y-1">
-              {agents.map(ag => (
-                <div key={ag.id} className="p-2 bg-[#161718] border border-[#23252a] rounded-[6px] font-mono text-xs">
-                  <span className="text-[#02b8cc] font-medium">{ag.name}</span> Pilha de Chamadas:
-                  <div className="mt-1 pl-3 text-[#8a8f98] space-y-0.5 border-l-2 border-[#23252a]">
-                    <div>-&gt; {ag.assignedFile}:{ag.currentLine} (frame ativo)</div>
-                    <div>  main()</div>
                   </div>
                 </div>
               ))}

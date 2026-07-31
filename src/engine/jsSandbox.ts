@@ -97,41 +97,52 @@ export class JavaScriptSandbox {
     engine: GameEngine,
     filePath: string
   ): { next: () => { done: boolean; value?: number } } {
-    const agent = engine.getAgent(agentId);
-    if (!agent) {
-      throw new Error('Agente não encontrado');
-    }
+    const getAg = () => engine.getAgent(agentId);
 
     const farm = {
       plant: (crop = 'WILD_FIBER') => {
         if (!engine.isTechUnlocked('AGRO_1')) {
           throw new Error("Recurso 'Fibra Selvagem' está bloqueado!");
         }
-        return engine.plantCrop(agentId, agent.x, agent.y, crop);
+        const ag = getAg();
+        return engine.plantCrop(agentId, ag?.x ?? 0, ag?.y ?? 0, crop);
       },
-      harvest: () => engine.harvestTile(agentId, agent.x, agent.y),
-      canHarvest: () => engine.canHarvestTile(agent.x, agent.y),
-      can_harvest: () => engine.canHarvestTile(agent.x, agent.y),
+      harvest: () => {
+        const ag = getAg();
+        return engine.harvestTile(agentId, ag?.x ?? 0, ag?.y ?? 0);
+      },
+      canHarvest: () => {
+        const ag = getAg();
+        return engine.canHarvestTile(ag?.x ?? 0, ag?.y ?? 0);
+      },
+      can_harvest: () => {
+        const ag = getAg();
+        return engine.canHarvestTile(ag?.x ?? 0, ag?.y ?? 0);
+      },
       water: () => {
         if (!engine.isTechUnlocked('AGRO_1')) {
           throw new Error("Recurso 'Irrigação' está bloqueado!");
         }
-        return engine.waterTile(agentId, agent.x, agent.y);
+        const ag = getAg();
+        return engine.waterTile(agentId, ag?.x ?? 0, ag?.y ?? 0);
       },
       till: () => {
         if (!engine.isTechUnlocked('AGRO_3')) {
           throw new Error("Recurso 'Solo Arado' está bloqueado!");
         }
-        return engine.tillTile(agentId, agent.x, agent.y);
+        const ag = getAg();
+        return engine.tillTile(agentId, ag?.x ?? 0, ag?.y ?? 0);
       },
       swap: (dir = 'RIGHT') => {
         if (!engine.isTechUnlocked('AGRO_7')) {
           throw new Error("Recurso 'Swap' está bloqueado!");
         }
-        return engine.swapTiles(agentId, agent.x, agent.y, dir);
+        const ag = getAg();
+        return engine.swapTiles(agentId, ag?.x ?? 0, ag?.y ?? 0, dir);
       },
       prestige: (resource = 'fiber', amount = 1) => {
-        return engine.offerPrestigeResource(agentId, agent.x, agent.y, resource, amount);
+        const ag = getAg();
+        return engine.offerPrestigeResource(agentId, ag?.x ?? 0, ag?.y ?? 0, resource, amount);
       },
       clear: () => {
         engine.clearWorld();
@@ -143,18 +154,42 @@ export class JavaScriptSandbox {
       move: (dir = 'RIGHT') => engine.moveAgent(agentId, dir),
       canMove: (dir = 'RIGHT') => engine.canMoveAgent(agentId, dir),
       can_move: (dir = 'RIGHT') => engine.canMoveAgent(agentId, dir),
-      x: () => agent.x,
-      y: () => agent.y,
+      x: () => getAg()?.x ?? 0,
+      y: () => getAg()?.y ?? 0,
       width: () => engine.getGridWidth(),
       height: () => engine.getGridHeight(),
-      ground: () => engine.getTile(agent.x, agent.y).ground,
-      entity: () => engine.getTile(agent.x, agent.y).crop,
-      crop: () => engine.getTile(agent.x, agent.y).crop,
-      moisture: () => engine.getTile(agent.x, agent.y).moisture,
-      growth: () => engine.getTile(agent.x, agent.y).growth,
-      measure: () => engine.measureTile(agent.x, agent.y),
-      getCompanion: () => engine.getCompanionRequest(agent.x, agent.y),
-      get_companion: () => engine.getCompanionRequest(agent.x, agent.y),
+      ground: () => {
+        const ag = getAg();
+        return engine.getTile(ag?.x ?? 0, ag?.y ?? 0).ground;
+      },
+      entity: () => {
+        const ag = getAg();
+        return engine.getTile(ag?.x ?? 0, ag?.y ?? 0).crop;
+      },
+      crop: () => {
+        const ag = getAg();
+        return engine.getTile(ag?.x ?? 0, ag?.y ?? 0).crop;
+      },
+      moisture: () => {
+        const ag = getAg();
+        return engine.getTile(ag?.x ?? 0, ag?.y ?? 0).moisture;
+      },
+      growth: () => {
+        const ag = getAg();
+        return engine.getTile(ag?.x ?? 0, ag?.y ?? 0).growth;
+      },
+      measure: () => {
+        const ag = getAg();
+        return engine.measureTile(ag?.x ?? 0, ag?.y ?? 0);
+      },
+      getCompanion: () => {
+        const ag = getAg();
+        return engine.getCompanionRequest(ag?.x ?? 0, ag?.y ?? 0);
+      },
+      get_companion: () => {
+        const ag = getAg();
+        return engine.getCompanionRequest(ag?.x ?? 0, ag?.y ?? 0);
+      },
       clear: () => {
         engine.clearWorld();
         return true;
@@ -163,6 +198,18 @@ export class JavaScriptSandbox {
 
     const inventory = {
       count: (item = 'fiber') => engine.getResourceCount(item)
+    };
+
+    const sys = {
+      getAgentStats: () => engine.getAgentStats(agentId),
+      get_agent_stats: () => engine.getAgentStats(agentId),
+      getStats: () => engine.getAgentStats(agentId),
+      get_stats: () => engine.getAgentStats(agentId)
+    };
+
+    const agentObj = {
+      getStats: () => engine.getAgentStats(agentId),
+      get_stats: () => engine.getAgentStats(agentId)
     };
 
     const customConsole = {
@@ -178,8 +225,8 @@ export class JavaScriptSandbox {
 
     const instrumentedCode = this.instrumentJsToGenerator(code);
     const GeneratorFunction = Object.getPrototypeOf(function* () {}).constructor;
-    const genFunc = new GeneratorFunction('farm', 'world', 'inventory', 'console', instrumentedCode);
-    const gen = genFunc(farm, world, inventory, customConsole);
+    const genFunc = new GeneratorFunction('farm', 'world', 'inventory', 'sys', 'agent', 'console', instrumentedCode);
+    const gen = genFunc(farm, world, inventory, sys, agentObj, customConsole);
 
     return {
       next: () => {

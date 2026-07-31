@@ -70,14 +70,11 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({ engine, onClose }) =
         <div className="p-6 space-y-4 text-xs leading-relaxed text-[#d0d6e0] max-h-[65vh] overflow-y-auto">
           
           <div className="p-3.5 bg-[#161718] border border-[#23252a] rounded-[8px] space-y-2">
-            <p className="font-medium text-[#ffffff] flex items-center justify-between">
-              <span>Saudações, nobre Programador(a)!</span>
-              <span className="text-[10px] bg-[#27a644]/10 text-[#27a644] border border-[#27a644]/30 px-1.5 py-0.5 rounded font-mono font-medium">
-                v2.3.0
-              </span>
+            <p className="font-medium text-[#ffffff]">
+              Saudações, nobre Programador(a) das Naves ETs!
             </p>
             <p className="text-[#8a8f98]">
-              Você acaba de assumir o comando da Estação de Automação. Sua missão é criar scripts em <span className="text-[#ffffff] font-mono font-medium">Python</span> e <span className="text-[#ffffff] font-mono font-medium">JavaScript</span> para automatizar nossos drones e transformar este quadrante num próspero ecossistema biotecnológico.
+              A Terra foi colonizada por seres extraterrestres avançados para o cultivo biotecnológico planetário. Como Programador(a) Chefe da Frota Alienígena, sua missão é criar scripts em <span className="text-[#ffffff] font-mono font-medium">Python</span> e <span className="text-[#ffffff] font-mono font-medium">JavaScript</span> para comandar nossas Naves de Trabalho — os <strong>Agentes Autônomos</strong> — e cultivar todo este quadrante!
             </p>
           </div>
 
@@ -85,9 +82,9 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({ engine, onClose }) =
           <div className="p-3 bg-[#161718] border border-[#23252a] rounded-[8px] flex items-start gap-3 text-[#d0d6e0]">
             <Bot className="w-4 h-4 shrink-0 text-[#27a644] mt-0.5" />
             <div className="text-[11px] leading-normal space-y-1">
-              <p className="font-medium text-[#ffffff]">Lembrete do seu drone auxiliar Claudio:</p>
+              <p className="font-medium text-[#ffffff]">Lembrete da Nave Agente Claudio:</p>
               <p className="text-[#8a8f98]">
-                &quot;Eu obedeço cegamente ao seu código em <code className="bg-[#08090a] px-1 py-0.5 rounded-[4px] text-[#27a644] font-mono">main.py</code>. Se você esquecer de regar o solo antes de plantar, eu tentarei plantar na terra seca mesmo assim!&quot;
+                &quot;Eu obedeço cegamente ao seu código em <code className="bg-[#08090a] px-1 py-0.5 rounded-[4px] text-[#27a644] font-mono">main.py</code>. Minha nave com propulsão antigravitacional tentará plantar na terra seca mesmo se você esquecer de regar antes!&quot;
               </p>
             </div>
           </div>
@@ -135,15 +132,12 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({ engine, onClose }) =
               </div>
             </div>
 
-            {/* UI Style Selector (v2.2.0 Spec) */}
+            {/* UI Style Selector */}
             <div className="pt-1">
               <label className="block text-xs font-medium text-[#ffffff] mb-1.5 flex items-center justify-between">
                 <span className="flex items-center gap-1.5">
                   <Palette className="w-3.5 h-3.5 text-[#d0d6e0]" />
                   <span>Estilo da Interface (UI Style)</span>
-                </span>
-                <span className="text-[10px] bg-[#161718] text-[#27a644] border border-[#27a644]/30 px-1.5 py-0.2 rounded font-mono font-medium">
-                  v2.3.0
                 </span>
               </label>
 
@@ -183,7 +177,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({ engine, onClose }) =
         {/* Footer info */}
         <div className="px-6 py-2.5 bg-[#08090a] border-t border-[#23252a] flex items-center justify-between text-[10px] text-[#8a8f98] font-mono">
           <span>SISTEMA: ONLINE</span>
-          <span>DRONE CLAUDIO: PRONTO</span>
+          <span>AGENTE CLAUDIO: PRONTO</span>
         </div>
 
       </div>

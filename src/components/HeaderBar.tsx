@@ -70,9 +70,6 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({ engine, activeTab, setActi
         <div>
           <div className="flex items-center gap-2">
             <span className="font-medium text-xs tracking-tight text-[#ffffff]">TerraScript <span className="text-[#27a644] font-semibold">3D</span></span>
-            <span className="px-1.5 py-0.2 rounded text-[10px] bg-[#161718] text-[#27a644] border border-[#27a644]/30 font-mono font-medium">
-              v2.3.0
-            </span>
             {onOpenWelcome && (
               <button
                 onClick={onOpenWelcome}
@@ -129,7 +126,7 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({ engine, activeTab, setActi
           }`}
         >
           <Bot className="w-3.5 h-3.5 text-[#8b5cf6]" />
-          Drones ({engine.getAgents().length})
+          Agentes ({engine.getAgents().length})
         </button>
 
         <button

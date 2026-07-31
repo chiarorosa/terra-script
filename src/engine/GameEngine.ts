@@ -11,7 +11,8 @@ import {
   TechBranch, 
   TechNode, 
   TileState,
-  PrestigeState
+  PrestigeState,
+  createDefaultAgentStats
 } from '../types/game';
 
 export function getRequiredPrestigePointsForLevel(level: number): number {
@@ -31,7 +32,7 @@ export const INITIAL_TECH_TREE: TechNode[] = [
   { id: 'AUTO_3', branch: 'AUTOMATION', name: 'Condicionais & Operadores Lógicos', description: 'Permite lógica de ramificação (if/elif/else) e combinação de condições com operadores lógicos (and, or, &&, ||).', tier: 2, cost: { fiber: 25, wood: 10 }, unlocked: false, requires: ['AUTO_2'] },
   { id: 'AUTO_4', branch: 'AUTOMATION', name: 'Loops (while / for)', description: 'Permite loops repetitivos contínuos.', tier: 3, cost: { fiber: 50, wood: 25 }, unlocked: false, requires: ['AUTO_3'] },
   { id: 'AUTO_5', branch: 'AUTOMATION', name: 'Funções', description: 'Agrupa código reutilizável em funções modulares.', tier: 4, cost: { fiber: 100, wood: 50, roots: 20 }, unlocked: false, requires: ['AUTO_4'] },
-  { id: 'AUTO_6', branch: 'AUTOMATION', name: 'Comunicação Inter-Drones (IPC)', description: 'Sinais em tempo real e barramento de mensagens para coordenação entre robôs.', tier: 8, cost: { roots: 100, fruits: 50, energy: 20 }, unlocked: false, requires: ['AUTO_5'] },
+  { id: 'AUTO_6', branch: 'AUTOMATION', name: 'Comunicação Inter-Agentes (IPC)', description: 'Sinais em tempo real e barramento de mensagens para coordenação entre naves agentes.', tier: 8, cost: { roots: 100, fruits: 50, energy: 20 }, unlocked: false, requires: ['AUTO_5'] },
 
   // AGRONOMY BRANCH
   { id: 'AGRO_1', branch: 'AGRONOMY', name: 'Fibra Selvagem e Irrigação', description: 'Colha fibras e use farm.water() para irrigar e restaurar a umidade do solo.', tier: 0, cost: {}, unlocked: true },
@@ -47,18 +48,17 @@ export const INITIAL_TECH_TREE: TechNode[] = [
   { id: 'SYS_1', branch: 'SYSTEMS', name: 'Saída do Console print()', description: 'Exiba mensagens e dados de depuração no console stdout.', tier: 0, cost: {}, unlocked: true },
   { id: 'SYS_2', branch: 'SYSTEMS', name: 'Sensores Básicos e Coordenadas', description: 'Inspecione o ambiente com os sensores world.ground(), world.entity() e world.moisture().', tier: 1, cost: { fiber: 10 }, unlocked: false, requires: ['SYS_1'] },
   { id: 'SYS_3', branch: 'SYSTEMS', name: 'Medição de Lotes', description: 'Use world.measure() para inspecionar graus de plantas e valores de energia.', tier: 3, cost: { fiber: 40, wood: 20 }, unlocked: false, requires: ['SYS_2'] },
-  { id: 'SYS_4', branch: 'SYSTEMS', name: 'Debugger Passo a Passo e Breakpoints', description: 'Defina breakpoints com F9 e execute passo a passo com F10.', tier: 5, cost: { wood: 60, roots: 30 }, unlocked: false, requires: ['SYS_3'] },
-  { id: 'SYS_5', branch: 'SYSTEMS', name: 'Profiler e Métricas', description: 'Rastreie rendimento, ticks e eficiência dos algoritmos.', tier: 7, cost: { roots: 80, fruits: 40 }, unlocked: false, requires: ['SYS_4'] },
+  { id: 'SYS_4', branch: 'SYSTEMS', name: 'Telemetria & Estatísticas do Agente', description: 'Leitura do dicionário de telemetria e estatísticas individuais via sys.get_agent_stats() ou agent.get_stats().', tier: 4, cost: { fiber: 50, wood: 25, roots: 15 }, unlocked: false, requires: ['SYS_3'] },
 
   // SCALE BRANCH
   { id: 'SCALE_1', branch: 'SCALE', name: 'Micro Fazenda 1x1', description: 'Lote inicial de terreno com um único bloco.', tier: 0, cost: {}, unlocked: true },
   { id: 'SCALE_2', branch: 'SCALE', name: 'Corredor 1x3', description: 'Expanda o terreno para um corredor horizontal 1x3.', tier: 1, cost: { fiber: 20 }, unlocked: false, requires: ['SCALE_1'] },
   { id: 'SCALE_3', branch: 'SCALE', name: 'Matriz 3x3', description: 'Expanda o terreno para uma matriz de grade 3x3.', tier: 2, cost: { fiber: 50, wood: 20 }, unlocked: false, requires: ['SCALE_2'] },
   { id: 'SCALE_4', branch: 'SCALE', name: 'Fazenda Expandida 5x5', description: 'Expanda o terreno para uma zona agrícola 5x5.', tier: 4, cost: { wood: 100, roots: 40 }, unlocked: false, requires: ['SCALE_3'] },
-  { id: 'SCALE_5', branch: 'SCALE', name: 'Segundo Agente Drone', description: 'Desbloqueie o Drone nº 2 para automatizar em paralelo.', tier: 5, cost: { roots: 100, fruits: 30 }, unlocked: false, requires: ['SCALE_4'] },
+  { id: 'SCALE_5', branch: 'SCALE', name: 'Segundo Agente', description: 'Desbloqueie a Nave Agente nº 2 para automatizar em paralelo.', tier: 5, cost: { roots: 100, fruits: 30 }, unlocked: false, requires: ['SCALE_4'] },
   { id: 'SCALE_6', branch: 'SCALE', name: 'Grade Industrial 7x7', description: 'Expanda o terreno para uma grade 7x7.', tier: 6, cost: { fruits: 100, energy: 50 }, unlocked: false, requires: ['SCALE_5'] },
   { id: 'SCALE_7', branch: 'SCALE', name: 'Matriz Complexa 9x9', description: 'Expanda o terreno para uma grade 9x9.', tier: 7, cost: { energy: 100, biomass: 50 }, unlocked: false, requires: ['SCALE_6'] },
-  { id: 'SCALE_8', branch: 'SCALE', name: 'Terceiro Agente Drone', description: 'Desbloqueie o Drone nº 3 para automatizar em paralelo.', tier: 8, cost: { biomass: 100, crystals: 25 }, unlocked: false, requires: ['SCALE_7'] },
+  { id: 'SCALE_8', branch: 'SCALE', name: 'Terceiro Agente', description: 'Desbloqueie a Nave Agente nº 3 para automatizar em paralelo.', tier: 8, cost: { biomass: 100, crystals: 25 }, unlocked: false, requires: ['SCALE_7'] },
   { id: 'SCALE_9', branch: 'SCALE', name: 'Mega Zona 12x12', description: 'Expanda o terreno para um lote mega agrícola 12x12.', tier: 9, cost: { biomass: 200, crystals: 50 }, unlocked: false, requires: ['SCALE_8'] }
 ];
 
@@ -151,7 +151,8 @@ export class GameEngine {
         assignedFile: 'main.py',
         status: 'IDLE',
         currentLine: 1,
-        actionMessage: 'Ready'
+        actionMessage: 'Ready',
+        stats: createDefaultAgentStats()
       }
     ];
 
@@ -185,7 +186,8 @@ export class GameEngine {
     if (!this.agents.find(a => a.id === 1)) {
       this.agents.push({
         id: 1, name: 'Claudio', x: 0, y: 0, color: '#3b82f6',
-        assignedFile: 'main.py', status: 'IDLE', currentLine: 1, actionMessage: 'Ready'
+        assignedFile: 'main.py', status: 'IDLE', currentLine: 1, actionMessage: 'Ready',
+        stats: createDefaultAgentStats()
       });
     }
 
@@ -193,7 +195,8 @@ export class GameEngine {
       if (!this.agents.find(a => a.id === 2)) {
         this.agents.push({
           id: 2, name: 'Gepeto', x: Math.min(1, this.width - 1), y: Math.min(1, this.height - 1),
-          color: '#10b981', assignedFile: 'checkerboard.py', status: 'IDLE', currentLine: 1, actionMessage: 'Ready'
+          color: '#10b981', assignedFile: 'checkerboard.py', status: 'IDLE', currentLine: 1, actionMessage: 'Ready',
+          stats: createDefaultAgentStats()
         });
       }
     } else {
@@ -204,7 +207,8 @@ export class GameEngine {
       if (!this.agents.find(a => a.id === 3)) {
         this.agents.push({
           id: 3, name: 'Gemilson', x: Math.min(2, this.width - 1), y: Math.min(2, this.height - 1),
-          color: '#a855f7', assignedFile: 'main.py', status: 'IDLE', currentLine: 1, actionMessage: 'Ready'
+          color: '#a855f7', assignedFile: 'main.py', status: 'IDLE', currentLine: 1, actionMessage: 'Ready',
+          stats: createDefaultAgentStats()
         });
       }
     } else {
@@ -219,6 +223,7 @@ export class GameEngine {
       if (a.id === 1) a.name = 'Claudio';
       if (a.id === 2) a.name = 'Gepeto';
       if (a.id === 3) a.name = 'Gemilson';
+      if (!a.stats) a.stats = createDefaultAgentStats();
     });
   }
 
@@ -233,6 +238,7 @@ export class GameEngine {
         currentTick: this.currentTick,
         totalActions: this.totalActionsPerformed,
         primaryAgentId: this.primaryAgentId,
+        agents: this.agents.map(a => ({ id: a.id, stats: a.stats, assignedFile: a.assignedFile })),
         tiles: Array.from(this.tiles.values())
       };
       const checksum = computeSyncChecksum(rawState);
@@ -336,6 +342,24 @@ export class GameEngine {
 
         // 6. Sync Agents & World Change Trigger
         this.syncAgentsWithTechTree();
+        if (Array.isArray(parsed.agents)) {
+          parsed.agents.forEach((savedAgent: any) => {
+            const ag = this.agents.find(a => a.id === savedAgent.id);
+            if (ag) {
+              if (savedAgent.assignedFile) ag.assignedFile = savedAgent.assignedFile;
+              if (savedAgent.stats) {
+                ag.stats = {
+                  harvestedResources: { ...createDefaultAgentStats().harvestedResources, ...(savedAgent.stats.harvestedResources || {}) },
+                  plantedCount: typeof savedAgent.stats.plantedCount === 'number' ? savedAgent.stats.plantedCount : 0,
+                  harvestedCount: typeof savedAgent.stats.harvestedCount === 'number' ? savedAgent.stats.harvestedCount : 0,
+                  wateredCount: typeof savedAgent.stats.wateredCount === 'number' ? savedAgent.stats.wateredCount : 0,
+                  tilledCount: typeof savedAgent.stats.tilledCount === 'number' ? savedAgent.stats.tilledCount : 0,
+                  stepsCount: typeof savedAgent.stats.stepsCount === 'number' ? savedAgent.stats.stepsCount : 0,
+                };
+              }
+            }
+          });
+        }
         this.checkWorldChangeTrigger();
 
         // Re-save clean, signed state
@@ -474,7 +498,7 @@ export class GameEngine {
       agent.x = 0;
       agent.y = 0;
     });
-    this.addLog(1, 'system', 'World reset (clearWorld() executed). Drones returned to (0,0). Player progress & inventory preserved.');
+    this.addLog(1, 'system', 'World reset (clearWorld() executed). Agentes retornados para (0,0). Progresso & inventário preservados.');
     this.saveEngineState();
     this.notify();
   }
@@ -524,7 +548,8 @@ export class GameEngine {
         assignedFile: 'main.py',
         status: 'IDLE',
         currentLine: 1,
-        actionMessage: 'Ready'
+        actionMessage: 'Ready',
+        stats: createDefaultAgentStats()
       }
     ];
 
@@ -662,16 +687,12 @@ export class GameEngine {
           ctx = this.agentContexts.get(agent.id);
         }
         if (ctx && !ctx.isCompleted) {
-          const fileBps = this.breakpoints.get(ctx.filePath) || new Set();
-          const res = this.runner.executeStep(ctx, fileBps);
+          const res = this.runner.executeStep(ctx);
           agent.currentLine = ctx.currentLineIndex + 1;
 
           if (res.error) {
             agent.status = 'ERROR';
             agent.actionMessage = `Error: Line ${agent.currentLine}`;
-          } else if (res.hitBreakpoint) {
-            this.pauseSimulation();
-            this.addLog(agent.id, 'system', `Breakpoint hit at ${ctx.filePath}:${agent.currentLine}`);
           } else if (res.completed) {
             agent.status = 'PAUSED';
             agent.actionMessage = 'Finished';
@@ -739,27 +760,40 @@ export class GameEngine {
     audioManager.playHarvest();
     this.totalActionsPerformed++;
     const ag = this.getAgent(agentId);
-    if (ag) ag.actionMessage = `Harvested ${t.crop} at (${x},${y})`;
+    if (ag) {
+      if (!ag.stats) ag.stats = createDefaultAgentStats();
+      ag.actionMessage = `Harvested ${t.crop} at (${x},${y})`;
+      ag.stats.harvestedCount++;
+    }
 
     let yieldAmt = 1;
     if (t.crop === 'WILD_FIBER') {
       this.resources.fiber += yieldAmt;
+      if (ag) ag.stats.harvestedResources.fiber += yieldAmt;
     } else if (t.crop === 'WOODY_BUSH') {
       this.resources.wood += yieldAmt;
+      if (ag) ag.stats.harvestedResources.wood += yieldAmt;
     } else if (t.crop === 'TREE') {
       const bonus = this.hasAdjacentCrop(x, y, 'TREE') ? 2 : 5;
       this.resources.wood += bonus;
+      if (ag) ag.stats.harvestedResources.wood += bonus;
     } else if (t.crop === 'CULTIVATED_ROOT') {
       this.resources.roots += 2;
+      if (ag) ag.stats.harvestedResources.roots += 2;
     } else if (t.crop === 'FRUIT_COLONY') {
       this.resources.fruits += 4;
+      if (ag) ag.stats.harvestedResources.fruits += 4;
     } else if (t.crop === 'ENERGY_FLOWER') {
       const bonus = Math.floor((t.energyValue || 50) / 10);
       this.resources.energy += bonus;
+      if (ag) ag.stats.harvestedResources.energy += bonus;
     } else if (t.crop === 'GRADED_PLANT') {
-      this.resources.biomass += (t.grade || 1) * 2;
+      const bioBonus = (t.grade || 1) * 2;
+      this.resources.biomass += bioBonus;
+      if (ag) ag.stats.harvestedResources.biomass += bioBonus;
     } else if (t.crop === 'MAZE_CORE') {
       this.resources.crystals += 5;
+      if (ag) ag.stats.harvestedResources.crystals += 5;
       this.addLog(agentId, 'system', 'MAZE CORE HARVESTED! +5 Crystals');
     }
 
@@ -791,7 +825,11 @@ export class GameEngine {
     t.ground = 'TILLED';
     this.totalActionsPerformed++;
     const ag = this.getAgent(agentId);
-    if (ag) ag.actionMessage = `Tilled soil at (${x},${y})`;
+    if (ag) {
+      if (!ag.stats) ag.stats = createDefaultAgentStats();
+      ag.actionMessage = `Tilled soil at (${x},${y})`;
+      ag.stats.tilledCount++;
+    }
     this.saveEngineState();
     return true;
   }
@@ -805,6 +843,10 @@ export class GameEngine {
 
     this.totalActionsPerformed++;
     const ag = this.getAgent(agentId);
+    if (ag) {
+      if (!ag.stats) ag.stats = createDefaultAgentStats();
+      ag.stats.wateredCount++;
+    }
 
     if (t.moisture > 0.95 || t.ground === 'SOAKED') {
       t.ground = 'SOAKED';
@@ -886,7 +928,11 @@ export class GameEngine {
     t.crop = crop;
     t.growth = 0;
     audioManager.playPlant();
-    if (ag) ag.actionMessage = `Planted ${crop} at (${x},${y})`;
+    if (ag) {
+      if (!ag.stats) ag.stats = createDefaultAgentStats();
+      ag.actionMessage = `Planted ${crop} at (${x},${y})`;
+      ag.stats.plantedCount++;
+    }
     this.saveEngineState();
     return true;
   }
@@ -963,8 +1009,36 @@ export class GameEngine {
 
     audioManager.playMove();
     this.totalActionsPerformed++;
+    if (!ag.stats) ag.stats = createDefaultAgentStats();
+    ag.stats.stepsCount++;
     ag.actionMessage = `Moved ${dirStr.toUpperCase()} to (${ag.x},${ag.y})`;
     return true;
+  }
+
+  public getAgentStats(agentId: number): Record<string, number> {
+    if (!this.isTechUnlocked('SYS_4')) {
+      throw new Error("Recurso 'Telemetria & Estatísticas do Agente' está bloqueado! Pesquise SYS_4 na Árvore de Pesquisa.");
+    }
+    const ag = this.getAgent(agentId);
+    if (!ag) throw new Error(`Agente #${agentId} não encontrado.`);
+    if (!ag.stats) ag.stats = createDefaultAgentStats();
+
+    return {
+      planted_count: ag.stats.plantedCount,
+      harvested_count: ag.stats.harvestedCount,
+      watered_count: ag.stats.wateredCount,
+      tilled_count: ag.stats.tilledCount,
+      steps_count: ag.stats.stepsCount,
+      harvested_fiber: ag.stats.harvestedResources.fiber || 0,
+      harvested_wood: ag.stats.harvestedResources.wood || 0,
+      harvested_roots: ag.stats.harvestedResources.roots || 0,
+      harvested_fruits: ag.stats.harvestedResources.fruits || 0,
+      harvested_energy: ag.stats.harvestedResources.energy || 0,
+      harvested_biomass: ag.stats.harvestedResources.biomass || 0,
+      harvested_crystals: ag.stats.harvestedResources.crystals || 0,
+      harvested_catalyst: ag.stats.harvestedResources.catalyst || 0,
+      harvested_fossils: ag.stats.harvestedResources.fossils || 0,
+    };
   }
 
   public canMoveAgent(agentId: number, dirStr: string): boolean {
@@ -1049,12 +1123,12 @@ export class GameEngine {
     else if (node.id === 'SCALE_4') this.rebuildGrid(5, 5);
     else if (node.id === 'SCALE_5') {
       this.syncAgentsWithTechTree();
-      this.addLog(2, 'system', 'Drone Gepeto desbloqueado e juntou-se à fazenda!');
+      this.addLog(2, 'system', 'Agente Gepeto desbloqueado e juntou-se à frota!');
     } else if (node.id === 'SCALE_6') this.rebuildGrid(7, 7);
     else if (node.id === 'SCALE_7') this.rebuildGrid(9, 9);
     else if (node.id === 'SCALE_8') {
       this.syncAgentsWithTechTree();
-      this.addLog(3, 'system', 'Drone Gemilson desbloqueado e juntou-se à fazenda!');
+      this.addLog(3, 'system', 'Agente Gemilson desbloqueado e juntou-se à frota!');
     } else if (node.id === 'SCALE_9') this.rebuildGrid(12, 12);
 
     this.checkWorldChangeTrigger();
@@ -1258,16 +1332,7 @@ export class GameEngine {
   public getSpeed() { return this.speed; }
   public getCurrentTick() { return this.currentTick; }
   public getBreakpoints(file: string): Set<number> {
-    return this.breakpoints.get(file) || new Set();
-  }
-  public toggleBreakpoint(file: string, line: number) {
-    if (!this.breakpoints.has(file)) {
-      this.breakpoints.set(file, new Set());
-    }
-    const set = this.breakpoints.get(file)!;
-    if (set.has(line)) set.delete(line);
-    else set.add(line);
-    this.notify();
+    return new Set();
   }
 
   public getProfilerMetrics(): ProfilerMetrics {
@@ -1299,7 +1364,7 @@ export class GameEngine {
     const ag = this.getAgent(id);
     if (ag) {
       this.primaryAgentId = id;
-      this.addLog(id, 'system', `Drone ${ag.name} definido como Drone Principal`);
+      this.addLog(id, 'system', `Agente ${ag.name} definido como Agente Principal`);
       this.saveEngineState();
       this.notify();
     }
@@ -1312,6 +1377,13 @@ export class GameEngine {
   public runScriptOnPrimaryAgent(filePath: string) {
     const primaryAgent = this.getPrimaryAgent();
     if (!primaryAgent) return;
+
+    // Pause non-primary agents so execution happens ONLY on primary agent
+    this.agents.forEach(agent => {
+      if (agent.id !== primaryAgent.id) {
+        agent.status = 'PAUSED';
+      }
+    });
 
     // Assign file to primary agent
     primaryAgent.assignedFile = filePath;
@@ -1331,7 +1403,7 @@ export class GameEngine {
     this.addLog(
       primaryAgent.id,
       'system',
-      `Execução do script "${filePath}" iniciada no Drone Principal (${primaryAgent.name})`
+      `Execução do script "${filePath}" iniciada no Agente Principal (${primaryAgent.name})`
     );
     this.notify();
   }

@@ -58,6 +58,36 @@ export interface TileState {
   occupyingAgentId?: number;
 }
 
+export interface AgentStats {
+  harvestedResources: ResourceMap;
+  plantedCount: number;
+  harvestedCount: number;
+  wateredCount: number;
+  tilledCount: number;
+  stepsCount: number;
+}
+
+export function createDefaultAgentStats(): AgentStats {
+  return {
+    harvestedResources: {
+      fiber: 0,
+      wood: 0,
+      roots: 0,
+      fruits: 0,
+      energy: 0,
+      biomass: 0,
+      catalyst: 0,
+      crystals: 0,
+      fossils: 0
+    },
+    plantedCount: 0,
+    harvestedCount: 0,
+    wateredCount: 0,
+    tilledCount: 0,
+    stepsCount: 0
+  };
+}
+
 export interface Agent {
   id: number;
   name: string;
@@ -71,6 +101,7 @@ export interface Agent {
   lastActionTick?: number;
   tailLength?: number; // For fossil trail snake challenge
   tailCoords?: Array<{ x: number; y: number }>;
+  stats: AgentStats;
 }
 
 export type TechBranch = 'AUTOMATION' | 'AGRONOMY' | 'SYSTEMS' | 'SCALE';

@@ -297,7 +297,7 @@ export const ExplorerPanel: React.FC<ExplorerPanelProps> = ({
                   {assignedAgents.length > 0 && (
                     <span 
                       className="text-[10px] px-1 bg-[#8b5cf6]/10 text-[#8b5cf6] border border-[#8b5cf6]/30 rounded-[4px] font-sans flex items-center gap-0.5"
-                      title={`Atribuído ao Drone ${assignedAgents.map(a => a.name).join(', ')}`}
+                      title={`Atribuído ao Agente ${assignedAgents.map(a => a.name).join(', ')}`}
                     >
                       <Bot className="w-2.5 h-2.5" />
                       {assignedAgents.length}
@@ -321,7 +321,7 @@ export const ExplorerPanel: React.FC<ExplorerPanelProps> = ({
                       engine.runScriptOnPrimaryAgent(file.path);
                     }}
                     className="p-1 text-[#5e6ad2] hover:text-[#707eff] transition-all rounded-[4px]"
-                    title={`Executar Script no Drone Principal (${primaryAgent.name})`}
+                    title={`Executar Script no Agente Principal (${primaryAgent.name})`}
                   >
                     <Play className="w-3 h-3 fill-current" />
                   </button>
@@ -340,14 +340,14 @@ export const ExplorerPanel: React.FC<ExplorerPanelProps> = ({
         </div>
       </div>
 
-      {/* Drone Assignment Quick Bar */}
+      {/* Agent Assignment Quick Bar */}
       <div className="p-2 border-t border-[#23252a] bg-[#08090a] text-xs">
         <div className="text-[11px] font-medium text-[#8a8f98] mb-1 flex items-center justify-between">
           <span className="flex items-center gap-1">
             <Bot className="w-3.5 h-3.5 text-[#8b5cf6]" />
-            Atribuir ao Drone:
+            Atribuir ao Agente:
           </span>
-          <span className="text-[10px] text-[#d0d6e0] font-mono flex items-center gap-1" title="Drone Principal para o botão PLAY do Explorador">
+          <span className="text-[10px] text-[#d0d6e0] font-mono flex items-center gap-1" title="Agente Principal para o botão PLAY do Explorador">
             <Star className="w-3 h-3 text-[#d0d6e0] fill-[#d0d6e0]" />
             <span>{primaryAgent.name}</span>
           </span>
@@ -360,7 +360,7 @@ export const ExplorerPanel: React.FC<ExplorerPanelProps> = ({
                 <span className="text-[11px] font-mono text-[#d0d6e0] flex items-center gap-1">
                   <span className="w-2 h-2 rounded-full" style={{ backgroundColor: ag.color }} />
                   {ag.name}
-                  {isPrimary && <Star className="w-2.5 h-2.5 text-[#d0d6e0] fill-[#d0d6e0]" title="Drone Principal" />}
+                  {isPrimary && <Star className="w-2.5 h-2.5 text-[#d0d6e0] fill-[#d0d6e0]" title="Agente Principal" />}
                 </span>
                 <select
                   value={ag.assignedFile}

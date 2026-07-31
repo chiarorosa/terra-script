@@ -29,9 +29,11 @@ class ThreeAssetCache {
   public static prestigeCropGeo = new THREE.OctahedronGeometry(0.35, 1);
   public static prestigeCropMat = new THREE.MeshStandardMaterial({ color: 0xfef08a, emissive: 0xeab308, emissiveIntensity: 0.9, roughness: 0.1, metalness: 0.9 });
   
-  public static droneBodyGeo = new THREE.BoxGeometry(0.4, 0.15, 0.4);
-  public static droneEyeGeo = new THREE.SphereGeometry(0.08, 6, 6);
-  public static dronePropGeo = new THREE.BoxGeometry(0.3, 0.02, 0.04);
+  // Alien Agent Ship Geometries
+  public static agentHullGeo = new THREE.CylinderGeometry(0.42, 0.22, 0.12, 16);
+  public static agentDomeGeo = new THREE.SphereGeometry(0.18, 12, 12, 0, Math.PI * 2, 0, Math.PI * 0.5);
+  public static agentRingGeo = new THREE.TorusGeometry(0.38, 0.04, 12, 24);
+  public static agentBeamGeo = new THREE.ConeGeometry(0.28, 0.45, 12, 1, true);
 
   public static selectionBoxGeo = new THREE.BoxGeometry(1.15, 0.25, 1.15);
   public static selectionEdgesGeo = new THREE.EdgesGeometry(ThreeAssetCache.selectionBoxGeo);
@@ -61,16 +63,17 @@ class ThreeAssetCache {
   public static gradedMat = new THREE.MeshStandardMaterial({ color: 0x8b5cf6, roughness: 0.4 });
   public static defaultCropMat = new THREE.MeshStandardMaterial({ color: 0x10b981 });
 
-  // Drone Materials Cache by Hex Color
-  private static droneMatCache = new Map<string, THREE.MeshStandardMaterial>();
-  public static getDroneMat(colorHex: string): THREE.MeshStandardMaterial {
-    if (!this.droneMatCache.has(colorHex)) {
-      this.droneMatCache.set(colorHex, new THREE.MeshStandardMaterial({ color: colorHex, metalness: 0.8, roughness: 0.2 }));
+  // Agent Hull Materials Cache by Hex Color
+  private static agentHullMatCache = new Map<string, THREE.MeshStandardMaterial>();
+  public static getAgentHullMat(colorHex: string): THREE.MeshStandardMaterial {
+    if (!this.agentHullMatCache.has(colorHex)) {
+      this.agentHullMatCache.set(colorHex, new THREE.MeshStandardMaterial({ color: colorHex, metalness: 0.85, roughness: 0.15 }));
     }
-    return this.droneMatCache.get(colorHex)!;
+    return this.agentHullMatCache.get(colorHex)!;
   }
-  public static droneEyeMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8 });
-  public static dronePropMat = new THREE.MeshStandardMaterial({ color: 0x64748b });
+  public static agentDomeMat = new THREE.MeshStandardMaterial({ color: 0x38bdf8, emissive: 0x0284c7, emissiveIntensity: 0.8, roughness: 0.1, metalness: 0.9, transparent: true, opacity: 0.85 });
+  public static agentRingMat = new THREE.MeshStandardMaterial({ color: 0xc084fc, emissive: 0x9333ea, emissiveIntensity: 0.9, roughness: 0.2, metalness: 0.8 });
+  public static agentBeamMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.35, side: THREE.DoubleSide });
 }
 
 // Safely disposes non-cached dynamic 3D objects
@@ -89,7 +92,7 @@ function dispose3DObject(obj: THREE.Object3D) {
 export const World3DCanvas: React.FC<World3DCanvasProps> = ({ engine }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [inspectedCoords, setInspectedCoords] = useState<{ x: number; y: number } | null>({ x: 0, y: 0 });
-  const [followDrone, setFollowDrone] = useState<boolean>(false);
+  const [followAgent, setFollowAgent] = useState<boolean>(true);
   const [cameraAngle, setCameraAngle] = useState<number>(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('terrascript_camera_angle');
@@ -102,7 +105,7 @@ export const World3DCanvas: React.FC<World3DCanvasProps> = ({ engine }) => {
   });
 
   const primaryAgent = engine.getPrimaryAgent();
-  const activeCoords = (followDrone && primaryAgent)
+  const activeCoords = (followAgent && primaryAgent)
     ? { x: primaryAgent.x, y: primaryAgent.y }
     : inspectedCoords;
 
@@ -249,13 +252,14 @@ export const World3DCanvas: React.FC<World3DCanvasProps> = ({ engine }) => {
         }
       }
 
-      // Animate Agent Drones (floating & bobbing)
+      // Animate Alien Agent Ships (floating, bobbing & energy ring plasma spin)
       agentMeshesRef.current.forEach((mesh) => {
-        mesh.position.y = 0.8 + Math.sin(elapsedTime * 3) * 0.1;
-        const prop1 = mesh.getObjectByName('prop1');
-        const prop2 = mesh.getObjectByName('prop2');
-        if (prop1) prop1.rotation.y += 0.3;
-        if (prop2) prop2.rotation.y += 0.3;
+        mesh.position.y = 0.85 + Math.sin(elapsedTime * 2.5) * 0.12;
+        mesh.rotation.y += 0.01;
+        const ring = mesh.getObjectByName('energyRing');
+        if (ring) {
+          ring.rotation.z += 0.04;
+        }
       });
 
       if (rendererRef.current && sceneRef.current && cameraRef.current) {
@@ -365,12 +369,12 @@ export const World3DCanvas: React.FC<World3DCanvasProps> = ({ engine }) => {
       }
     }
 
-    // Rebuild / Update Drone Agents 3D
+    // Rebuild / Update Alien Agent Ships 3D
     const currentAgents = engine.getAgents();
     currentAgents.forEach((ag) => {
       let agentMesh = agentMeshesRef.current.get(ag.id);
       if (!agentMesh) {
-        agentMesh = createDroneMesh(ag.color);
+        agentMesh = createAgentShipMesh(ag.color);
         scene.add(agentMesh);
         agentMeshesRef.current.set(ag.id, agentMesh);
       }
@@ -522,32 +526,32 @@ export const World3DCanvas: React.FC<World3DCanvasProps> = ({ engine }) => {
     return cropGroup;
   };
 
-  // Helper Drone Mesh Creator
-  const createDroneMesh = (colorHex: string): THREE.Group => {
-    const droneGroup = new THREE.Group();
+  // Helper Alien Agent Ship Mesh Creator
+  const createAgentShipMesh = (colorHex: string): THREE.Group => {
+    const shipGroup = new THREE.Group();
 
-    // Body
-    const bodyMat = ThreeAssetCache.getDroneMat(colorHex);
-    const body = new THREE.Mesh(ThreeAssetCache.droneBodyGeo, bodyMat);
-    droneGroup.add(body);
+    // 1. Sleek Alien Hull
+    const hullMat = ThreeAssetCache.getAgentHullMat(colorHex);
+    const hull = new THREE.Mesh(ThreeAssetCache.agentHullGeo, hullMat);
+    shipGroup.add(hull);
 
-    // Eye
-    const eye = new THREE.Mesh(ThreeAssetCache.droneEyeGeo, ThreeAssetCache.droneEyeMat);
-    eye.position.set(0, 0, 0.2);
-    droneGroup.add(eye);
+    // 2. Glowing Cockpit / Sensor Dome on Top
+    const dome = new THREE.Mesh(ThreeAssetCache.agentDomeGeo, ThreeAssetCache.agentDomeMat);
+    dome.position.set(0, 0.06, 0);
+    shipGroup.add(dome);
 
-    // Rotors
-    const p1 = new THREE.Mesh(ThreeAssetCache.dronePropGeo, ThreeAssetCache.dronePropMat);
-    p1.name = 'prop1';
-    p1.position.set(0.25, 0.1, 0.25);
-    droneGroup.add(p1);
+    // 3. Levitating Energy / Plasma Ring around Hull
+    const ring = new THREE.Mesh(ThreeAssetCache.agentRingGeo, ThreeAssetCache.agentRingMat);
+    ring.name = 'energyRing';
+    ring.rotation.x = Math.PI / 2;
+    shipGroup.add(ring);
 
-    const p2 = new THREE.Mesh(ThreeAssetCache.dronePropGeo, ThreeAssetCache.dronePropMat);
-    p2.name = 'prop2';
-    p2.position.set(-0.25, 0.1, -0.25);
-    droneGroup.add(p2);
+    // 4. Anti-Gravity Scanner Beam underneath
+    const beam = new THREE.Mesh(ThreeAssetCache.agentBeamGeo, ThreeAssetCache.agentBeamMat);
+    beam.position.set(0, -0.28, 0);
+    shipGroup.add(beam);
 
-    return droneGroup;
+    return shipGroup;
   };
 
   // Camera Orbit Controls
@@ -577,7 +581,7 @@ export const World3DCanvas: React.FC<World3DCanvasProps> = ({ engine }) => {
       let curr: THREE.Object3D | null = hit.object;
       while (curr) {
         if (curr.userData && typeof curr.userData.tileX === 'number' && typeof curr.userData.tileY === 'number') {
-          setFollowDrone(false);
+          setFollowAgent(false);
           setInspectedCoords({ x: curr.userData.tileX, y: curr.userData.tileY });
           return;
         }
@@ -644,15 +648,6 @@ export const World3DCanvas: React.FC<World3DCanvasProps> = ({ engine }) => {
           >
             <Trash2 className="w-3.5 h-3.5 text-slate-400" />
             Limpar Lote
-          </button>
-
-          <button
-            onClick={rotateCamera}
-            className="flex items-center gap-1 px-2 py-1 bg-[#08090a] hover:bg-[#161718] border border-[#23252a] text-slate-300 rounded text-xs transition-colors"
-            title="Girar Câmera 90°"
-          >
-            <RotateCw className="w-3.5 h-3.5 text-cyan-400" />
-            Girar 90°
           </button>
         </div>
       </div>
@@ -728,24 +723,24 @@ export const World3DCanvas: React.FC<World3DCanvasProps> = ({ engine }) => {
             <div className="flex items-center gap-2 shrink-0">
               <button
                 onClick={() => {
-                  const nextState = !followDrone;
-                  setFollowDrone(nextState);
+                  const nextState = !followAgent;
+                  setFollowAgent(nextState);
                   if (nextState && primaryAgent) {
                     setInspectedCoords({ x: primaryAgent.x, y: primaryAgent.y });
                   }
                 }}
                 className={`px-2 py-0.5 rounded text-[10px] font-mono transition-colors border ${
-                  followDrone
+                  followAgent
                     ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/50 font-bold'
                     : 'bg-[#161718] text-slate-400 border-[#383b3f] hover:text-slate-200 font-normal'
                 }`}
-                title={followDrone ? "Seguir Drone: ON (Clique para desligar)" : "Seguir Drone: OFF (Clique para ligar)"}
+                title={followAgent ? "Seguir Agente: ON (Clique para desligar)" : "Seguir Agente: OFF (Clique para ligar)"}
               >
-                Seguir {followDrone ? 'ON' : 'OFF'}
+                Seguir {followAgent ? 'ON' : 'OFF'}
               </button>
               <button 
                 onClick={() => {
-                  setFollowDrone(false);
+                  setFollowAgent(false);
                   setInspectedCoords(null);
                 }}
                 className="text-slate-400 hover:text-white text-sm font-bold pl-0.5 leading-none"
