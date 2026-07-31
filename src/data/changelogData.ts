@@ -8,10 +8,23 @@ export interface ChangelogRelease {
 
 export const CHANGELOG_HISTORY: ChangelogRelease[] = [
   {
+    version: 'v2.3.1',
+    date: '2026-07-31',
+    title: 'Reformulação do Guia em Wiki de API Didática & Otimização de UI',
+    isCurrent: true,
+    changes: [
+      'Nova Estrutura do Guia em Formato Wiki de API: Reformulação completa do Guia Técnico para uma documentação no estilo Wiki/API, focada no ensino didático de programação com interface dividida (Navegação + Leitura em Foco).',
+      'Navegação e Busca Integrada por Tópicos: Menu lateral com agrupamento por Namespace (farm, world, inventory, syntax, mecânicas) e campo de pesquisa dinâmica com filtros de estado (Todos, Desbloqueados, Bloqueados).',
+      'Sete Pilares Didáticos por Entrada da API: Cada método/conceito exibe Descrição Didática, Declaração/Assinatura da Função (Python & JavaScript), Tabela de Parâmetros e Tipos, Valor de Retorno e Saída Esperada, Usabilidade e Casos de Uso Práticos, Exemplo Executável com botão Copiar, e Vínculo com a Árvore de Tecnologias.',
+      'Simplificação do Painel Inferior e Câmera: O painel inferior passa a iniciar recolhido por padrão para uma visualização inicial limpa; o modo "Seguir Agente" vem habilitado por padrão; remoção do botão de girar câmera e do ícone redundante na IDE.',
+      'Remoção de Selos de Versão Espalhados: Limpeza dos selos e badges de versão espalhados no cabeçalho e modais, concentrando a versão atual e histórico de lançamentos exclusivamente no Painel de Changelog.'
+    ]
+  },
+  {
     version: 'v2.3.0',
     date: '2026-07-30',
     title: 'Motor de Execução Nativo WASM (Pyodide) & Sandbox JavaScript V8 no Navegador',
-    isCurrent: true,
+    isCurrent: false,
     changes: [
       'Integração do Pyodide WebAssembly (Python Nativo): Os scripts em Python agora rodam diretamente através da distribuição WebAssembly oficial do CPython (v0.26.4) carregada no navegador do jogador, garantindo suporte completo às especificações da linguagem.',
       'Suporte Algorítmico Total sem Limitações: Eliminação da necessidade de interpretador hardcoded linha a linha. Suporte completo a algoritmos avançados, estruturas de dados (listas, dicionários, conjuntos), funções nativas (len, range, map, filter, sorted), recursão e laços aninhados.',

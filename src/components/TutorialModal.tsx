@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { 
   BookOpen, 
   Cpu, 
@@ -7,33 +7,24 @@ import {
   CheckCircle2, 
   Lock, 
   Code, 
-  ArrowRight, 
   Copy, 
   Check, 
-  Filter, 
+  Search, 
   Sprout, 
-  TreePine, 
-  Compass, 
+  Zap, 
+  Boxes, 
   Layers,
-  Grid,
-  Bot,
-  Zap,
-  Droplets,
-  RefreshCw,
+  ArrowRight,
+  ChevronRight,
+  Info,
+  Sparkles,
   HelpCircle,
-  Boxes,
-  Award,
-  Globe,
-  Maximize2,
-  AlertTriangle,
-  Star,
-  Wheat,
-  Apple
+  FileText
 } from 'lucide-react';
 import { GameEngine } from '../engine/GameEngine';
 import { VirtualFS } from '../engine/virtualFs';
 import { API_CATALOG, isTechUnlocked, getTechForApiItem, ApiItem } from '../engine/techApiMap';
-import { TechBranch, TechNode } from '../types/game';
+import { TechNode } from '../types/game';
 
 interface TutorialModalProps {
   engine: GameEngine;
@@ -43,9 +34,11 @@ interface TutorialModalProps {
 
 export const TutorialModal: React.FC<TutorialModalProps> = ({ engine, onNavigateToTab }) => {
   const techTree = engine.getTechTree();
-  const [activeGuideTab, setActiveGuideTab] = useState<'matrix' | 'farm' | 'world' | 'syntax' | 'mechanics'>('matrix');
+  const [selectedItemId, setSelectedItemId] = useState<string>('mech_soil_water');
+  const [searchQuery, setSearchQuery] = useState<string>('');
   const [filterMode, setFilterMode] = useState<'all' | 'unlocked' | 'locked'>('all');
   const [copiedSnippet, setCopiedSnippet] = useState<string | null>(null);
+  const [activeCodeLang, setActiveCodeLang] = useState<'python' | 'javascript'>('python');
 
   const totalTech = techTree.length;
   const unlockedTechCount = techTree.filter(t => t.unlocked).length;
@@ -59,191 +52,76 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ engine, onNavigate
 
   const isUnlocked = (techId: string) => isTechUnlocked(techId, techTree);
 
-  // Group tech tree nodes by branch
-  const techByBranch: Record<TechBranch, TechNode[]> = {
-    AUTOMATION: techTree.filter(t => t.branch === 'AUTOMATION'),
-    AGRONOMY: techTree.filter(t => t.branch === 'AGRONOMY'),
-    SYSTEMS: techTree.filter(t => t.branch === 'SYSTEMS'),
-    SCALE: techTree.filter(t => t.branch === 'SCALE'),
-  };
+  // Filter items according to search query & filter mode
+  const filteredCatalog = useMemo(() => {
+    return API_CATALOG.filter(item => {
+      const unlocked = isUnlocked(item.techId);
+      
+      // Filter mode check
+      if (filterMode === 'unlocked' && !unlocked) return false;
+      if (filterMode === 'locked' && unlocked) return false;
 
-  // Associated details and code for each tech node
-  const getTechUnlockDetails = (node: TechNode) => {
-    switch (node.id) {
-      // AUTOMATION
-      case 'AUTO_1':
-        return {
-          capabilities: ['Execução sequencial de código linha a linha', 'Movimento básico: world.move("RIGHT")', 'Verificação básica de obstáculo: world.can_move("RIGHT")', 'Reset de bloco: world.clear()'],
-          snippet: 'farm.harvest()\nworld.move("RIGHT")'
-        };
-      case 'AUTO_2':
-        return {
-          capabilities: ['Atribuição de variáveis (x = 10, y = 20)', 'Operadores aritméticos (+, -, *, /, %)', 'Armazenamento de coordenadas e contadores'],
-          snippet: 'x = world.x()\ny = world.y()\nnext_x = x + 1'
-        };
-      case 'AUTO_3':
-        return {
-          capabilities: [
-            'Lógica condicional: if ... elif ... else (Python) e if ... else if ... else (JS)',
-            'Operadores Lógicos e/ou liberados simultaneamente: Python (and, or) | JavaScript (&&, ||)',
-            'Avaliação combinada de múltiplas condições e tomada de decisão dinâmica'
-          ],
-          snippet: 'if world.ground() == "NATURAL" and world.moisture() < 0.5:\n    farm.till()\n    farm.water()\nelse:\n    farm.plant("WILD_FIBER")'
-        };
-      case 'AUTO_4':
-        return {
-          capabilities: ['Estruturas de laço: while / for', 'Laços de automação contínua (while True:)'],
-          snippet: 'while True:\n    if farm.can_harvest():\n        farm.harvest()\n    world.move("RIGHT")'
-        };
-      case 'AUTO_5':
-        return {
-          capabilities: ['Definição de funções: def minha_func() / function minhaFunc()', 'Procedimentos de código modulares e reutilizáveis'],
-          snippet: 'def harvest_tile():\n    if farm.can_harvest():\n        farm.harvest()\n    world.move("RIGHT")'
-        };
-      case 'AUTO_6':
-        return {
-          capabilities: [
-            'Barramento de Comunicação Inter-Agentes (IPC)',
-            'Envio de sinais e mensagens entre naves: sys.send(agent_id, msg)',
-            'Sincronização de tarefas coordenadas em tempo real'
-          ],
-          snippet: '# Agente 1 notifica o Agente 2 quando concluir a linha:\nif farm.can_harvest():\n    farm.harvest()\nsys.send(2, "ROW_COMPLETED")'
-        };
+      // Search query check
+      if (!searchQuery.trim()) return true;
 
-      // AGRONOMY
-      case 'AGRO_1':
-        return {
-          capabilities: ['Colher fibras selvagens', 'Plantar fibra selvagem: farm.plant("WILD_FIBER")', 'Irrigação do Solo: farm.water()', 'Verificação de colheita: farm.can_harvest()'],
-          snippet: 'if farm.can_harvest():\n    farm.harvest()\nelse:\n    farm.water()'
-        };
-      case 'AGRO_2':
-        return {
-          capabilities: ['Plantar Arbusto de Madeira: farm.plant("WOODY_BUSH")', 'Gera o recurso Madeira necessário para pesquisas Nível 2+'],
-          snippet: 'farm.plant("WOODY_BUSH")'
-        };
-      case 'AGRO_3':
-        return {
-          capabilities: ['Arar solo natural para cultivo: farm.till()', 'Irrigar solo: farm.water()', 'Plantar Raízes Cultivadas: farm.plant("CULTIVATED_ROOT")', 'Solo arado triplica a taxa de crescimento!'],
-          snippet: 'if world.ground() == "NATURAL":\n    farm.till()\nfarm.plant("CULTIVATED_ROOT")'
-        };
-      case 'AGRO_4':
-        return {
-          capabilities: ['Plantar Árvores: farm.plant("TREE")', 'Rendimento de madeira para pesquisas avançadas', 'Otimização em xadrez: plante árvores sem vizinhos adjacentes para crescimento mais rápido'],
-          snippet: 'if (world.x() + world.y()) % 2 == 0:\n    farm.plant("TREE")'
-        };
-      case 'AGRO_5':
-        return {
-          capabilities: ['Plantar Colônias de Frutas: farm.plant("FRUIT_COLONY")', 'Grupos de frutas maduras conectadas geram recompensas multiplicadas de Fruta'],
-          snippet: 'farm.plant("FRUIT_COLONY")'
-        };
-      case 'AGRO_6':
-        return {
-          capabilities: ['Plantar Flores de Energia: farm.plant("ENERGY_FLOWER")', 'Medir o valor de energia do bloco com world.measure()', 'Colher quando a energia atingir o pico (> 50)'],
-          snippet: 'farm.plant("ENERGY_FLOWER")\nif world.measure() > 50:\n    farm.harvest()'
-        };
-      case 'AGRO_7':
-        return {
-          capabilities: ['Plantar Plantas com Nota: farm.plant("GRADED_PLANT")', 'Trocar blocos de cultivo com vizinho: farm.swap("RIGHT")', 'Executar algoritmos de ordenação (ex: Bubble Sort) para ordenar fileiras para Máxima Biomassa'],
-          snippet: 'if world.measure() > next_grade:\n    farm.swap("RIGHT")'
-        };
-      case 'AGRO_8':
-        return {
-          capabilities: ['Geração de Labirinto Vivo e núcleo de cristal', 'Verificar núcleo do labirinto: world.is_maze_core()', 'Inspecionar cultura companheira: farm.get_companion()'],
-          snippet: 'if world.is_maze_core():\n    farm.harvest()'
-        };
+      const q = searchQuery.toLowerCase().trim();
+      const matchName = item.methodName.toLowerCase().includes(q);
+      const matchDisplay = item.displayText.toLowerCase().includes(q);
+      const matchDesc = item.description.toLowerCase().includes(q);
+      const matchNamespace = item.namespace.toLowerCase().includes(q);
+      const matchCat = item.category.toLowerCase().includes(q);
 
-      // SYSTEMS
-      case 'SYS_1':
-        return {
-          capabilities: ['Imprimir mensagens no stdout: print(...) ou console.log(...)', 'Visualizar logs de execução no console do Painel Inferior'],
-          snippet: 'print("Agente ativo em", world.x(), world.y())'
-        };
-      case 'SYS_2':
-        return {
-          capabilities: [
-            'Sensores de posição: world.x(), world.y()',
-            'Sensores de dimensão: world.width(), world.height()',
-            'Inspeção do solo: world.ground()',
-            'Inspeção da cultura: world.entity()',
-            'Inspeção da umidade: world.moisture()',
-            'Contagem de inventário: inventory.count("fiber")'
-          ],
-          snippet: 'if world.ground() == "NATURAL" and world.moisture() < 0.5:\n    farm.till()\n    farm.water()'
-        };
-      case 'SYS_3':
-        return {
-          capabilities: ['Sensor numérico de bloco: world.measure()', 'Lê níveis de energia em flores e valores de nota em plantas graduadas'],
-          snippet: 'val = world.measure()'
-        };
-      case 'SYS_4':
-        return {
-          capabilities: ['Telemetria & Estatísticas do Agente', 'Inspecione contadores de passos e ações via sys.get_agent_stats() ou agent.get_stats()'],
-          snippet: 'stats = sys.get_agent_stats()'
-        };
+      return matchName || matchDisplay || matchDesc || matchNamespace || matchCat;
+    });
+  }, [searchQuery, filterMode, techTree]);
 
-      // SCALE
-      case 'SCALE_1':
-        return { capabilities: ['Terreno Inicial 1x1'], snippet: '# Tamanho da Grade: 1x1' };
-      case 'SCALE_2':
-        return { capabilities: ['Expandir terreno para faixa horizontal 1x3 (3 blocos)'], snippet: '# Tamanho da Grade: 1x3' };
-      case 'SCALE_3':
-        return { capabilities: ['Expandir terreno para matriz 2D 3x3 (9 blocos)'], snippet: '# Tamanho da Grade: 3x3' };
-      case 'SCALE_4':
-        return { capabilities: ['Expandir terreno para zona agrícola 5x5 (25 blocos)'], snippet: '# Tamanho da Grade: 5x5' };
-      case 'SCALE_5':
-        return { capabilities: ['Desbloquear Agente #2 (Gepeto)', 'Implantar múltiplos agentes simultaneamente na grade'], snippet: '# Agentes Ativos: 2 (Claudio & Gepeto)' };
-      case 'SCALE_6':
-        return { capabilities: ['Expandir terreno para grade industrial 7x7 (49 blocos)'], snippet: '# Tamanho da Grade: 7x7' };
-      case 'SCALE_7':
-        return { capabilities: ['Expandir terreno para matriz complexa 9x9 (81 blocos)'], snippet: '# Tamanho da Grade: 9x9' };
-      case 'SCALE_8':
-        return { capabilities: ['Desbloquear Agente #3 (Gemilson)', 'Ativar 3 agentes operando em paralelo na fazenda'], snippet: '# Agentes Ativos: 3 (Claudio, Gepeto & Gemilson)' };
-      case 'SCALE_9':
-        return { capabilities: ['Expandir terreno para mega lote 12x12 (144 blocos)'], snippet: '# Tamanho da Grade: 12x12' };
+  // Group filtered catalog by namespace/category
+  const namespaces = [
+    { key: 'mechanics', label: 'Conceitos & Regras', namespaceCode: 'regras', icon: BookOpen, color: 'text-[#ec4899]', bgColor: 'bg-[#ec4899]/10', borderColor: 'border-[#ec4899]/30' },
+    { key: 'farm', label: 'Comandos da Fazenda', namespaceCode: 'farm.*', icon: Sprout, color: 'text-[#27a644]', bgColor: 'bg-[#27a644]/10', borderColor: 'border-[#27a644]/30' },
+    { key: 'world', label: 'Sensores do Mundo', namespaceCode: 'world.*', icon: Terminal, color: 'text-[#8b5cf6]', bgColor: 'bg-[#8b5cf6]/10', borderColor: 'border-[#8b5cf6]/30' },
+    { key: 'inventory', label: 'Consulta de Inventário', namespaceCode: 'inventory.*', icon: Boxes, color: 'text-[#eab308]', bgColor: 'bg-[#eab308]/10', borderColor: 'border-[#eab308]/30' },
+    { key: 'syntax', label: 'Recursos da Linguagem', namespaceCode: 'sintaxe', icon: Cpu, color: 'text-[#02b8cc]', bgColor: 'bg-[#02b8cc]/10', borderColor: 'border-[#02b8cc]/30' },
+  ] as const;
 
-      default:
-        return { capabilities: [node.description], snippet: '' };
-    }
-  };
+  // Selected item object
+  const selectedItem = useMemo(() => {
+    return API_CATALOG.find(i => i.id === selectedItemId) || API_CATALOG[0];
+  }, [selectedItemId]);
 
-  // Filter API items
-  const filteredApis = API_CATALOG.filter(item => {
-    const unlocked = isUnlocked(item.techId);
-    if (filterMode === 'unlocked') return unlocked;
-    if (filterMode === 'locked') return !unlocked;
-    return true;
-  });
+  const selectedTechNode = useMemo(() => {
+    if (!selectedItem) return undefined;
+    return getTechForApiItem(selectedItem.techId, techTree);
+  }, [selectedItem, techTree]);
 
-  const farmApis = filteredApis.filter(a => a.namespace === 'farm');
-  const worldApis = filteredApis.filter(a => a.namespace === 'world');
-  const syntaxApis = filteredApis.filter(a => a.namespace === 'syntax');
+  const selectedUnlocked = selectedItem ? isUnlocked(selectedItem.techId) : false;
 
   return (
-    <div className="flex-1 bg-[#08090a] p-6 overflow-y-auto font-sans text-[#d0d6e0] select-none">
-      <div className="max-w-5xl mx-auto space-y-6">
+    <div className="flex-1 bg-[#08090a] p-4 md:p-6 overflow-hidden font-sans text-[#d0d6e0] select-none flex flex-col h-full">
+      <div className="max-w-7xl w-full mx-auto flex flex-col h-full space-y-4">
         
-        {/* Header Title & Research Progress Bar */}
-        <div className="border-b border-[#23252a] pb-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        {/* Header Bar & Research Progress */}
+        <div className="bg-[#0f1011] border border-[#23252a] rounded-[12px] p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 shrink-0 shadow-sm">
           <div>
-            <h1 className="text-xl font-medium text-[#ffffff] flex items-center gap-2">
+            <h1 className="text-lg font-bold text-[#ffffff] flex items-center gap-2">
               <BookOpen className="w-5 h-5 text-[#27a644]" />
-              Guia do Desenvolvedor & Documentação de API
+              Wiki da API & Guia de Programação
             </h1>
             <p className="text-xs text-[#8a8f98] mt-1">
-              Manual de referência técnica para automação agrícola. Consulte sintaxes das linguagens, métodos das APIs <code className="text-[#27a644] font-mono">farm</code>, <code className="text-[#8b5cf6] font-mono">world</code> e <code className="text-[#eab308] font-mono">inventory</code>, e regras do ambiente.
+              Documentação técnica oficial para automação agrícola. Inspecione a declaração de métodos, parâmetros, tipos de retorno e exemplos de algoritmos.
             </p>
           </div>
 
-          {/* Research Progress Widget */}
-          <div className="bg-[#0f1011] border border-[#23252a] p-3 rounded-[12px] flex items-center gap-4 shrink-0">
+          {/* Research Progress Badge */}
+          <div className="flex items-center gap-4 bg-[#08090a] border border-[#23252a] px-3.5 py-2 rounded-[8px] shrink-0">
             <div className="space-y-1">
-              <div className="flex items-center justify-between text-xs font-mono">
-                <span className="text-[#8a8f98] font-medium">Pesquisas Desbloqueadas:</span>
-                <span className="text-[#27a644] font-medium ml-2">{unlockedTechCount} / {totalTech} ({unlockPercentage}%)</span>
+              <div className="flex items-center justify-between text-[11px] font-mono">
+                <span className="text-[#8a8f98]">Progresso de Pesquisas:</span>
+                <span className="text-[#27a644] font-bold ml-2">{unlockedTechCount} / {totalTech} ({unlockPercentage}%)</span>
               </div>
-              <div className="w-48 h-2 bg-[#08090a] rounded-[4px] overflow-hidden border border-[#23252a]">
+              <div className="w-40 h-1.5 bg-[#161718] rounded-full overflow-hidden border border-[#23252a]">
                 <div 
-                  className="h-full bg-[#27a644] transition-all duration-500" 
+                  className="h-full bg-[#27a644] transition-all duration-500 rounded-full" 
                   style={{ width: `${unlockPercentage}%` }}
                 />
               </div>
@@ -252,956 +130,427 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ engine, onNavigate
             {onNavigateToTab && (
               <button
                 onClick={() => onNavigateToTab('research')}
-                className="px-3 py-1.5 bg-[#238636] hover:bg-[#2ea043] text-white rounded text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm active:scale-95 shrink-0 border border-[#3fb950]/30"
+                className="px-2.5 py-1.5 bg-[#238636] hover:bg-[#2ea043] text-white rounded text-xs font-semibold transition-all flex items-center gap-1 shadow-sm active:scale-95 shrink-0 border border-[#3fb950]/30"
               >
                 <FlaskConical className="w-3.5 h-3.5" />
-                Árvore de Pesquisa
+                <span>Pesquisas</span>
               </button>
             )}
           </div>
         </div>
 
-        {/* Main Category Tabs */}
-        <div className="flex flex-wrap items-center gap-2 border-b border-[#30363d] pb-3">
-          <button
-            onClick={() => setActiveGuideTab('matrix')}
-            className={`flex items-center gap-2 px-3.5 py-2 rounded text-xs font-bold transition-all ${
-              activeGuideTab === 'matrix' 
-                ? 'bg-[#21262d] text-[#f0f6fc] border border-[#30363d] shadow-sm' 
-                : 'bg-[#161b22]/60 text-[#8b949e] hover:text-[#f0f6fc] border border-[#30363d]'
-            }`}
-          >
-            <Zap className="w-4 h-4 text-[#27a644]" />
-            Matriz de Desbloqueios
-          </button>
-
-          <button
-            onClick={() => setActiveGuideTab('mechanics')}
-            className={`flex items-center gap-2 px-3.5 py-2 rounded text-xs font-bold transition-all ${
-              activeGuideTab === 'mechanics' 
-                ? 'bg-[#21262d] text-[#f0f6fc] border border-[#30363d] shadow-sm' 
-                : 'bg-[#161b22]/60 text-[#8b949e] hover:text-[#f0f6fc] border border-[#30363d]'
-            }`}
-          >
-            <Sprout className="w-4 h-4 text-[#27a644]" />
-            Mecânicas
-          </button>
-
-          <button
-            onClick={() => setActiveGuideTab('farm')}
-            className={`flex items-center gap-2 px-3.5 py-2 rounded text-xs font-bold transition-all ${
-              activeGuideTab === 'farm' 
-                ? 'bg-[#21262d] text-[#f0f6fc] border border-[#30363d] shadow-sm' 
-                : 'bg-[#161b22]/60 text-[#8b949e] hover:text-[#f0f6fc] border border-[#30363d]'
-            }`}
-          >
-            <Sprout className="w-4 h-4 text-[#27a644]" />
-            API da Fazenda (<code className="text-[#27a644]">farm.*</code>)
-          </button>
-
-          <button
-            onClick={() => setActiveGuideTab('world')}
-            className={`flex items-center gap-2 px-3.5 py-2 rounded text-xs font-bold transition-all ${
-              activeGuideTab === 'world' 
-                ? 'bg-[#21262d] text-[#f0f6fc] border border-[#30363d] shadow-sm' 
-                : 'bg-[#161b22]/60 text-[#8b949e] hover:text-[#f0f6fc] border border-[#30363d]'
-            }`}
-          >
-            <Terminal className="w-4 h-4 text-[#8b5cf6]" />
-            Mundo e Sensores (<code className="text-[#8b5cf6]">world.*</code>)
-          </button>
-
-          <button
-            onClick={() => setActiveGuideTab('syntax')}
-            className={`flex items-center gap-2 px-3.5 py-2 rounded text-xs font-bold transition-all ${
-              activeGuideTab === 'syntax' 
-                ? 'bg-[#21262d] text-[#f0f6fc] border border-[#30363d] shadow-sm' 
-                : 'bg-[#161b22]/60 text-[#8b949e] hover:text-[#f0f6fc] border border-[#30363d]'
-            }`}
-          >
-            <Cpu className="w-4 h-4 text-[#02b8cc]" />
-            Linguagem e Sintaxe
-          </button>
-        </div>
-
-        {/* TAB 1: RESEARCH UNLOCKS MATRIX */}
-        {activeGuideTab === 'matrix' && (
-          <div className="space-y-6">
+        {/* Wiki Main Container: Sidebar + Article View */}
+        <div className="flex-1 min-h-0 grid grid-cols-1 md:grid-cols-12 gap-4">
+          
+          {/* SIDEBAR NAVIGATION (4 Cols) */}
+          <div className="md:col-span-4 lg:col-span-3 bg-[#0f1011] border border-[#23252a] rounded-[12px] p-3 flex flex-col min-h-0 overflow-hidden shadow-sm">
             
-            {/* AUTOMATION BRANCH */}
-            <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-5 space-y-4">
-              <div className="flex items-center justify-between border-b border-[#30363d] pb-2">
-                <h2 className="font-bold text-sm text-[#02b8cc] flex items-center gap-2">
-                  <Cpu className="w-4 h-4" />
-                  Automação e Linguagem
-                </h2>
-                <span className="text-xs font-mono text-[#02b8cc]">
-                  {techByBranch.AUTOMATION.filter(t => t.unlocked).length} / {techByBranch.AUTOMATION.length} Desbloqueados
-                </span>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-                {techByBranch.AUTOMATION.map(node => {
-                  const details = getTechUnlockDetails(node);
-                  return (
-                    <div 
-                      key={node.id} 
-                      className={`p-4 rounded-xl border transition-all ${
-                        node.unlocked 
-                          ? 'bg-[#010409] border-[#02b8cc]/40 text-[#f0f6fc] shadow-sm' 
-                          : 'bg-[#010409]/50 border-[#30363d] text-[#8b949e] opacity-70'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="font-bold text-xs text-[#02b8cc] flex items-center gap-1.5">
-                          {node.unlocked ? <CheckCircle2 className="w-4 h-4 text-[#02b8cc]" /> : <Lock className="w-4 h-4 text-[#d29922]" />}
-                          {node.name} <span className="text-[10px] text-[#8b949e] font-mono">({node.id})</span>
-                        </span>
-                        <span className={`text-[10px] font-sans px-2 py-0.5 rounded font-bold ${
-                          node.unlocked ? 'bg-[#02b8cc]/15 text-[#02b8cc] border border-[#02b8cc]/30' : 'bg-[#d29922]/15 text-[#d29922] border border-[#d29922]/30'
-                        }`}>
-                          {node.unlocked ? 'DESBLOQUEADO' : `Nível ${node.tier}`}
-                        </span>
-                      </div>
-
-                      <p className="text-xs text-[#c9d1d9] mb-2 font-sans leading-relaxed">{node.description}</p>
-
-                      <div className="space-y-1 mb-3">
-                        <div className="text-[11px] font-semibold text-[#8b949e] uppercase tracking-wider font-mono">Recursos Desbloqueados:</div>
-                        <ul className="list-disc list-inside text-xs text-[#c9d1d9] space-y-1 font-sans">
-                          {details.capabilities.map((cap, i) => (
-                            <li key={i} className="leading-snug">{cap}</li>
-                          ))}
-                        </ul>
-                      </div>
-
-                      {details.snippet && (
-                        <div className="bg-[#0d1117] p-2.5 rounded border border-[#30363d] flex items-center justify-between group">
-                          <code className="text-xs font-mono text-[#02b8cc] whitespace-pre leading-relaxed">{details.snippet}</code>
-                          {node.unlocked && (
-                            <button 
-                              onClick={() => copyCode(details.snippet)}
-                              className="p-1.5 hover:bg-[#21262d] rounded text-[#8b949e] hover:text-[#f0f6fc] transition-all opacity-0 group-hover:opacity-100 shrink-0"
-                              title="Copiar código"
-                            >
-                              {copiedSnippet === details.snippet ? <Check className="w-4 h-4 text-[#27a644]" /> : <Copy className="w-4 h-4" />}
-                            </button>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
+            {/* Search Input Box */}
+            <div className="relative mb-2.5 shrink-0">
+              <Search className="w-3.5 h-3.5 text-[#8a8f98] absolute left-3 top-2.5" />
+              <input 
+                type="text"
+                placeholder="Pesquisar API ou conceito..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-8 pr-3 py-1.5 bg-[#08090a] border border-[#23252a] rounded-[6px] text-xs text-[#ffffff] placeholder-[#8a8f98] focus:outline-none focus:border-[#27a644] font-mono transition-colors"
+              />
             </div>
 
-            {/* AGRONOMY BRANCH */}
-            <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-5 space-y-4">
-              <div className="flex items-center justify-between border-b border-[#30363d] pb-2">
-                <h2 className="font-bold text-sm text-[#27a644] flex items-center gap-2">
-                  <Sprout className="w-4 h-4" />
-                  Agronomia e Culturas
-                </h2>
-                <span className="text-xs font-mono text-[#27a644]">
-                  {techByBranch.AGRONOMY.filter(t => t.unlocked).length} / {techByBranch.AGRONOMY.length} Desbloqueados
-                </span>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-                {techByBranch.AGRONOMY.map(node => {
-                  const details = getTechUnlockDetails(node);
-                  return (
-                    <div 
-                      key={node.id} 
-                      className={`p-4 rounded-xl border transition-all ${
-                        node.unlocked 
-                          ? 'bg-[#010409] border-[#27a644]/40 text-[#f0f6fc] shadow-sm' 
-                          : 'bg-[#010409]/50 border-[#30363d] text-[#8b949e] opacity-70'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="font-bold text-xs text-[#27a644] flex items-center gap-1.5">
-                          {node.unlocked ? <CheckCircle2 className="w-4 h-4 text-[#27a644]" /> : <Lock className="w-4 h-4 text-[#d29922]" />}
-                          {node.name} <span className="text-[10px] text-[#8b949e] font-mono">({node.id})</span>
-                        </span>
-                        <span className={`text-[10px] font-sans px-2 py-0.5 rounded font-bold ${
-                          node.unlocked ? 'bg-[#27a644]/15 text-[#27a644] border border-[#27a644]/30' : 'bg-[#d29922]/15 text-[#d29922] border border-[#d29922]/30'
-                        }`}>
-                          {node.unlocked ? 'DESBLOQUEADO' : `Nível ${node.tier}`}
-                        </span>
-                      </div>
-
-                      <p className="text-xs text-[#c9d1d9] mb-2 font-sans leading-relaxed">{node.description}</p>
-
-                      <div className="space-y-1 mb-3">
-                        <div className="text-[11px] font-semibold text-[#8b949e] uppercase tracking-wider font-mono">Recursos Desbloqueados:</div>
-                        <ul className="list-disc list-inside text-xs text-[#c9d1d9] space-y-1 font-sans">
-                          {details.capabilities.map((cap, i) => (
-                            <li key={i} className="leading-snug">{cap}</li>
-                          ))}
-                        </ul>
-                      </div>
-
-                      {details.snippet && (
-                        <div className="bg-[#0d1117] p-2.5 rounded border border-[#30363d] flex items-center justify-between group">
-                          <code className="text-xs font-mono text-[#27a644] whitespace-pre leading-relaxed">{details.snippet}</code>
-                          {node.unlocked && (
-                            <button 
-                              onClick={() => copyCode(details.snippet)}
-                              className="p-1.5 hover:bg-[#21262d] rounded text-[#8b949e] hover:text-[#f0f6fc] transition-all opacity-0 group-hover:opacity-100 shrink-0"
-                              title="Copiar código"
-                            >
-                              {copiedSnippet === details.snippet ? <Check className="w-4 h-4 text-[#27a644]" /> : <Copy className="w-4 h-4" />}
-                            </button>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* SYSTEMS BRANCH */}
-            <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-5 space-y-4">
-              <div className="flex items-center justify-between border-b border-[#30363d] pb-2">
-                <h2 className="font-bold text-sm text-[#8b5cf6] flex items-center gap-2">
-                  <Terminal className="w-4 h-4" />
-                  Sistemas e Depuração
-                </h2>
-                <span className="text-xs font-mono text-[#8b5cf6]">
-                  {techByBranch.SYSTEMS.filter(t => t.unlocked).length} / {techByBranch.SYSTEMS.length} Desbloqueados
-                </span>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-                {techByBranch.SYSTEMS.map(node => {
-                  const details = getTechUnlockDetails(node);
-                  return (
-                    <div 
-                      key={node.id} 
-                      className={`p-4 rounded-xl border transition-all ${
-                        node.unlocked 
-                          ? 'bg-[#010409] border-[#8b5cf6]/40 text-[#f0f6fc] shadow-sm' 
-                          : 'bg-[#010409]/50 border-[#30363d] text-[#8b949e] opacity-70'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="font-bold text-xs text-[#8b5cf6] flex items-center gap-1.5">
-                          {node.unlocked ? <CheckCircle2 className="w-4 h-4 text-[#8b5cf6]" /> : <Lock className="w-4 h-4 text-[#d29922]" />}
-                          {node.name} <span className="text-[10px] text-[#8b949e] font-mono">({node.id})</span>
-                        </span>
-                        <span className={`text-[10px] font-sans px-2 py-0.5 rounded font-bold ${
-                          node.unlocked ? 'bg-[#8b5cf6]/15 text-[#8b5cf6] border border-[#8b5cf6]/30' : 'bg-[#d29922]/15 text-[#d29922] border border-[#d29922]/30'
-                        }`}>
-                          {node.unlocked ? 'DESBLOQUEADO' : `Nível ${node.tier}`}
-                        </span>
-                      </div>
-
-                      <p className="text-xs text-[#c9d1d9] mb-2 font-sans leading-relaxed">{node.description}</p>
-
-                      <div className="space-y-1 mb-3">
-                        <div className="text-[11px] font-semibold text-[#8b949e] uppercase tracking-wider font-mono">Recursos Desbloqueados:</div>
-                        <ul className="list-disc list-inside text-xs text-[#c9d1d9] space-y-1 font-sans">
-                          {details.capabilities.map((cap, i) => (
-                            <li key={i} className="leading-snug">{cap}</li>
-                          ))}
-                        </ul>
-                      </div>
-
-                      {details.snippet && (
-                        <div className="bg-[#0d1117] p-2.5 rounded border border-[#30363d] flex items-center justify-between group">
-                          <code className="text-xs font-mono text-[#8b5cf6] whitespace-pre leading-relaxed">{details.snippet}</code>
-                          {node.unlocked && (
-                            <button 
-                              onClick={() => copyCode(details.snippet)}
-                              className="p-1.5 hover:bg-[#21262d] rounded text-[#8b949e] hover:text-[#f0f6fc] transition-all opacity-0 group-hover:opacity-100 shrink-0"
-                              title="Copiar código"
-                            >
-                              {copiedSnippet === details.snippet ? <Check className="w-4 h-4 text-[#27a644]" /> : <Copy className="w-4 h-4" />}
-                            </button>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* SCALE BRANCH */}
-            <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-5 space-y-4">
-              <div className="flex items-center justify-between border-b border-[#30363d] pb-2">
-                <h2 className="font-bold text-sm text-[#d0d6e0] flex items-center gap-2">
-                  <Maximize2 className="w-4 h-4" />
-                  Escala e Expansão de Terreno
-                </h2>
-                <span className="text-xs font-mono text-[#d0d6e0]">
-                  {techByBranch.SCALE.filter(t => t.unlocked).length} / {techByBranch.SCALE.length} Desbloqueados
-                </span>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-                {techByBranch.SCALE.map(node => {
-                  const details = getTechUnlockDetails(node);
-                  return (
-                    <div 
-                      key={node.id} 
-                      className={`p-4 rounded-xl border transition-all ${
-                        node.unlocked 
-                          ? 'bg-[#010409] border-[#d0d6e0]/40 text-[#f0f6fc] shadow-sm' 
-                          : 'bg-[#010409]/50 border-[#30363d] text-[#8b949e] opacity-70'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="font-bold text-xs text-[#d0d6e0] flex items-center gap-1.5">
-                          {node.unlocked ? <CheckCircle2 className="w-4 h-4 text-[#d0d6e0]" /> : <Lock className="w-4 h-4 text-[#d29922]" />}
-                          {node.name} <span className="text-[10px] text-[#8b949e] font-mono">({node.id})</span>
-                        </span>
-                        <span className={`text-[10px] font-sans px-2 py-0.5 rounded font-bold ${
-                          node.unlocked ? 'bg-[#d0d6e0]/15 text-[#d0d6e0] border border-[#d0d6e0]/30' : 'bg-[#d29922]/10 text-[#d29922] border border-[#d29922]/20'
-                        }`}>
-                          {node.unlocked ? 'DESBLOQUEADO' : `Nível ${node.tier}`}
-                        </span>
-                      </div>
-
-                      <p className="text-xs text-[#c9d1d9] mb-2 font-sans leading-relaxed">{node.description}</p>
-
-                      <div className="space-y-1 mb-2">
-                        <div className="text-[11px] font-semibold text-[#8b949e] uppercase tracking-wider font-mono">Recursos Desbloqueados:</div>
-                        <ul className="list-disc list-inside text-xs text-[#c9d1d9] space-y-1 font-sans">
-                          {details.capabilities.map((cap, i) => (
-                            <li key={i} className="leading-snug">{cap}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-          </div>
-        )}
-
-        {/* TAB 2: FARM API */}
-        {activeGuideTab === 'farm' && (
-          <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-5 space-y-4">
-            <div className="flex items-center justify-between border-b border-[#30363d] pb-3">
-              <h2 className="font-bold text-sm text-[#27a644] flex items-center gap-2">
-                <Sprout className="w-4 h-4" />
-                Comandos da Fazenda (<code className="text-[#27a644]">farm.*</code>)
-              </h2>
-              <span className="text-xs text-[#8b949e] font-mono">
-                {farmApis.filter(a => isUnlocked(a.techId)).length} / {farmApis.length} Desbloqueados
-              </span>
-            </div>
-
-            {/* Growth Notice Callout */}
-            <div className="bg-[#27a644]/10 border border-[#27a644]/30 p-3 rounded-lg flex items-center justify-between gap-3 text-xs">
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-[#27a644] shrink-0" />
-                <span className="text-[#f0f6fc] font-sans">
-                  <strong>Regra de Colheita:</strong> A colheita com <code className="text-[#27a644] font-mono">farm.harvest()</code> exige <strong>100% de crescimento</strong> no bloco.
-                </span>
-              </div>
-              <button 
-                onClick={() => setActiveGuideTab('mechanics')}
-                className="text-[11px] font-bold text-[#27a644] hover:underline shrink-0"
+            {/* Filter Pills */}
+            <div className="flex items-center gap-1 mb-3 pb-2 border-b border-[#23252a] shrink-0">
+              <button
+                onClick={() => setFilterMode('all')}
+                className={`px-2 py-0.5 rounded text-[11px] font-medium transition-all ${
+                  filterMode === 'all' 
+                    ? 'bg-[#27a644]/20 text-[#27a644] border border-[#27a644]/40 font-semibold' 
+                    : 'text-[#8a8f98] hover:text-[#ffffff]'
+                }`}
               >
-                Ver Mecânicas →
+                Todos
+              </button>
+              <button
+                onClick={() => setFilterMode('unlocked')}
+                className={`px-2 py-0.5 rounded text-[11px] font-medium transition-all ${
+                  filterMode === 'unlocked' 
+                    ? 'bg-[#27a644]/20 text-[#27a644] border border-[#27a644]/40 font-semibold' 
+                    : 'text-[#8a8f98] hover:text-[#ffffff]'
+                }`}
+              >
+                Desbloqueados
+              </button>
+              <button
+                onClick={() => setFilterMode('locked')}
+                className={`px-2 py-0.5 rounded text-[11px] font-medium transition-all ${
+                  filterMode === 'locked' 
+                    ? 'bg-[#27a644]/20 text-[#27a644] border border-[#27a644]/40 font-semibold' 
+                    : 'text-[#8a8f98] hover:text-[#ffffff]'
+                }`}
+              >
+                Bloqueados
               </button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-              {farmApis.map(api => {
-                const unlocked = isUnlocked(api.techId);
-                const techNode = getTechForApiItem(api.techId, techTree);
+            {/* Navigation Tree by Namespace */}
+            <div className="flex-1 overflow-y-auto space-y-3 pr-1">
+              {namespaces.map(ns => {
+                const nsItems = filteredCatalog.filter(i => i.namespace === ns.key);
+                if (nsItems.length === 0) return null;
+
+                const NsIcon = ns.icon;
 
                 return (
-                  <div 
-                    key={api.id}
-                    className={`p-4 rounded-xl border text-xs font-mono transition-all ${
-                      unlocked 
-                        ? 'bg-[#010409] border-[#27a644]/40 text-[#f0f6fc]' 
-                        : 'bg-[#010409]/50 border-[#30363d] text-[#8b949e] opacity-60'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="font-bold text-[#27a644] flex items-center gap-1.5 text-xs">
-                        {unlocked ? (
-                          <CheckCircle2 className="w-3.5 h-3.5 text-[#27a644]" />
-                        ) : (
-                          <Lock className="w-3.5 h-3.5 text-[#d29922]" />
-                        )}
-                        {api.displayText}
+                  <div key={ns.key} className="space-y-1">
+                    <div className="flex items-center justify-between px-2 py-1 text-[11px] font-bold text-[#ffffff] tracking-wide uppercase font-mono border-b border-[#23252a]/50">
+                      <span className="flex items-center gap-1.5">
+                        <NsIcon className={`w-3.5 h-3.5 ${ns.color}`} />
+                        <span>{ns.label}</span>
                       </span>
-                      <span className={`text-[10px] px-2 py-0.5 rounded font-sans font-bold ${
-                        unlocked ? 'bg-[#27a644]/15 text-[#27a644] border border-[#27a644]/30' : 'bg-[#d29922]/15 text-[#d29922] border border-[#d29922]/30'
-                      }`}>
-                        {unlocked ? 'DESBLOQUEADO' : `Req: ${techNode?.name || api.techId}`}
-                      </span>
+                      <span className="text-[10px] text-[#8a8f98] font-mono">({nsItems.length})</span>
                     </div>
 
-                    <div className="text-[11px] font-mono text-[#27a644] mb-2 bg-[#0d1117] px-2 py-1 rounded border border-[#30363d]">
-                      <span className="text-[#8b949e] font-sans font-semibold mr-1">Sintaxe:</span>
-                      <code>{api.signature}</code>
-                    </div>
+                    <div className="space-y-0.5 pt-0.5">
+                      {nsItems.map(item => {
+                        const unlocked = isUnlocked(item.techId);
+                        const isSelected = item.id === selectedItemId;
 
-                    <p className="text-xs font-sans text-[#c9d1d9] mb-3 leading-relaxed">{api.docDetail}</p>
+                        return (
+                          <button
+                            key={item.id}
+                            onClick={() => setSelectedItemId(item.id)}
+                            className={`w-full text-left px-2.5 py-1.5 rounded-[6px] text-xs font-mono transition-all flex items-center justify-between group ${
+                              isSelected 
+                                ? 'bg-[#161718] text-[#ffffff] border border-[#27a644]/50 shadow-sm' 
+                                : 'text-[#a0a6b0] hover:text-[#ffffff] hover:bg-[#161718]/60 border border-transparent'
+                            }`}
+                          >
+                            <span className="truncate flex items-center gap-1.5">
+                              <ChevronRight className={`w-3 h-3 transition-transform ${isSelected ? 'rotate-90 text-[#27a644]' : 'text-[#8a8f98] group-hover:text-[#ffffff]'}`} />
+                              <span className="truncate">{item.displayText}</span>
+                            </span>
 
-                    <div className="bg-[#0d1117] p-2.5 rounded border border-[#30363d] flex items-center justify-between group">
-                      <code className="text-xs text-[#27a644]">{api.exampleCode}</code>
-                      {unlocked && (
-                        <button 
-                          onClick={() => copyCode(api.exampleCode)}
-                          className="p-1 hover:bg-[#21262d] rounded text-[#8b949e] hover:text-[#f0f6fc] transition-all opacity-0 group-hover:opacity-100"
-                          title="Copiar código"
-                        >
-                          {copiedSnippet === api.exampleCode ? <Check className="w-3.5 h-3.5 text-[#27a644]" /> : <Copy className="w-3.5 h-3.5" />}
-                        </button>
-                      )}
+                            <span className="shrink-0 ml-1">
+                              {unlocked ? (
+                                <CheckCircle2 className="w-3.5 h-3.5 text-[#27a644]" />
+                              ) : (
+                                <Lock className="w-3.5 h-3.5 text-[#d29922]" />
+                              )}
+                            </span>
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
                 );
               })}
-            </div>
-          </div>
-        )}
 
-        {/* TAB 3: WORLD & SENSORS */}
-        {activeGuideTab === 'world' && (
-          <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-5 space-y-4">
-            <div className="flex items-center justify-between border-b border-[#30363d] pb-3">
-              <h2 className="font-bold text-sm text-[#8b5cf6] flex items-center gap-2">
-                <Terminal className="w-4 h-4" />
-                API de Mundo e Sensores (<code className="text-[#8b5cf6]">world.*</code>)
-              </h2>
-              <span className="text-xs text-[#8b949e] font-mono">
-                {worldApis.filter(a => isUnlocked(a.techId)).length} / {worldApis.length} Desbloqueados
-              </span>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-              {worldApis.map(api => {
-                const unlocked = isUnlocked(api.techId);
-                const techNode = getTechForApiItem(api.techId, techTree);
-
-                return (
-                  <div 
-                    key={api.id}
-                    className={`p-4 rounded-xl border text-xs font-mono transition-all ${
-                      unlocked 
-                        ? 'bg-[#010409] border-[#8b5cf6]/40 text-[#f0f6fc]' 
-                        : 'bg-[#010409]/50 border-[#30363d] text-[#8b949e] opacity-60'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="font-bold text-[#8b5cf6] flex items-center gap-1.5 text-xs">
-                        {unlocked ? (
-                          <CheckCircle2 className="w-3.5 h-3.5 text-[#8b5cf6]" />
-                        ) : (
-                          <Lock className="w-3.5 h-3.5 text-[#d29922]" />
-                        )}
-                        {api.displayText}
-                      </span>
-                      <span className={`text-[10px] px-2 py-0.5 rounded font-sans font-bold ${
-                        unlocked ? 'bg-[#8b5cf6]/15 text-[#8b5cf6] border border-[#8b5cf6]/30' : 'bg-[#d29922]/15 text-[#d29922] border border-[#d29922]/30'
-                      }`}>
-                        {unlocked ? 'DESBLOQUEADO' : `Req: ${techNode?.name || api.techId}`}
-                      </span>
-                    </div>
-
-                    <div className="text-[11px] font-mono text-[#8b5cf6] mb-2 bg-[#0d1117] px-2 py-1 rounded border border-[#30363d]">
-                      <span className="text-[#8b949e] font-sans font-semibold mr-1">Sintaxe:</span>
-                      <code>{api.signature}</code>
-                    </div>
-
-                    <p className="text-xs font-sans text-[#c9d1d9] mb-3 leading-relaxed">{api.docDetail}</p>
-
-                    <div className="bg-[#0d1117] p-2.5 rounded border border-[#30363d] flex items-center justify-between group">
-                      <code className="text-xs text-[#8b5cf6]">{api.exampleCode}</code>
-                      {unlocked && (
-                        <button 
-                          onClick={() => copyCode(api.exampleCode)}
-                          className="p-1 hover:bg-[#21262d] rounded text-[#8b949e] hover:text-[#f0f6fc] transition-all opacity-0 group-hover:opacity-100"
-                          title="Copiar código"
-                        >
-                          {copiedSnippet === api.exampleCode ? <Check className="w-3.5 h-3.5 text-[#27a644]" /> : <Copy className="w-3.5 h-3.5" />}
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {/* TAB 4: LANGUAGE & SYNTAX */}
-        {activeGuideTab === 'syntax' && (
-          <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-5 space-y-4">
-            <div className="flex items-center justify-between border-b border-[#30363d] pb-3">
-              <h2 className="font-bold text-sm text-[#02b8cc] flex items-center gap-2">
-                <Cpu className="w-4 h-4" />
-                Sintaxe e Estruturas da Linguagem
-              </h2>
-              <span className="text-xs text-[#8b949e] font-mono">
-                {syntaxApis.filter(a => isUnlocked(a.techId)).length} / {syntaxApis.length} Desbloqueados
-              </span>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-              {syntaxApis.map(syn => {
-                const unlocked = isUnlocked(syn.techId);
-                const techNode = getTechForApiItem(syn.techId, techTree);
-
-                return (
-                  <div 
-                    key={syn.id} 
-                    className={`p-4 rounded-xl border text-xs font-mono transition-all ${
-                      unlocked 
-                        ? 'bg-[#010409] border-[#02b8cc]/40 text-[#f0f6fc]' 
-                        : 'bg-[#010409]/50 border-[#30363d] text-[#8b949e] opacity-70'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="font-bold text-[#02b8cc] flex items-center gap-1.5 text-xs">
-                        {unlocked ? (
-                          <CheckCircle2 className="w-3.5 h-3.5 text-[#02b8cc]" />
-                        ) : (
-                          <Lock className="w-3.5 h-3.5 text-[#d29922]" />
-                        )}
-                        {syn.displayText}
-                      </span>
-                      <span className={`text-[10px] px-2 py-0.5 rounded font-sans font-bold ${
-                        unlocked ? 'bg-[#02b8cc]/15 text-[#02b8cc] border border-[#02b8cc]/30' : 'bg-[#d29922]/15 text-[#d29922] border border-[#d29922]/30'
-                      }`}>
-                        {unlocked ? 'Desbloqueado' : `Pesquisa: ${techNode?.name}`}
-                      </span>
-                    </div>
-
-                    <div className="text-[11px] font-mono text-[#02b8cc] mb-2 bg-[#0d1117] px-2 py-1 rounded border border-[#30363d]">
-                      <span className="text-[#8b949e] font-sans font-semibold mr-1">Sintaxe:</span>
-                      <code>{syn.signature}</code>
-                    </div>
-
-                    <p className="text-xs font-sans text-[#c9d1d9] mb-3 leading-relaxed">{syn.description}</p>
-
-                    <div className="bg-[#0d1117] p-2.5 rounded border border-[#30363d] flex items-center justify-between group">
-                      <code className="text-xs text-[#02b8cc] whitespace-pre">{syn.exampleCode}</code>
-                      {unlocked && (
-                        <button 
-                          onClick={() => copyCode(syn.exampleCode)}
-                          className="p-1 hover:bg-[#21262d] rounded text-[#8b949e] hover:text-[#f0f6fc] transition-all opacity-0 group-hover:opacity-100"
-                          title="Copiar código"
-                        >
-                          {copiedSnippet === syn.exampleCode ? <Check className="w-3.5 h-3.5 text-[#27a644]" /> : <Copy className="w-3.5 h-3.5" />}
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {/* TAB 5: GROWTH & FARM MECHANICS */}
-        {activeGuideTab === 'mechanics' && (
-          <div className="space-y-6">
-            <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-5 space-y-4">
-              <div className="flex items-center justify-between border-b border-[#30363d] pb-3">
-                <h2 className="font-bold text-base text-[#3fb950] flex items-center gap-2">
-                  <Sprout className="w-5 h-5 text-[#3fb950]" />
-                  Mecânicas e Regras de Crescimento das Culturas
-                </h2>
-                <span className="text-xs bg-[#3fb950]/15 text-[#3fb950] border border-[#3fb950]/30 px-2.5 py-1 rounded font-bold">
-                  Requisito de Colheita: 100%
-                </span>
-              </div>
-
-              {/* Requirement Highlight Card */}
-              <div className="bg-[#3fb950]/10 border border-[#3fb950]/30 p-4 rounded-xl flex items-start gap-3">
-                <CheckCircle2 className="w-5 h-5 text-[#3fb950] shrink-0 mt-0.5" />
-                <div className="space-y-1">
-                  <h3 className="text-xs font-bold text-[#3fb950] uppercase tracking-wide">Condição Obrigatória para Colheita</h3>
-                  <p className="text-xs text-[#c9d1d9] leading-relaxed font-sans">
-                    Para que a colheita seja realizada com sucesso utilizando <code className="text-[#3fb950] font-mono bg-[#0d1117] px-1 py-0.5 rounded border border-[#30363d]">farm.harvest()</code>, a cultura no bloco precisa atingir <strong>exatamente 100% de crescimento</strong>. A função <code className="text-[#3fb950] font-mono bg-[#0d1117] px-1 py-0.5 rounded border border-[#30363d]">farm.can_harvest()</code> retornará <code className="text-[#3fb950] font-mono">True</code> apenas quando o crescimento for de 100%.
-                  </p>
+              {filteredCatalog.length === 0 && (
+                <div className="p-6 text-center text-xs text-[#8a8f98] space-y-2">
+                  <HelpCircle className="w-8 h-8 mx-auto text-[#8a8f98]/50" />
+                  <p>Nenhum método ou conceito encontrado para a busca atual.</p>
                 </div>
-              </div>
+              )}
+            </div>
+          </div>
 
-              {/* Grid of Mechanics Factors */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-                
-                {/* Prestige System & World Change Card */}
-                <div className="bg-[#010409] p-4 rounded-xl border border-[#d29922]/50 space-y-3 md:col-span-2 shadow-[0_0_15px_rgba(210,153,34,0.15)]">
-                  <div className="flex items-center gap-2 font-bold text-sm text-[#e3b341]">
-                    <Award className="w-4 h-4 text-[#e3b341]" />
-                    Sistema de Prestígio (Nível 1 a 100) e Mudança do Mundo (World Change)
-                  </div>
-                  <p className="text-xs text-[#c9d1d9] leading-relaxed">
-                    O <strong>Prestígio</strong> é a mecânica de engajamento e longo prazo do jogo. Ele incentiva o jogador a acumular e entregar recursos valiosos (Fibras, Madeira, Raízes, Frutas, Energia, etc.) além do limite da árvore de pesquisas.
-                  </p>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1 text-xs">
-                    <div className="bg-[#161b22] p-3 rounded-lg border border-[#30363d]">
-                      <span className="font-bold text-[#e3b341] flex items-center gap-1.5 mb-1">
-                        <Award className="w-3.5 h-3.5 text-[#e3b341]" />
-                        Fonte 1: Desbloqueios da Árvore
-                      </span>
-                      <span className="text-[#8b949e]">Cada nó pesquisado na Árvore de Tecnologia concede Pontos de Prestígio imediatamente (entre 50 XP e 250.000 XP dependendo do Tier).</span>
-                    </div>
-                    <div className="bg-[#161b22] p-3 rounded-lg border border-[#30363d]">
-                      <span className="font-bold text-[#e3b341] flex items-center gap-1.5 mb-1">
-                        <Boxes className="w-3.5 h-3.5 text-[#e3b341]" />
-                        Fonte 2: Upload de Recursos
-                      </span>
-                      <span className="text-[#8b949e]">Com o agente sobre o <strong>Bloco Dourado</strong>, execute <code className="text-[#e3b341] font-mono">farm.prestige("recurso", qtd)</code> para realizar o upload de itens do seu Estoque para a rede de Prestígio.</span>
-                    </div>
-                  </div>
-                  <div className="bg-[#161b22] p-3 rounded-lg border border-[#d29922]/30 text-xs text-[#c9d1d9] space-y-1">
-                    <span className="font-bold text-[#e3b341] flex items-center gap-1.5">
-                      <Globe className="w-3.5 h-3.5 text-[#e3b341]" />
-                      Mudança do Mundo (World Change): Bloco Dourado Sagrado
+          {/* MAIN ARTICLE VIEW - FOCUSED WIKI TOPIC (8-9 Cols) */}
+          <div className="md:col-span-8 lg:col-span-9 bg-[#0f1011] border border-[#23252a] rounded-[12px] p-5 flex flex-col min-h-0 overflow-y-auto space-y-5 shadow-sm">
+            
+            {/* Header Title Card */}
+            <div className="p-4 bg-[#08090a] border border-[#23252a] rounded-[10px] space-y-3">
+              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#23252a] pb-3">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] uppercase font-mono font-bold tracking-wider px-2 py-0.5 rounded bg-[#161718] text-[#27a644] border border-[#27a644]/30">
+                      {selectedItem.category}
                     </span>
-                    <p className="text-[#8b949e]">
-                      Ao completar os 4 nós de Nível 1 (<code className="text-[#e3b341]">AUTO_2</code>, <code className="text-[#e3b341]">AGRO_2</code>, <code className="text-[#e3b341]">SYS_2</code>, <code className="text-[#e3b341]">SCALE_2</code>), a primeira <em>World Change</em> é ativada no mundo: exatamente <strong>1 bloco da grade</strong> se torna o Bloco Dourado de Prestígio. Ele é indestrutível, imune a limpezas de mundo (<code className="text-[#e3b341]">clear()</code>) e se reposiciona automaticamente para o centro do mundo em expansões de mapa.
-                    </p>
+                    <span className="text-xs font-mono text-[#8a8f98]">
+                      Namespace: <code className="text-[#ffffff]">{selectedItem.namespace}</code>
+                    </span>
                   </div>
+
+                  <h2 className="text-xl font-bold font-mono text-[#ffffff] mt-1.5 flex items-center gap-2">
+                    {selectedItem.displayText}
+                  </h2>
                 </div>
 
-                <div className="bg-[#010409] p-4 rounded-xl border border-[#30363d] space-y-2">
-                  <div className="flex items-center gap-2 font-bold text-xs text-[#d29922]">
-                    <Grid className="w-4 h-4 text-[#d29922]" />
-                    1. Preparo do Solo (Arado vs. Natural)
-                  </div>
-                  <p className="text-xs text-[#c9d1d9] leading-relaxed">
-                    Plantas em solo <strong>Arado (<code className="text-[#d29922]">farm.till()</code>)</strong> crescem significativamente mais rápido (<strong>duplica a taxa base de Raízes Cultivadas</strong>) em comparação com solo natural não preparado. Arar o solo é o fator principal para otimizar sua fazenda.
-                  </p>
-                </div>
+                {/* Status Badge & Research Navigation */}
+                <div className="flex items-center gap-2">
+                  <span className={`px-2.5 py-1 rounded text-xs font-mono font-bold flex items-center gap-1.5 border ${
+                    selectedUnlocked 
+                      ? 'bg-[#27a644]/15 text-[#27a644] border-[#27a644]/30' 
+                      : 'bg-[#d29922]/15 text-[#d29922] border-[#d29922]/30'
+                  }`}>
+                    {selectedUnlocked ? (
+                      <>
+                        <CheckCircle2 className="w-3.5 h-3.5 text-[#27a644]" />
+                        <span>DESBLOQUEADO</span>
+                      </>
+                    ) : (
+                      <>
+                        <Lock className="w-3.5 h-3.5 text-[#d29922]" />
+                        <span>BLOQUEADO</span>
+                      </>
+                    )}
+                  </span>
 
-                <div className="bg-[#010409] p-4 rounded-xl border border-[#30363d] space-y-2">
-                  <div className="flex items-center gap-2 font-bold text-xs text-[#58a6ff]">
-                    <Compass className="w-4 h-4 text-[#58a6ff]" />
-                    2. Irrigação, Umidade e Combinação com Arado (Till)
-                  </div>
-                  <p className="text-xs text-[#c9d1d9] leading-relaxed">
-                    <strong>Combinação de Arado e Irrigação:</strong> Os comandos <code className="text-[#d29922] font-mono">farm.till()</code> e <code className="text-[#58a6ff] font-mono">farm.water()</code> <strong>se combinam perfeitamente</strong>! O arado define a preparação do solo para duplicar a taxa base de crescimento de Raízes Cultivadas, enquanto a irrigação eleva a umidade do solo para 100% (<code className="text-[#58a6ff] font-mono">moisture = 1.0</code>) para aplicar o acelerador de velocidade (+60%). Um solo arado e irrigado atinge a máxima produtividade possível do jogo.
-                  </p>
-                </div>
-
-                <div className="bg-[#010409] p-4 rounded-xl border border-[#30363d] space-y-2">
-                  <div className="flex items-center gap-2 font-bold text-xs text-[#38d430]">
-                    <Droplets className="w-4 h-4 text-[#38d430]" />
-                    3. Consumo de Umidade e Evaporação Natural
-                  </div>
-                  <p className="text-xs text-[#c9d1d9] leading-relaxed">
-                    • <strong>Absorção pelas Plantas:</strong> Durante o crescimento, a cultura absorve água do bloco (-0,3% de umidade/tick).<br/>
-                    • <strong>Evaporação Natural:</strong> Solo desprovido de cultura e com alta umidade (&gt; 50%) evapora água gradualmente (-0,1%/tick).<br/>
-                    • <strong>Consumo na Colheita:</strong> Colher uma planta consume imediatamente 25% (0,25) da umidade do bloco.
-                  </p>
-                </div>
-
-                <div className="bg-[#010409] p-4 rounded-xl border border-[#30363d] space-y-2">
-                  <div className="flex items-center gap-2 font-bold text-xs text-[#e3b341]">
-                    <RefreshCw className="w-4 h-4 text-[#e3b341]" />
-                    4. Reversão Dinâmica do Solo Irrigado
-                  </div>
-                  <p className="text-xs text-[#c9d1d9] leading-relaxed">
-                    Quando a umidade de um bloco irrigado diminui para <strong>&le; 25% (0.25)</strong> — seja por absorção do crescimento, evaporação ou colheita —, o solo perde o estado Irrigado (<code className="text-[#58a6ff] font-mono">IRRIGATED</code>) e <strong>reverte automaticamente para Solo Natural (<code className="text-[#3fb950] font-mono">NATURAL</code>)</strong>. Para mantê-lo irrigado, regue periodicamente com <code className="text-[#58a6ff] font-mono">farm.water()</code>.
-                  </p>
-                </div>
-
-                <div className="bg-[#010409] p-4 rounded-xl border border-[#388bfd]/50 space-y-2">
-                  <div className="flex items-center gap-2 font-bold text-xs text-[#58a6ff]">
-                    <Droplets className="w-4 h-4 text-[#58a6ff]" />
-                    5. Solo Encharcado (SOAKED) e Perda de Cultura
-                  </div>
-                  <p className="text-xs text-[#c9d1d9] leading-relaxed">
-                    <AlertTriangle className="w-3.5 h-3.5 text-[#eb5757] inline mr-1" /> <strong>Cuidado com o excesso de água!</strong> Regar um bloco que já possui <strong>&gt; 95% de umidade</strong> eleva o nível para <strong>110% (1.10)</strong> e altera o solo para <strong>Encharcado (<code className="text-[#58a6ff] font-mono">SOAKED</code>)</strong>.<br/>
-                    • <strong>Efeito Destrutivo:</strong> Destrói a cultura atual imediatamente (<code className="text-[#f85149] font-mono">crop = NONE</code>).<br/>
-                    • <strong>Bloqueio de Plantio:</strong> Tentar plantar com <code className="text-[#58a6ff] font-mono">farm.plant()</code> em solo encharcado resultará em falha.<br/>
-                    • <strong>Recuperação:</strong> É necessário aguardar a evaporação dos ticks até a umidade cair para &le; 100% (<code className="text-[#58a6ff] font-mono">IRRIGATED</code>) para voltar a cultivar.
-                  </p>
-                </div>
-
-                <div className="bg-[#010409] p-4 rounded-xl border border-[#bc8cff]/50 space-y-2">
-                  <div className="flex items-center gap-2 font-bold text-xs text-[#bc8cff]">
-                    <Bot className="w-4 h-4 text-[#bc8cff]" />
-                    6. Agente Principal e Execução Instantânea
-                  </div>
-                  <p className="text-xs text-[#c9d1d9] leading-relaxed">
-                    <Star className="w-3.5 h-3.5 text-[#e3b341] fill-[#e3b341] inline shrink-0 mr-1" /> <strong>Execução direta pelo Explorador:</strong> Na lista de arquivos do Explorador, o botão <strong>PLAY</strong> executa o script diretamente no <strong>Agente Principal</strong>.<br/>
-                    • O Agente Principal atual é indicado com um ícone de estrela.<br/>
-                    • Alterne qual agente é o Principal na aba <strong>Agentes</strong> a qualquer momento.<br/>
-                    • <strong>Rastreamento do Agente no Painel INFO:</strong> Na janela de informações do bloco (canto inferior direito do visualizador 3D), alterne o botão <strong>Seguir: ON/OFF</strong> para que o inspetor acompanhe a posição do Agente Principal em tempo real. Clicar em qualquer bloco fixa a inspeção naquele bloco.
-                  </p>
-                </div>
-
-              </div>
-
-              {/* Comprehensive Crops, Soil & Adjacency Reference Table/Cards */}
-              <div className="border-t border-[#30363d] pt-5 space-y-4">
-                <div className="flex items-center justify-between">
-                  <h3 className="font-bold text-sm text-[#f0f6fc] flex items-center gap-2">
-                    <Sprout className="w-4 h-4 text-[#3fb950]" />
-                    Guia Detalhado de Culturas, Solo, Umidade e Adjacências
-                  </h3>
-                  <span className="text-[11px] font-mono text-[#8b949e]">7 Culturas Agrícolas</span>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-
-                  {/* WILD_FIBER */}
-                  <div className="bg-[#010409] p-4 rounded-xl border border-[#30363d] space-y-2.5">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2 font-bold text-xs text-[#e4f222]">
-                        <Wheat className="w-4 h-4 text-[#e4f222]" />
-                        <span>Fibra Selvagem</span>
-                        <code className="text-[10px] text-[#8b949e] font-mono">"WILD_FIBER"</code>
-                      </div>
-                      <span className="text-[10px] bg-[#e4f222]/15 text-[#e4f222] border border-[#e4f222]/30 px-2 py-0.5 rounded font-mono font-semibold">
-                        Base: 5%/tick
-                      </span>
-                    </div>
-                    <p className="text-xs text-[#c9d1d9] leading-relaxed">
-                      Cultura silvestre inicial. Rebrota de forma espontânea e natural em qualquer solo não plantado (<code className="text-[#e4f222] font-mono">crop = "NONE"</code>).
-                    </p>
-                    <div className="grid grid-cols-3 gap-2 text-[11px] font-mono bg-[#0d1117] p-2 rounded border border-[#30363d]">
-                      <div>
-                        <span className="text-[#8b949e] block text-[9px] uppercase font-sans font-bold">Solo:</span>
-                        <span className="text-[#f0f6fc]">Qualquer</span>
-                      </div>
-                      <div>
-                        <span className="text-[#8b949e] block text-[9px] uppercase font-sans font-bold">Umidade:</span>
-                        <span className="text-[#58a6ff]">&gt; 25%</span>
-                      </div>
-                      <div>
-                        <span className="text-[#8b949e] block text-[9px] uppercase font-sans font-bold">Adjacência:</span>
-                        <span className="text-[#27a644]">Livre</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* WOODY_BUSH */}
-                  <div className="bg-[#010409] p-4 rounded-xl border border-[#30363d] space-y-2.5">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2 font-bold text-xs text-[#27a644]">
-                        <TreePine className="w-4 h-4 text-[#27a644]" />
-                        <span>Arbusto de Madeira</span>
-                        <code className="text-[10px] text-[#8b949e] font-mono">"WOODY_BUSH"</code>
-                      </div>
-                      <span className="text-[10px] bg-[#27a644]/15 text-[#27a644] border border-[#27a644]/30 px-2 py-0.5 rounded font-mono font-semibold">
-                        Base: 3%/tick
-                      </span>
-                    </div>
-                    <p className="text-xs text-[#c9d1d9] leading-relaxed">
-                      Planta lenhosa resistente. Excelente fonte primária de madeira para construção e pesquisas Nível 2+.
-                    </p>
-                    <div className="grid grid-cols-3 gap-2 text-[11px] font-mono bg-[#0d1117] p-2 rounded border border-[#30363d]">
-                      <div>
-                        <span className="text-[#8b949e] block text-[9px] uppercase font-sans font-bold">Solo:</span>
-                        <span className="text-[#f0f6fc]">Qualquer</span>
-                      </div>
-                      <div>
-                        <span className="text-[#8b949e] block text-[9px] uppercase font-sans font-bold">Umidade:</span>
-                        <span className="text-[#58a6ff]">&gt; 25%</span>
-                      </div>
-                      <div>
-                        <span className="text-[#8b949e] block text-[9px] uppercase font-sans font-bold">Adjacência:</span>
-                        <span className="text-[#27a644]">Livre</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* CULTIVATED_ROOT */}
-                  <div className="bg-[#010409] p-4 rounded-xl border border-[#30363d] space-y-2.5">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2 font-bold text-xs text-[#f97316]">
-                        <Sprout className="w-4 h-4 text-[#f97316]" />
-                        <span>Raízes Cultivadas</span>
-                        <code className="text-[10px] text-[#8b949e] font-mono">"CULTIVATED_ROOT"</code>
-                      </div>
-                      <span className="text-[10px] bg-[#f97316]/15 text-[#f97316] border border-[#f97316]/30 px-2 py-0.5 rounded font-mono font-semibold">
-                        Base: 4%/tick (Arado)
-                      </span>
-                    </div>
-                    <p className="text-xs text-[#c9d1d9] leading-relaxed">
-                      Exige preparação do terreno. Cresce <strong>duas vezes mais rápido (4%/tick)</strong> em solo Arado (<code className="text-[#f97316] font-mono">farm.till()</code>) do que em solo natural.
-                    </p>
-                    <div className="grid grid-cols-3 gap-2 text-[11px] font-mono bg-[#0d1117] p-2 rounded border border-[#30363d]">
-                      <div>
-                        <span className="text-[#8b949e] block text-[9px] uppercase font-sans font-bold">Solo Ideal:</span>
-                        <span className="text-[#f97316]">Arado (TILLED)</span>
-                      </div>
-                      <div>
-                        <span className="text-[#8b949e] block text-[9px] uppercase font-sans font-bold">Umidade:</span>
-                        <span className="text-[#58a6ff]">&gt; 25%</span>
-                      </div>
-                      <div>
-                        <span className="text-[#8b949e] block text-[9px] uppercase font-sans font-bold">Adjacência:</span>
-                        <span className="text-[#27a644]">Livre</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* TREE */}
-                  <div className="bg-[#010409] p-4 rounded-xl border border-[#30363d] space-y-2.5">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2 font-bold text-xs text-[#a16207]">
-                        <TreePine className="w-4 h-4 text-[#a16207]" />
-                        <span>Árvore (Madeira Nobre)</span>
-                        <code className="text-[10px] text-[#8b949e] font-mono">"TREE"</code>
-                      </div>
-                      <span className="text-[10px] bg-[#a16207]/15 text-[#a16207] border border-[#a16207]/30 px-2 py-0.5 rounded font-mono font-semibold">
-                        Base: 2%/tick (Xadrez)
-                      </span>
-                    </div>
-                    <p className="text-xs text-[#c9d1d9] leading-relaxed">
-                      Possui regra de vizinhança: se houver outra árvore em um bloco adjacente (N, S, L, O), a taxa cai pela metade (1%/tick). Plante em <strong>padrão xadrez (padrão intercalado)</strong> para evitar competição por recursos.
-                    </p>
-                    <div className="grid grid-cols-3 gap-2 text-[11px] font-mono bg-[#0d1117] p-2 rounded border border-[#30363d]">
-                      <div>
-                        <span className="text-[#8b949e] block text-[9px] uppercase font-sans font-bold">Solo:</span>
-                        <span className="text-[#f0f6fc]">Natural / Irrigado</span>
-                      </div>
-                      <div>
-                        <span className="text-[#8b949e] block text-[9px] uppercase font-sans font-bold">Umidade:</span>
-                        <span className="text-[#58a6ff]">&gt; 25%</span>
-                      </div>
-                      <div>
-                        <span className="text-[#8b949e] block text-[9px] uppercase font-sans font-bold">Adjacência:</span>
-                        <span className="text-[#eb5757]">Evitar Vizinho</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* FRUIT_COLONY */}
-                  <div className="bg-[#010409] p-4 rounded-xl border border-[#30363d] space-y-2.5">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2 font-bold text-xs text-[#eb5757]">
-                        <Apple className="w-4 h-4 text-[#eb5757]" />
-                        <span>Colônia de Frutas</span>
-                        <code className="text-[10px] text-[#8b949e] font-mono">"FRUIT_COLONY"</code>
-                      </div>
-                      <span className="text-[10px] bg-[#eb5757]/15 text-[#eb5757] border border-[#eb5757]/30 px-2 py-0.5 rounded font-mono font-semibold">
-                        Delicada (Umidade &ge; 75%)
-                      </span>
-                    </div>
-                    <p className="text-xs text-[#c9d1d9] leading-relaxed">
-                      Cultura de alta irrigação. Requer umidade alta (&ge; 75%) para crescer. Formar agrupamentos contínuos de frutas maduras gera multiplicadores na colheita.
-                    </p>
-                    <div className="grid grid-cols-3 gap-2 text-[11px] font-mono bg-[#0d1117] p-2 rounded border border-[#30363d]">
-                      <div>
-                        <span className="text-[#8b949e] block text-[9px] uppercase font-sans font-bold">Solo:</span>
-                        <span className="text-[#58a6ff]">Irrigado (water)</span>
-                      </div>
-                      <div>
-                        <span className="text-[#8b949e] block text-[9px] uppercase font-sans font-bold">Umidade Min:</span>
-                        <span className="text-[#eb5757] font-bold">&ge; 75%</span>
-                      </div>
-                      <div>
-                        <span className="text-[#8b949e] block text-[9px] uppercase font-sans font-bold">Adjacência:</span>
-                        <span className="text-[#27a644]">Colônias</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* ENERGY_FLOWER */}
-                  <div className="bg-[#010409] p-4 rounded-xl border border-[#30363d] space-y-2.5">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2 font-bold text-[#02b8cc] text-xs">
-                        <Zap className="w-4 h-4 text-[#02b8cc]" />
-                        <span>Flor de Energia</span>
-                        <code className="text-[10px] text-[#8b949e] font-mono">"ENERGY_FLOWER"</code>
-                      </div>
-                      <span className="text-[10px] bg-[#02b8cc]/15 text-[#02b8cc] border border-[#02b8cc]/30 px-2 py-0.5 rounded font-mono font-semibold">
-                        Delicada (Umidade &ge; 75%)
-                      </span>
-                    </div>
-                    <p className="text-xs text-[#c9d1d9] leading-relaxed">
-                      Gera energia elétrica. Requer umidade alta (&ge; 75%). Utilize <code className="text-[#02b8cc] font-mono">world.measure()</code> para ler o acúmulo de energia e colher no valor de pico (&gt; 50).
-                    </p>
-                    <div className="grid grid-cols-3 gap-2 text-[11px] font-mono bg-[#0d1117] p-2 rounded border border-[#30363d]">
-                      <div>
-                        <span className="text-[#8b949e] block text-[9px] uppercase font-sans font-bold">Solo:</span>
-                        <span className="text-[#58a6ff]">Irrigado (water)</span>
-                      </div>
-                      <div>
-                        <span className="text-[#8b949e] block text-[9px] uppercase font-sans font-bold">Umidade Min:</span>
-                        <span className="text-[#eb5757] font-bold">&ge; 75%</span>
-                      </div>
-                      <div>
-                        <span className="text-[#8b949e] block text-[9px] uppercase font-sans font-bold">Sensor:</span>
-                        <span className="text-[#02b8cc]">measure()</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* GRADED_PLANT */}
-                  <div className="bg-[#010409] p-4 rounded-xl border border-[#30363d] space-y-2.5 md:col-span-2">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2 font-bold text-xs text-[#8b5cf6]">
-                        <Cpu className="w-4 h-4 text-[#8b5cf6]" />
-                        <span>Planta Graduada (Ordenação de Biomassa)</span>
-                        <code className="text-[10px] text-[#8b949e] font-mono">"GRADED_PLANT"</code>
-                      </div>
-                      <span className="text-[10px] bg-[#8b5cf6]/15 text-[#8b5cf6] border border-[#8b5cf6]/30 px-2 py-0.5 rounded font-mono font-semibold">
-                        Delicada (Umidade &ge; 75%)
-                      </span>
-                    </div>
-                    <p className="text-xs text-[#c9d1d9] leading-relaxed">
-                      Cultura avançada para algoritmos de ordenação (ex: Bubble Sort). Cada planta possui um grau numérico lido via <code className="text-[#58a6ff] font-mono">world.measure()</code>. Troque posições com blocos vizinhos via <code className="text-[#bc8cff] font-mono">farm.swap("RIGHT")</code> para criar sequências ordenadas e maximizar a biomassa gerada.
-                    </p>
-                    <div className="grid grid-cols-4 gap-2 text-[11px] font-mono bg-[#0d1117] p-2 rounded border border-[#30363d]">
-                      <div>
-                        <span className="text-[#8b949e] block text-[9px] uppercase font-sans font-bold">Solo:</span>
-                        <span className="text-[#58a6ff]">Irrigado</span>
-                      </div>
-                      <div>
-                        <span className="text-[#8b949e] block text-[9px] uppercase font-sans font-bold">Umidade:</span>
-                        <span className="text-[#f85149] font-bold">&ge; 75%</span>
-                      </div>
-                      <div>
-                        <span className="text-[#8b949e] block text-[9px] uppercase font-sans font-bold">Troca de Posição:</span>
-                        <span className="text-[#bc8cff]">farm.swap()</span>
-                      </div>
-                      <div>
-                        <span className="text-[#8b949e] block text-[9px] uppercase font-sans font-bold">Ação Especial:</span>
-                        <span className="text-[#e3b341]">Bubble Sort</span>
-                      </div>
-                    </div>
-                  </div>
-
+                  {selectedTechNode && onNavigateToTab && !selectedUnlocked && (
+                    <button
+                      onClick={() => onNavigateToTab('research')}
+                      className="px-2.5 py-1 bg-[#161718] hover:bg-[#23252a] text-[#27a644] border border-[#27a644]/40 rounded text-xs font-medium transition-all flex items-center gap-1"
+                      title="Ir para Árvore de Pesquisa"
+                    >
+                      <span>Pesquisar {selectedTechNode.id}</span>
+                      <ArrowRight className="w-3 h-3" />
+                    </button>
+                  )}
                 </div>
               </div>
 
-              {/* Example Python Code Snippet */}
-              <div className="bg-[#010409] border border-[#30363d] rounded-xl p-4 space-y-2">
-                <div className="flex items-center justify-between text-xs font-mono font-bold text-[#8b949e]">
-                  <span>Exemplo de Loop Inteligente de Colheita (Python)</span>
-                  <button 
-                    onClick={() => copyCode('while True:\n    if world.get_growth() == 100:\n        farm.harvest()\n    elif world.get_growth() == 0:\n        farm.plant("CORN")\n    farm.move()')}
-                    className="flex items-center gap-1 text-[#3fb950] hover:underline text-[11px]"
-                  >
-                    <Copy className="w-3.5 h-3.5" />
-                    Copiar
-                  </button>
-                </div>
-                <pre className="bg-[#0d1117] p-3 rounded text-xs font-mono text-[#3fb950] overflow-x-auto leading-relaxed border border-[#30363d]">
-{`# Colhe apenas com 100% de crescimento
-if farm.can_harvest():
-    farm.harvest()
-elif world.get_growth() < 100 and world.get_crop() != "NONE":
-    # Aguarda o crescimento completo sem gastar sementes
-    pass`}
-                </pre>
+              {/* Languages Tag & Description summary */}
+              <div className="flex items-center justify-between text-xs text-[#a0a6b0]">
+                <span>Suporte a Linguagens: <strong className="text-[#ffffff] font-mono">Python 3</strong> & <strong className="text-[#ffffff] font-mono">JavaScript ES6+</strong></span>
+                {selectedTechNode && (
+                  <span className="font-mono text-[11px] text-[#8a8f98]">Requisito: {selectedTechNode.name} ({selectedTechNode.id})</span>
+                )}
               </div>
-
             </div>
+
+            {/* PILAR: DESCRIÇÃO DIDÁTICA */}
+            <div className="space-y-2">
+              <h3 className="text-xs font-bold font-mono text-[#27a644] uppercase tracking-wider flex items-center gap-1.5">
+                <FileText className="w-4 h-4 text-[#27a644]" />
+                Descrição Didática
+              </h3>
+              <div className="p-3.5 bg-[#161718] border border-[#23252a] rounded-[8px] text-xs text-[#d0d6e0] leading-relaxed">
+                <p className="mb-2 font-sans">{selectedItem.description}</p>
+                <p className="font-sans text-[#a0a6b0]">{selectedItem.docDetail}</p>
+              </div>
+            </div>
+
+            {/* PILAR: DECLARAÇÃO DA FUNÇÃO / SINTAXE (Somente se houver sintaxe válida) */}
+            {((selectedItem.pythonSnippet && selectedItem.pythonSnippet.trim().length > 0) || 
+              (selectedItem.jsSnippet && selectedItem.jsSnippet.trim().length > 0)) && (
+              <div className="space-y-2">
+                <h3 className="text-xs font-bold font-mono text-[#02b8cc] uppercase tracking-wider flex items-center gap-1.5">
+                  <Code className="w-4 h-4 text-[#02b8cc]" />
+                  Declaração e Assinatura do Método
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  
+                  {/* Python Signature */}
+                  {selectedItem.pythonSnippet && (
+                    <div className="p-3 bg-[#08090a] border border-[#23252a] rounded-[8px] space-y-1.5">
+                      <div className="flex items-center justify-between text-[11px] font-mono font-bold text-[#02b8cc]">
+                        <span>Sintaxe Python</span>
+                        <span className="text-[10px] text-[#8a8f98]">.py</span>
+                      </div>
+                      <pre className="p-2 bg-[#161718] rounded border border-[#23252a] text-xs font-mono text-[#ffffff] overflow-x-auto">
+                        <code>{selectedItem.pythonSnippet}</code>
+                      </pre>
+                    </div>
+                  )}
+
+                  {/* JS Signature */}
+                  {selectedItem.jsSnippet && (
+                    <div className="p-3 bg-[#08090a] border border-[#23252a] rounded-[8px] space-y-1.5">
+                      <div className="flex items-center justify-between text-[11px] font-mono font-bold text-[#eab308]">
+                        <span>Sintaxe JavaScript</span>
+                        <span className="text-[10px] text-[#8a8f98]">.js</span>
+                      </div>
+                      <pre className="p-2 bg-[#161718] rounded border border-[#23252a] text-xs font-mono text-[#ffffff] overflow-x-auto">
+                        <code>{selectedItem.jsSnippet}</code>
+                      </pre>
+                    </div>
+                  )}
+
+                </div>
+              </div>
+            )}
+
+            {/* PILAR: PARÂMETROS E TIPOS (Somente se houver parâmetros definidos) */}
+            {selectedItem.parameters && selectedItem.parameters.length > 0 && (
+              <div className="space-y-2">
+                <h3 className="text-xs font-bold font-mono text-[#eab308] uppercase tracking-wider flex items-center gap-1.5">
+                  <Layers className="w-4 h-4 text-[#eab308]" />
+                  Parâmetros e Tipos de Entrada
+                </h3>
+
+                <div className="overflow-x-auto border border-[#23252a] rounded-[8px] bg-[#161718]">
+                  <table className="w-full text-left border-collapse text-xs">
+                    <thead>
+                      <tr className="bg-[#08090a] border-b border-[#23252a] text-[#8a8f98] font-mono text-[11px]">
+                        <th className="p-2.5 font-bold">Parâmetro</th>
+                        <th className="p-2.5 font-bold">Tipo</th>
+                        <th className="p-2.5 font-bold">Obrigatório</th>
+                        <th className="p-2.5 font-bold">Valores Aceitos</th>
+                        <th className="p-2.5 font-bold">Descrição</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[#23252a] text-[#d0d6e0] font-sans">
+                      {selectedItem.parameters.map((param, i) => (
+                        <tr key={i} className="hover:bg-[#08090a]/50">
+                          <td className="p-2.5 font-mono font-bold text-[#ffffff]">{param.name}</td>
+                          <td className="p-2.5 font-mono text-[#02b8cc]">{param.type}</td>
+                          <td className="p-2.5 font-mono">
+                            <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${param.required ? 'bg-[#eb5757]/15 text-[#eb5757]' : 'bg-[#8a8f98]/15 text-[#8a8f98]'}`}>
+                              {param.required ? 'SIM' : 'OPCIONAL'}
+                            </span>
+                          </td>
+                          <td className="p-2.5 font-mono text-[11px] text-[#eab308]">
+                            {param.allowedValues ? param.allowedValues.join(', ') : 'Qualquer valor válido'}
+                          </td>
+                          <td className="p-2.5 text-[#a0a6b0]">{param.description}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {/* PILAR: RETORNO E SAÍDA ESPERADA (Somente se houver retorno definido) */}
+            {selectedItem.returns && selectedItem.returns.type !== 'conceito' && (
+              <div className="space-y-2">
+                <h3 className="text-xs font-bold font-mono text-[#ec4899] uppercase tracking-wider flex items-center gap-1.5">
+                  <Zap className="w-4 h-4 text-[#ec4899]" />
+                  Retorno e Saída Esperada
+                </h3>
+                <div className="p-3.5 bg-[#161718] border border-[#23252a] rounded-[8px] space-y-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-mono font-bold text-[#ffffff]">Tipo do Retorno:</span>
+                    <span className="px-2 py-0.5 bg-[#ec4899]/15 text-[#ec4899] border border-[#ec4899]/30 rounded font-mono text-xs font-bold">
+                      {selectedItem.returns.type}
+                    </span>
+                  </div>
+                  <p className="text-xs text-[#d0d6e0] font-sans leading-relaxed">
+                    <strong>Efeito no Mundo:</strong> {selectedItem.returns.description}
+                  </p>
+                  {selectedItem.expectedOutput && (
+                    <div className="p-2 bg-[#08090a] rounded border border-[#23252a] text-[11px] font-mono text-[#27a644]">
+                      Resultado em tela: {selectedItem.expectedOutput}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* PILAR: USABILIDADE E CASOS DE USO (Somente se houver notas) */}
+            {selectedItem.usabilityNotes && selectedItem.usabilityNotes.length > 0 && (
+              <div className="space-y-2">
+                <h3 className="text-xs font-bold font-mono text-[#8b5cf6] uppercase tracking-wider flex items-center gap-1.5">
+                  <Sparkles className="w-4 h-4 text-[#8b5cf6]" />
+                  Usabilidade & Casos de Uso Práticos
+                </h3>
+                <div className="p-3.5 bg-[#161718] border border-[#23252a] rounded-[8px] space-y-1.5">
+                  <ul className="list-disc list-inside text-xs text-[#d0d6e0] space-y-1.5 font-sans leading-relaxed">
+                    {selectedItem.usabilityNotes.map((note, i) => (
+                      <li key={i} className="leading-snug">{note}</li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            )}
+
+            {/* PILAR: EXEMPLO PRÁTICO EXECUTÁVEL (Somente se houver código de exemplo) */}
+            {selectedItem.exampleCode && selectedItem.exampleCode.trim().length > 0 && (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xs font-bold font-mono text-[#27a644] uppercase tracking-wider flex items-center gap-1.5">
+                    <Terminal className="w-4 h-4 text-[#27a644]" />
+                    Exemplo Prático de Script
+                  </h3>
+
+                  {/* Code Language Switcher */}
+                  <div className="flex items-center gap-1 bg-[#08090a] border border-[#23252a] p-0.5 rounded">
+                    <button
+                      onClick={() => setActiveCodeLang('python')}
+                      className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold transition-all ${
+                        activeCodeLang === 'python' ? 'bg-[#27a644] text-white' : 'text-[#8a8f98] hover:text-[#ffffff]'
+                      }`}
+                    >
+                      Python
+                    </button>
+                    <button
+                      onClick={() => setActiveCodeLang('javascript')}
+                      className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold transition-all ${
+                        activeCodeLang === 'javascript' ? 'bg-[#eab308] text-black' : 'text-[#8a8f98] hover:text-[#ffffff]'
+                      }`}
+                    >
+                      JavaScript
+                    </button>
+                  </div>
+                </div>
+
+                <div className="p-3 bg-[#08090a] border border-[#23252a] rounded-[8px] relative group space-y-2">
+                  <div className="flex items-center justify-between border-b border-[#23252a] pb-2 text-[11px] font-mono text-[#8a8f98]">
+                    <span>Script Prático ({activeCodeLang === 'python' ? 'Python' : 'JavaScript'})</span>
+                    <button 
+                      onClick={() => copyCode(selectedItem.exampleCode)}
+                      className="flex items-center gap-1 px-2 py-1 bg-[#161718] hover:bg-[#23252a] text-[#ffffff] rounded border border-[#23252a] text-xs transition-all active:scale-95"
+                      title="Copiar código para o clipboard"
+                    >
+                      {copiedSnippet === selectedItem.exampleCode ? (
+                        <>
+                          <Check className="w-3.5 h-3.5 text-[#27a644]" />
+                          <span className="text-[#27a644]">Copiado!</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-3.5 h-3.5 text-[#8a8f98]" />
+                          <span>Copiar Código</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+
+                  <pre className="p-3 bg-[#161718] rounded border border-[#23252a] text-xs font-mono text-[#27a644] leading-relaxed overflow-x-auto">
+                    <code>
+                      {activeCodeLang === 'python' 
+                        ? selectedItem.exampleCode 
+                        : selectedItem.exampleCode.replace(/def /g, 'function ').replace(/:/g, ' {').replace(/pass/g, '// ...')}
+                    </code>
+                  </pre>
+                </div>
+              </div>
+            )}
+
+            {/* PILAR: VÍNCULO NA ÁRVORE DE TECNOLOGIAS */}
+            {selectedTechNode && (
+              <div className="space-y-2 pt-2 border-t border-[#23252a]">
+                <h3 className="text-xs font-bold font-mono text-[#8a8f98] uppercase tracking-wider flex items-center gap-1.5">
+                  <FlaskConical className="w-4 h-4 text-[#27a644]" />
+                  Vínculo na Árvore de Tecnologias
+                </h3>
+
+                <div className="p-3.5 bg-[#161718] border border-[#23252a] rounded-[8px] flex flex-col md:flex-row md:items-center justify-between gap-3">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-xs text-[#ffffff] font-mono">{selectedTechNode.name}</span>
+                      <span className="text-[10px] font-mono text-[#8a8f98]">({selectedTechNode.id})</span>
+                      <span className="px-1.5 py-0.2 rounded text-[10px] font-mono bg-[#08090a] border border-[#23252a] text-[#27a644]">
+                        Nível {selectedTechNode.tier}
+                      </span>
+                    </div>
+                    <p className="text-xs text-[#a0a6b0] font-sans">{selectedTechNode.description}</p>
+                  </div>
+
+                  {onNavigateToTab && (
+                    <button
+                      onClick={() => onNavigateToTab('research')}
+                      className="px-3 py-1.5 bg-[#238636] hover:bg-[#2ea043] text-white rounded text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm shrink-0 border border-[#3fb950]/30 active:scale-95"
+                    >
+                      <FlaskConical className="w-3.5 h-3.5" />
+                      <span>Ir para Pesquisa ({selectedTechNode.id})</span>
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+
           </div>
-        )}
+
+        </div>
 
       </div>
     </div>
