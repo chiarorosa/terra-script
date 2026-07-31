@@ -8,10 +8,22 @@ export interface ChangelogRelease {
 
 export const CHANGELOG_HISTORY: ChangelogRelease[] = [
   {
+    version: 'v2.4.1',
+    date: '2026-07-31',
+    title: 'Atualização de Guardrails, Atalho do Editor & Barra de Recursos Progressiva',
+    isCurrent: true,
+    changes: [
+      'Sincronização de Guardrails de Execução: Os interpretadores nativos (Pyodide Python WASM e JavaScript Sandbox) agora aplicam verificações de segurança via AST para garantir que tanto recursos da linguagem (if/else, loops, funções, variáveis) quanto comandos de API estejam bloqueados até a respectiva pesquisa na Árvore de Tecnologias.',
+      'Diretriz de Manutenção na Documentação: Adicionada nota arquitetural na documentação do sistema (techApiMap.ts) para revisão obrigatória dos guardrails em futuras expansões da Árvore de Pesquisas.',
+      'Execução via Atalho Ctrl/Cmd + Enter: O atalho de teclado executa o arquivo aberto sem inserir quebras de linha no código.',
+      'Exibição Progressiva da Barra de Recursos: Recursos e moedas agora aparecem na barra superior no exato instante em que a tecnologia associada é liberada na Árvore de Pesquisas.'
+    ]
+  },
+  {
     version: 'v2.4.0',
     date: '2026-07-31',
     title: 'UI Limpa, Revelação Progressiva & Onboarding Amigável para Iniciantes',
-    isCurrent: true,
+    isCurrent: false,
     changes: [
       'Sistema de Marcos do Jogador (Player Milestones Engine): Nova estrutura dedicada para salvar o progresso de conquistas do jogador (Primeira execução do script, desbloqueio de novo arquivo +, revelação da barra de Prestígio Nível 2 e destaques de onboarding).',
       'Pop-up de Boas-Vindas "Primeiros Passos" com Áudio: Modal em destaque na primeira visita com efeito sonoro alegre, apresentando os 3 passos fundamentais para colocar o primeiro Agente em ação.',

@@ -2,6 +2,77 @@ import * as acorn from 'acorn';
 import { GameEngine } from './GameEngine';
 
 export class JavaScriptSandbox {
+  public static checkJsGuardrails(node: any, engine: GameEngine): void {
+    if (!node || typeof node !== 'object') return;
+
+    switch (node.type) {
+      case 'IfStatement':
+      case 'ConditionalExpression': {
+        if (!engine.isTechUnlocked('AUTO_3')) {
+          throw new Error("Recurso 'Condicionais (if/else)' está bloqueado! Pesquise AUTO_3 na Árvore de Pesquisa.");
+        }
+        break;
+      }
+      case 'LogicalExpression': {
+        if (!engine.isTechUnlocked('AUTO_3')) {
+          throw new Error("Recurso 'Operadores Lógicos' está bloqueado! Pesquise AUTO_3 na Árvore de Pesquisa.");
+        }
+        break;
+      }
+      case 'UnaryExpression': {
+        if (node.operator === '!' && !engine.isTechUnlocked('AUTO_3')) {
+          throw new Error("Recurso 'Operadores Lógicos' está bloqueado! Pesquise AUTO_3 na Árvore de Pesquisa.");
+        }
+        break;
+      }
+      case 'WhileStatement':
+      case 'DoWhileStatement':
+      case 'ForStatement':
+      case 'ForInStatement':
+      case 'ForOfStatement': {
+        if (!engine.isTechUnlocked('AUTO_4')) {
+          throw new Error("Recurso 'Loops (while / for)' está bloqueado! Pesquise AUTO_4 na Árvore de Pesquisa.");
+        }
+        break;
+      }
+      case 'FunctionDeclaration':
+      case 'FunctionExpression':
+      case 'ArrowFunctionExpression': {
+        if (!engine.isTechUnlocked('AUTO_5')) {
+          throw new Error("Recurso 'Funções' está bloqueado! Pesquise AUTO_5 na Árvore de Pesquisa.");
+        }
+        break;
+      }
+      case 'VariableDeclaration':
+      case 'AssignmentExpression': {
+        if (!engine.isTechUnlocked('AUTO_2')) {
+          throw new Error("Recurso 'Variáveis & Operadores' está bloqueado! Pesquise AUTO_2 na Árvore de Pesquisa.");
+        }
+        break;
+      }
+      case 'BinaryExpression': {
+        if (['+', '-', '*', '/', '%'].includes(node.operator) && !engine.isTechUnlocked('AUTO_2')) {
+          throw new Error("Recurso 'Variáveis & Operadores' está bloqueado! Pesquise AUTO_2 na Árvore de Pesquisa.");
+        }
+        break;
+      }
+    }
+
+    for (const key of Object.keys(node)) {
+      if (key === 'loc' || key === 'range') continue;
+      const child = (node as any)[key];
+      if (Array.isArray(child)) {
+        for (const item of child) {
+          if (item && typeof item === 'object' && item.type) {
+            this.checkJsGuardrails(item, engine);
+          }
+        }
+      } else if (child && typeof child === 'object' && child.type) {
+        this.checkJsGuardrails(child, engine);
+      }
+    }
+  }
+
   public static instrumentJsToGenerator(code: string): string {
     let ast: any;
     try {
@@ -97,12 +168,41 @@ export class JavaScriptSandbox {
     engine: GameEngine,
     filePath: string
   ): { next: () => { done: boolean; value?: number } } {
+    // 1. AST Guardrails check for JS syntax
+    try {
+      const ast = acorn.parse(code, { ecmaVersion: 'latest', locations: true, allowReturnOutsideFunction: true });
+      this.checkJsGuardrails(ast, engine);
+    } catch (e: any) {
+      if (e?.message && e.message.includes('bloqueado')) {
+        throw e;
+      }
+    }
+
     const getAg = () => engine.getAgent(agentId);
 
     const farm = {
       plant: (crop = 'WILD_FIBER') => {
+        const upper = String(crop || 'WILD_FIBER').toUpperCase();
+        if ((upper.includes('BUSH') || upper.includes('WOODY') || upper === 'WOOD') && !engine.isTechUnlocked('AGRO_2')) {
+          throw new Error("Cultura 'Arbusto de Madeira' está bloqueada! Pesquise AGRO_2 na Árvore de Pesquisa.");
+        }
+        if ((upper.includes('ROOT') || upper.includes('CULTIVATED') || upper === 'CORN') && !engine.isTechUnlocked('AGRO_3')) {
+          throw new Error("Cultura 'Raízes Cultivadas' está bloqueada! Pesquise AGRO_3 na Árvore de Pesquisa.");
+        }
+        if ((upper.includes('TREE') || upper.includes('TIMBER')) && !engine.isTechUnlocked('AGRO_4')) {
+          throw new Error("Cultura 'Árvores & Madeira Nobre' está bloqueada! Pesquise AGRO_4 na Árvore de Pesquisa.");
+        }
+        if ((upper.includes('FRUIT') || upper.includes('BERRY')) && !engine.isTechUnlocked('AGRO_5')) {
+          throw new Error("Cultura 'Colônias de Frutas' está bloqueada! Pesquise AGRO_5 na Árvore de Pesquisa.");
+        }
+        if ((upper.includes('FLOWER') || upper.includes('ENERGY')) && !engine.isTechUnlocked('AGRO_6')) {
+          throw new Error("Cultura 'Flores Energéticas' está bloqueada! Pesquise AGRO_6 na Árvore de Pesquisa.");
+        }
+        if (upper.includes('GRADED') && !engine.isTechUnlocked('AGRO_7')) {
+          throw new Error("Cultura 'Culturas Graduadas' está bloqueada! Pesquise AGRO_7 na Árvore de Pesquisa.");
+        }
         if (!engine.isTechUnlocked('AGRO_1')) {
-          throw new Error("Recurso 'Fibra Selvagem' está bloqueado!");
+          throw new Error("Recurso 'Fibra Selvagem' está bloqueado! Pesquise AGRO_1 na Árvore de Pesquisa.");
         }
         const ag = getAg();
         return engine.plantCrop(agentId, ag?.x ?? 0, ag?.y ?? 0, crop);
@@ -121,21 +221,21 @@ export class JavaScriptSandbox {
       },
       water: () => {
         if (!engine.isTechUnlocked('AGRO_1')) {
-          throw new Error("Recurso 'Irrigação' está bloqueado!");
+          throw new Error("Recurso 'Irrigação' está bloqueado! Pesquise AGRO_1 na Árvore de Pesquisa.");
         }
         const ag = getAg();
         return engine.waterTile(agentId, ag?.x ?? 0, ag?.y ?? 0);
       },
       till: () => {
         if (!engine.isTechUnlocked('AGRO_3')) {
-          throw new Error("Recurso 'Solo Arado' está bloqueado!");
+          throw new Error("Recurso 'Solo Arado & Raízes Cultivadas' está bloqueado! Pesquise AGRO_3 na Árvore de Pesquisa.");
         }
         const ag = getAg();
         return engine.tillTile(agentId, ag?.x ?? 0, ag?.y ?? 0);
       },
       swap: (dir = 'RIGHT') => {
         if (!engine.isTechUnlocked('AGRO_7')) {
-          throw new Error("Recurso 'Swap' está bloqueado!");
+          throw new Error("Recurso 'Trocar Terrenos (Swap)' está bloqueado! Pesquise AGRO_7 na Árvore de Pesquisa.");
         }
         const ag = getAg();
         return engine.swapTiles(agentId, ag?.x ?? 0, ag?.y ?? 0, dir);
@@ -150,35 +250,49 @@ export class JavaScriptSandbox {
       }
     };
 
+    const checkSys2 = () => {
+      if (!engine.isTechUnlocked('SYS_2')) {
+        throw new Error("Recurso 'Sensores Básicos & Coordenadas' está bloqueado! Pesquise SYS_2 na Árvore de Pesquisa.");
+      }
+    };
+
     const world = {
       move: (dir = 'RIGHT') => engine.moveAgent(agentId, dir),
       canMove: (dir = 'RIGHT') => engine.canMoveAgent(agentId, dir),
       can_move: (dir = 'RIGHT') => engine.canMoveAgent(agentId, dir),
-      x: () => getAg()?.x ?? 0,
-      y: () => getAg()?.y ?? 0,
-      width: () => engine.getGridWidth(),
-      height: () => engine.getGridHeight(),
+      x: () => { checkSys2(); return getAg()?.x ?? 0; },
+      y: () => { checkSys2(); return getAg()?.y ?? 0; },
+      width: () => { checkSys2(); return engine.getGridWidth(); },
+      height: () => { checkSys2(); return engine.getGridHeight(); },
       ground: () => {
+        checkSys2();
         const ag = getAg();
         return engine.getTile(ag?.x ?? 0, ag?.y ?? 0).ground;
       },
       entity: () => {
+        checkSys2();
         const ag = getAg();
         return engine.getTile(ag?.x ?? 0, ag?.y ?? 0).crop;
       },
       crop: () => {
+        checkSys2();
         const ag = getAg();
         return engine.getTile(ag?.x ?? 0, ag?.y ?? 0).crop;
       },
       moisture: () => {
+        checkSys2();
         const ag = getAg();
         return engine.getTile(ag?.x ?? 0, ag?.y ?? 0).moisture;
       },
       growth: () => {
+        checkSys2();
         const ag = getAg();
         return engine.getTile(ag?.x ?? 0, ag?.y ?? 0).growth;
       },
       measure: () => {
+        if (!engine.isTechUnlocked('SYS_3')) {
+          throw new Error("Recurso 'Medição de Bloco' está bloqueado! Pesquise SYS_3 na Árvore de Pesquisa.");
+        }
         const ag = getAg();
         return engine.measureTile(ag?.x ?? 0, ag?.y ?? 0);
       },
@@ -197,19 +311,30 @@ export class JavaScriptSandbox {
     };
 
     const inventory = {
-      count: (item = 'fiber') => engine.getResourceCount(item)
+      count: (item = 'fiber') => {
+        if (!engine.isTechUnlocked('SYS_2')) {
+          throw new Error("Recurso 'Sensor de Inventário' está bloqueado! Pesquise SYS_2 na Árvore de Pesquisa.");
+        }
+        return engine.getResourceCount(item);
+      }
+    };
+
+    const checkSys4 = () => {
+      if (!engine.isTechUnlocked('SYS_4')) {
+        throw new Error("Recurso 'Telemetria & Estatísticas do Agente' está bloqueado! Pesquise SYS_4 na Árvore de Pesquisa.");
+      }
     };
 
     const sys = {
-      getAgentStats: () => engine.getAgentStats(agentId),
-      get_agent_stats: () => engine.getAgentStats(agentId),
-      getStats: () => engine.getAgentStats(agentId),
-      get_stats: () => engine.getAgentStats(agentId)
+      getAgentStats: () => { checkSys4(); return engine.getAgentStats(agentId); },
+      get_agent_stats: () => { checkSys4(); return engine.getAgentStats(agentId); },
+      getStats: () => { checkSys4(); return engine.getAgentStats(agentId); },
+      get_stats: () => { checkSys4(); return engine.getAgentStats(agentId); }
     };
 
     const agentObj = {
-      getStats: () => engine.getAgentStats(agentId),
-      get_stats: () => engine.getAgentStats(agentId)
+      getStats: () => { checkSys4(); return engine.getAgentStats(agentId); },
+      get_stats: () => { checkSys4(); return engine.getAgentStats(agentId); }
     };
 
     const customConsole = {

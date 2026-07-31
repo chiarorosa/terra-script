@@ -67,6 +67,15 @@ export interface ApiItem {
  *      documentação referente àquela pesquisa.
  *    - Para novos updates/pesquisas: basta declarar o novo `ApiItem` com o `techId` da pesquisa.
  * 
+ * 5. MANUTENÇÃO OBRIGATÓRIA DOS GUARDRAILS NOS INTERPRETADORES NATIVOS:
+ *    - Sempre que a Árvore de Pesquisas (`INITIAL_TECH_TREE`) for modificada ou novos nós/funcionalidades forem criados,
+ *      OS GUARDRAILS DE EXECUÇÃO DEVEM SER REVISADOS E ATUALIZADOS nos interpretadores nativos:
+ *        * `jsSandbox.ts` -> Método `checkJsGuardrails(ast, engine)` e ponte de objetos (`farm`, `world`, `sys`, `inventory`, `agent`).
+ *        * `pyodideLoader.ts` -> Classe Python AST `_GuardrailChecker` e ponte de objetos `jsBridge`.
+ *        * `ScriptRunner.ts` -> Métodos de fallback `evaluateStatement`, `handleConditional`, `handleWhileLoop`, etc.
+ *    - Regra essencial: NENHUMA funcionalidade da API ou recurso de linguagem (if/else, loops, funções, variáveis) pode ser
+ *      executado sem que a respectiva tecnologia esteja desbloqueada (`engine.isTechUnlocked(techId)`).
+ * 
  * =========================================================================
  */
 export const API_ITEM_TEMPLATE_SAMPLE: ApiItem = {

@@ -160,6 +160,76 @@ export class PyodideManager {
     const initScript = `
 import ast
 
+class _GuardrailChecker(ast.NodeVisitor):
+    def __init__(self, bridge):
+        self.bridge = bridge
+
+    def visit_If(self, node):
+        if not self.bridge.is_tech_unlocked('AUTO_3'):
+            raise Exception("Recurso 'Condicionais (if/else)' está bloqueado! Pesquise AUTO_3 na Árvore de Pesquisa.")
+        self.generic_visit(node)
+
+    def visit_IfExp(self, node):
+        if not self.bridge.is_tech_unlocked('AUTO_3'):
+            raise Exception("Recurso 'Condicionais (if/else)' está bloqueado! Pesquise AUTO_3 na Árvore de Pesquisa.")
+        self.generic_visit(node)
+
+    def visit_BoolOp(self, node):
+        if not self.bridge.is_tech_unlocked('AUTO_3'):
+            raise Exception("Recurso 'Operadores Lógicos' está bloqueado! Pesquise AUTO_3 na Árvore de Pesquisa.")
+        self.generic_visit(node)
+
+    def visit_UnaryOp(self, node):
+        if isinstance(node.op, ast.Not):
+            if not self.bridge.is_tech_unlocked('AUTO_3'):
+                raise Exception("Recurso 'Operadores Lógicos' está bloqueado! Pesquise AUTO_3 na Árvore de Pesquisa.")
+        self.generic_visit(node)
+
+    def visit_While(self, node):
+        if not self.bridge.is_tech_unlocked('AUTO_4'):
+            raise Exception("Recurso 'Loops (while / for)' está bloqueado! Pesquise AUTO_4 na Árvore de Pesquisa.")
+        self.generic_visit(node)
+
+    def visit_For(self, node):
+        if not self.bridge.is_tech_unlocked('AUTO_4'):
+            raise Exception("Recurso 'Loops (while / for)' está bloqueado! Pesquise AUTO_4 na Árvore de Pesquisa.")
+        self.generic_visit(node)
+
+    def visit_FunctionDef(self, node):
+        if not self.bridge.is_tech_unlocked('AUTO_5'):
+            raise Exception("Recurso 'Funções' está bloqueado! Pesquise AUTO_5 na Árvore de Pesquisa.")
+        self.generic_visit(node)
+
+    def visit_AsyncFunctionDef(self, node):
+        if not self.bridge.is_tech_unlocked('AUTO_5'):
+            raise Exception("Recurso 'Funções' está bloqueado! Pesquise AUTO_5 na Árvore de Pesquisa.")
+        self.generic_visit(node)
+
+    def visit_Lambda(self, node):
+        if not self.bridge.is_tech_unlocked('AUTO_5'):
+            raise Exception("Recurso 'Funções' está bloqueado! Pesquise AUTO_5 na Árvore de Pesquisa.")
+        self.generic_visit(node)
+
+    def visit_Assign(self, node):
+        if not self.bridge.is_tech_unlocked('AUTO_2'):
+            raise Exception("Recurso 'Variáveis & Operadores' está bloqueado! Pesquise AUTO_2 na Árvore de Pesquisa.")
+        self.generic_visit(node)
+
+    def visit_AugAssign(self, node):
+        if not self.bridge.is_tech_unlocked('AUTO_2'):
+            raise Exception("Recurso 'Variáveis & Operadores' está bloqueado! Pesquise AUTO_2 na Árvore de Pesquisa.")
+        self.generic_visit(node)
+
+    def visit_AnnAssign(self, node):
+        if not self.bridge.is_tech_unlocked('AUTO_2'):
+            raise Exception("Recurso 'Variáveis & Operadores' está bloqueado! Pesquise AUTO_2 na Árvore de Pesquisa.")
+        self.generic_visit(node)
+
+    def visit_BinOp(self, node):
+        if not self.bridge.is_tech_unlocked('AUTO_2'):
+            raise Exception("Recurso 'Variáveis & Operadores' está bloqueado! Pesquise AUTO_2 na Árvore de Pesquisa.")
+        self.generic_visit(node)
+
 class _StepInserter(ast.NodeTransformer):
     def generic_visit(self, node):
         super().generic_visit(node)
@@ -284,6 +354,7 @@ def _create_py_step_generator(code_str, _jsBridge):
     }
 
     parsed = ast.parse(code_str)
+    _GuardrailChecker(_jsBridge).visit(parsed)
     transformed = _StepInserter().visit(parsed)
     gen_func_def = ast.FunctionDef(
         name='__user_step_gen__',
@@ -338,13 +409,33 @@ def _create_py_step_generator(code_str, _jsBridge):
 
     // Setup bridge callbacks in JS namespace
     const jsBridge = {
+      is_tech_unlocked: (techId: string) => engine.isTechUnlocked(techId),
       print: (...args: any[]) => {
         const msg = args.map(a => (a === null || a === undefined ? '' : String(a))).join(' ');
         engine.addLog(agentId, 'stdout', msg, undefined, filePath);
       },
       farm_plant: (crop: string) => {
+        const upper = (crop || 'WILD_FIBER').toUpperCase();
+        if ((upper.includes('BUSH') || upper.includes('WOODY') || upper === 'WOOD') && !engine.isTechUnlocked('AGRO_2')) {
+          throw new Error("Cultura 'Arbusto de Madeira' está bloqueada! Pesquise AGRO_2 na Árvore de Pesquisa.");
+        }
+        if ((upper.includes('ROOT') || upper.includes('CULTIVATED') || upper === 'CORN') && !engine.isTechUnlocked('AGRO_3')) {
+          throw new Error("Cultura 'Raízes Cultivadas' está bloqueada! Pesquise AGRO_3 na Árvore de Pesquisa.");
+        }
+        if ((upper.includes('TREE') || upper.includes('TIMBER')) && !engine.isTechUnlocked('AGRO_4')) {
+          throw new Error("Cultura 'Árvores & Madeira Nobre' está bloqueada! Pesquise AGRO_4 na Árvore de Pesquisa.");
+        }
+        if ((upper.includes('FRUIT') || upper.includes('BERRY')) && !engine.isTechUnlocked('AGRO_5')) {
+          throw new Error("Cultura 'Colônias de Frutas' está bloqueada! Pesquise AGRO_5 na Árvore de Pesquisa.");
+        }
+        if ((upper.includes('FLOWER') || upper.includes('ENERGY')) && !engine.isTechUnlocked('AGRO_6')) {
+          throw new Error("Cultura 'Flores Energéticas' está bloqueada! Pesquise AGRO_6 na Árvore de Pesquisa.");
+        }
+        if (upper.includes('GRADED') && !engine.isTechUnlocked('AGRO_7')) {
+          throw new Error("Cultura 'Culturas Graduadas' está bloqueada! Pesquise AGRO_7 na Árvore de Pesquisa.");
+        }
         if (!engine.isTechUnlocked('AGRO_1')) {
-          throw new Error("Recurso 'Fibra Selvagem' bloqueado! Pesquise na Árvore de Pesquisa.");
+          throw new Error("Recurso 'Fibra Selvagem' bloqueado! Pesquise AGRO_1 na Árvore de Pesquisa.");
         }
         const ag = getAg();
         return engine.plantCrop(agentId, ag?.x ?? 0, ag?.y ?? 0, crop || 'WILD_FIBER');
@@ -359,21 +450,21 @@ def _create_py_step_generator(code_str, _jsBridge):
       },
       farm_water: () => {
         if (!engine.isTechUnlocked('AGRO_1')) {
-          throw new Error("Recurso 'Irrigação' bloqueado!");
+          throw new Error("Recurso 'Irrigação' bloqueado! Pesquise AGRO_1 na Árvore de Pesquisa.");
         }
         const ag = getAg();
         return engine.waterTile(agentId, ag?.x ?? 0, ag?.y ?? 0);
       },
       farm_till: () => {
         if (!engine.isTechUnlocked('AGRO_3')) {
-          throw new Error("Recurso 'Solo Arado' bloqueado!");
+          throw new Error("Recurso 'Solo Arado & Raízes Cultivadas' está bloqueado! Pesquise AGRO_3 na Árvore de Pesquisa.");
         }
         const ag = getAg();
         return engine.tillTile(agentId, ag?.x ?? 0, ag?.y ?? 0);
       },
       farm_swap: (dir: string) => {
         if (!engine.isTechUnlocked('AGRO_7')) {
-          throw new Error("Recurso 'Swap' bloqueado!");
+          throw new Error("Recurso 'Trocar Terrenos (Swap)' está bloqueado! Pesquise AGRO_7 na Árvore de Pesquisa.");
         }
         const ag = getAg();
         return engine.swapTiles(agentId, ag?.x ?? 0, ag?.y ?? 0, dir || 'RIGHT');
@@ -392,31 +483,69 @@ def _create_py_step_generator(code_str, _jsBridge):
       world_can_move: (dir: string) => {
         return engine.canMoveAgent(agentId, dir || 'RIGHT');
       },
-      world_x: () => getAg()?.x ?? 0,
-      world_y: () => getAg()?.y ?? 0,
-      world_width: () => engine.getGridWidth(),
-      world_height: () => engine.getGridHeight(),
+      world_x: () => {
+        if (!engine.isTechUnlocked('SYS_2')) {
+          throw new Error("Recurso 'Sensores Básicos & Coordenadas' está bloqueado! Pesquise SYS_2 na Árvore de Pesquisa.");
+        }
+        return getAg()?.x ?? 0;
+      },
+      world_y: () => {
+        if (!engine.isTechUnlocked('SYS_2')) {
+          throw new Error("Recurso 'Sensores Básicos & Coordenadas' está bloqueado! Pesquise SYS_2 na Árvore de Pesquisa.");
+        }
+        return getAg()?.y ?? 0;
+      },
+      world_width: () => {
+        if (!engine.isTechUnlocked('SYS_2')) {
+          throw new Error("Recurso 'Sensores Básicos & Coordenadas' está bloqueado! Pesquise SYS_2 na Árvore de Pesquisa.");
+        }
+        return engine.getGridWidth();
+      },
+      world_height: () => {
+        if (!engine.isTechUnlocked('SYS_2')) {
+          throw new Error("Recurso 'Sensores Básicos & Coordenadas' está bloqueado! Pesquise SYS_2 na Árvore de Pesquisa.");
+        }
+        return engine.getGridHeight();
+      },
       world_ground: () => {
+        if (!engine.isTechUnlocked('SYS_2')) {
+          throw new Error("Recurso 'Sensores Básicos & Coordenadas' está bloqueado! Pesquise SYS_2 na Árvore de Pesquisa.");
+        }
         const ag = getAg();
         return engine.getTile(ag?.x ?? 0, ag?.y ?? 0).ground;
       },
       world_entity: () => {
+        if (!engine.isTechUnlocked('SYS_2')) {
+          throw new Error("Recurso 'Sensores Básicos & Coordenadas' está bloqueado! Pesquise SYS_2 na Árvore de Pesquisa.");
+        }
         const ag = getAg();
         return engine.getTile(ag?.x ?? 0, ag?.y ?? 0).crop;
       },
       world_crop: () => {
+        if (!engine.isTechUnlocked('SYS_2')) {
+          throw new Error("Recurso 'Sensores Básicos & Coordenadas' está bloqueado! Pesquise SYS_2 na Árvore de Pesquisa.");
+        }
         const ag = getAg();
         return engine.getTile(ag?.x ?? 0, ag?.y ?? 0).crop;
       },
       world_moisture: () => {
+        if (!engine.isTechUnlocked('SYS_2')) {
+          throw new Error("Recurso 'Sensores Básicos & Coordenadas' está bloqueado! Pesquise SYS_2 na Árvore de Pesquisa.");
+        }
         const ag = getAg();
         return engine.getTile(ag?.x ?? 0, ag?.y ?? 0).moisture;
       },
       world_growth: () => {
+        if (!engine.isTechUnlocked('SYS_2')) {
+          throw new Error("Recurso 'Sensores Básicos & Coordenadas' está bloqueado! Pesquise SYS_2 na Árvore de Pesquisa.");
+        }
         const ag = getAg();
         return engine.getTile(ag?.x ?? 0, ag?.y ?? 0).growth;
       },
       world_measure: () => {
+        if (!engine.isTechUnlocked('SYS_3')) {
+          throw new Error("Recurso 'Medição de Bloco' está bloqueado! Pesquise SYS_3 na Árvore de Pesquisa.");
+        }
         const ag = getAg();
         return engine.measureTile(ag?.x ?? 0, ag?.y ?? 0);
       },
@@ -424,8 +553,18 @@ def _create_py_step_generator(code_str, _jsBridge):
         const ag = getAg();
         return engine.getCompanionRequest(ag?.x ?? 0, ag?.y ?? 0);
       },
-      inventory_count: (res: string) => engine.getResourceCount(res || 'fiber'),
-      sys_get_agent_stats: () => engine.getAgentStats(agentId)
+      inventory_count: (res: string) => {
+        if (!engine.isTechUnlocked('SYS_2')) {
+          throw new Error("Recurso 'Sensor de Inventário' está bloqueado! Pesquise SYS_2 na Árvore de Pesquisa.");
+        }
+        return engine.getResourceCount(res || 'fiber');
+      },
+      sys_get_agent_stats: () => {
+        if (!engine.isTechUnlocked('SYS_4')) {
+          throw new Error("Recurso 'Telemetria & Estatísticas do Agente' está bloqueado! Pesquise SYS_4 na Árvore de Pesquisa.");
+        }
+        return engine.getAgentStats(agentId);
+      }
     };
 
     const pythonIsolatedExec = `
@@ -529,6 +668,8 @@ def _exec_isolated_py(code_str, _jsBridge):
         '__builtins__': __builtins__
     }
 
+    parsed = ast.parse(code_str)
+    _GuardrailChecker(_jsBridge).visit(parsed)
     exec(code_str, env)
 `;
 
