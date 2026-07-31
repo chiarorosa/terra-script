@@ -105,32 +105,64 @@ function splitCommaTopLevel(str: string): string[] {
 
 function splitTopLevel(expr: string, op: string): [string, string] | null {
   let parenDepth = 0;
+  let bracketDepth = 0;
+  let braceDepth = 0;
   let inString: string | null = null;
   const opLen = op.length;
+  let lastMatchIdx = -1;
 
-  for (let i = expr.length - opLen; i >= 0; i--) {
+  for (let i = 0; i <= expr.length - opLen; i++) {
     const char = expr[i];
+
     if (inString) {
       if (char === inString && expr[i - 1] !== '\\') {
         inString = null;
       }
       continue;
     }
+
     if (char === '"' || char === "'" || char === '`') {
       inString = char;
       continue;
     }
-    if (char === ')') parenDepth++;
-    else if (char === '(') parenDepth--;
 
-    if (parenDepth === 0) {
+    if (char === '(') parenDepth++;
+    else if (char === ')') parenDepth--;
+    else if (char === '[') bracketDepth++;
+    else if (char === ']') bracketDepth--;
+    else if (char === '{') braceDepth++;
+    else if (char === '}') braceDepth--;
+
+    if (
+      parenDepth === 0 &&
+      bracketDepth === 0 &&
+      braceDepth === 0 &&
+      !inString
+    ) {
       if (expr.substring(i, i + opLen) === op) {
-        const left = expr.substring(0, i).trim();
-        const right = expr.substring(i + opLen).trim();
-        return [left, right];
+        if (op === '==' && (expr[i - 1] === '=' || expr[i + opLen] === '=' || expr[i - 1] === '!')) {
+          continue;
+        }
+        if (op === '!=' && (expr[i - 1] === '=' || expr[i + opLen] === '=')) {
+          continue;
+        }
+        if (op === '>' && (expr[i - 1] === '=' || expr[i + opLen] === '=' || expr[i - 1] === '>')) {
+          continue;
+        }
+        if (op === '<' && (expr[i - 1] === '=' || expr[i + opLen] === '=' || expr[i - 1] === '<')) {
+          continue;
+        }
+        lastMatchIdx = i;
       }
     }
   }
+
+  if (lastMatchIdx !== -1) {
+    const left = expr.substring(0, lastMatchIdx).trim();
+    const right = expr.substring(lastMatchIdx + opLen).trim();
+    return [left, right];
+  }
+
   return null;
 }
 
@@ -732,6 +764,8 @@ export class ScriptRunner {
         if (/^if\b/.test(trimmed)) {
           type = 'if';
           condStr = trimmed.replace(/^if\b\s*/, '').replace(/:\s*$/, '').trim();
+        } else if (/^(elif|else)\b/.test(trimmed)) {
+          throw new Error(`Erro de Sintaxe (linha ${currIdx + 1}): Instrução '${trimmed}' encontrada sem um 'if' correspondente.`);
         } else {
           break;
         }
@@ -811,6 +845,8 @@ export class ScriptRunner {
       if (branches.length === 0) {
         if (/^\}?\s*if\b/.test(trimmed) || (trimmed.includes('if') && !trimmed.includes('else'))) {
           type = 'if';
+        } else if (/^\}?\s*(else\s+if|else)\b/.test(trimmed)) {
+          throw new Error(`Erro de Sintaxe (linha ${currIdx + 1}): Instrução '${trimmed}' encontrada sem um 'if' correspondente.`);
         } else {
           break;
         }
@@ -939,7 +975,13 @@ export class ScriptRunner {
           chainEndLineIdx: chain.chainEndIdx,
           indent: chain.baseIndent
         });
-        ctx.currentLineIndex = branch.headerLineIdx;
+        if (branch.blockStartIdx <= branch.blockEndIdx) {
+          ctx.currentLineIndex = branch.blockStartIdx - 1;
+        } else {
+          // Empty block: finish conditional chain immediately
+          ctx.conditionalStack.pop();
+          ctx.currentLineIndex = chain.chainEndIdx - 1;
+        }
         return;
       }
     }
@@ -1034,15 +1076,31 @@ export class ScriptRunner {
     }
 
     // Direct Game API Calls or Assignments
-    if (line.includes('=')) {
+    const assignMatch = trimmedLine.match(/^((let|var|const)\s+)?([a-zA-Z_][a-zA-Z0-9_]*)\s*(\+=|-=|\*=|\/=|=(?!=))\s*(.*)$/);
+    if (assignMatch) {
       if (!this.engine.isTechUnlocked('AUTO_2')) {
         throw new Error("Recurso 'Variáveis & Operadores' está bloqueado! Pesquise AUTO_2 na Árvore de Pesquisa.");
       }
-      const parts = line.split('=');
-      const varName = parts[0].trim().replace(/^(let|var|const)\s+/, '');
-      const rhs = parts.slice(1).join('=').trim().replace(/;$/, '');
-      const val = this.evalExpression(rhs, ctx);
-      ctx.scope[varName] = val;
+      const varName = assignMatch[3].trim();
+      const op = assignMatch[4];
+      const rhsStr = assignMatch[5].trim().replace(/;$/, '');
+      const rhsVal = this.evalExpression(rhsStr, ctx);
+
+      if (op === '=') {
+        ctx.scope[varName] = rhsVal;
+      } else if (op === '+=') {
+        const cur = ctx.scope[varName] ?? 0;
+        ctx.scope[varName] = typeof cur === 'string' || typeof rhsVal === 'string' ? String(cur) + String(rhsVal) : Number(cur) + Number(rhsVal);
+      } else if (op === '-=') {
+        const cur = ctx.scope[varName] ?? 0;
+        ctx.scope[varName] = Number(cur) - Number(rhsVal);
+      } else if (op === '*=') {
+        const cur = ctx.scope[varName] ?? 0;
+        ctx.scope[varName] = Number(cur) * Number(rhsVal);
+      } else if (op === '/=') {
+        const cur = ctx.scope[varName] ?? 0;
+        ctx.scope[varName] = Number(cur) / Number(rhsVal);
+      }
       return;
     }
 
@@ -1185,12 +1243,14 @@ export class ScriptRunner {
       return this.engine.waterTile(ctx.agentId, agent.x, agent.y);
     }
     if (expr.includes('farm.plant(')) {
-      const cropArg = expr.match(/farm\.plant\((.*?)\)/)?.[1]?.replace(/['"]/g, '').trim() || 'WILD_FIBER';
+      const rawArg = expr.match(/farm\.plant\((.*?)\)/)?.[1]?.trim();
+      const evaluated = rawArg ? this.evalExpression(rawArg, ctx) : 'WILD_FIBER';
+      const cropArg = evaluated !== undefined && evaluated !== null ? String(evaluated) : 'WILD_FIBER';
       const upper = cropArg.toUpperCase();
-      if ((upper.includes('BUSH') || upper.includes('WOODY')) && !this.engine.isTechUnlocked('AGRO_2')) {
+      if ((upper.includes('BUSH') || upper.includes('WOODY') || upper.includes('WOOD')) && !this.engine.isTechUnlocked('AGRO_2')) {
         throw new Error("Cultura 'Arbusto de Madeira' está bloqueada! Pesquise AGRO_2 na Árvore de Pesquisa.");
       }
-      if ((upper.includes('ROOT') || upper.includes('CULTIVATED') || upper.includes('CORN')) && !this.engine.isTechUnlocked('AGRO_3')) {
+      if ((upper.includes('ROOT') || upper.includes('CULTIVATED') || upper.includes('CORN') || upper.includes('CARROT')) && !this.engine.isTechUnlocked('AGRO_3')) {
         throw new Error("Cultura 'Raízes Cultivadas' está bloqueada! Pesquise AGRO_3 na Árvore de Pesquisa.");
       }
       if ((upper.includes('TREE') || upper.includes('TIMBER')) && !this.engine.isTechUnlocked('AGRO_4')) {
@@ -1223,9 +1283,11 @@ export class ScriptRunner {
     if (expr.includes('farm.prestige(') || expr.includes('prestige(')) {
       const match = expr.match(/(?:farm\.)?prestige\s*\((.*?)\)/);
       if (match) {
-        const rawArgs = match[1].split(',').map(s => s.trim().replace(/['"]/g, ''));
-        const resourceArg = rawArgs[0] || 'fiber';
-        const parsedAmt = parseInt(rawArgs[1] || '1', 10);
+        const rawArgs = splitCommaTopLevel(match[1]);
+        const resVal = rawArgs[0] ? this.evalExpression(rawArgs[0], ctx) : 'fiber';
+        const resourceArg = resVal !== undefined && resVal !== null ? String(resVal) : 'fiber';
+        const amtVal = rawArgs[1] ? this.evalExpression(rawArgs[1], ctx) : 1;
+        const parsedAmt = parseInt(String(amtVal), 10);
         const amountArg = isNaN(parsedAmt) ? 1 : parsedAmt;
         ctx.actionsPerformedInRun++;
         return this.engine.offerPrestigeResource(ctx.agentId, agent.x, agent.y, resourceArg, amountArg);
@@ -1235,7 +1297,9 @@ export class ScriptRunner {
       if (!this.engine.isTechUnlocked('AGRO_7')) {
         throw new Error("Recurso 'Trocar Terrenos (Swap)' está bloqueado! Pesquise AGRO_7 na Árvore de Pesquisa.");
       }
-      const dirArg = expr.match(/farm\.swap\((.*?)\)/)?.[1]?.replace(/['"]/g, '').trim() || 'RIGHT';
+      const rawArg = expr.match(/farm\.swap\((.*?)\)/)?.[1]?.trim();
+      const evaluated = rawArg ? this.evalExpression(rawArg, ctx) : 'RIGHT';
+      const dirArg = evaluated !== undefined && evaluated !== null ? String(evaluated) : 'RIGHT';
       ctx.actionsPerformedInRun++;
       return this.engine.swapTiles(ctx.agentId, agent.x, agent.y, dirArg);
     }
@@ -1261,12 +1325,16 @@ export class ScriptRunner {
 
     // world.*
     if (expr.includes('world.move(')) {
-      const dirArg = expr.match(/world\.move\((.*?)\)/)?.[1]?.replace(/['"]/g, '').trim() || 'RIGHT';
+      const rawArg = expr.match(/world\.move\((.*?)\)/)?.[1]?.trim();
+      const evaluated = rawArg ? this.evalExpression(rawArg, ctx) : 'RIGHT';
+      const dirArg = evaluated !== undefined && evaluated !== null ? String(evaluated) : 'RIGHT';
       ctx.actionsPerformedInRun++;
       return this.engine.moveAgent(ctx.agentId, dirArg);
     }
     if (expr.includes('world.can_move(') || expr.includes('world.canMove(')) {
-      const dirArg = expr.match(/world\.can_?move\((.*?)\)/)?.[1]?.replace(/['"]/g, '').trim() || 'RIGHT';
+      const rawArg = expr.match(/world\.can_?move\((.*?)\)/)?.[1]?.trim();
+      const evaluated = rawArg ? this.evalExpression(rawArg, ctx) : 'RIGHT';
+      const dirArg = evaluated !== undefined && evaluated !== null ? String(evaluated) : 'RIGHT';
       return this.engine.canMoveAgent(ctx.agentId, dirArg);
     }
     if (expr.includes('world.x()')) {
@@ -1339,7 +1407,9 @@ export class ScriptRunner {
       if (!this.engine.isTechUnlocked('SYS_2')) {
         throw new Error("Recurso 'Sensor de Inventário' está bloqueado! Pesquise SYS_2 na Árvore de Pesquisa.");
       }
-      const res = expr.match(/inventory\.count\((.*?)\)/)?.[1]?.replace(/['"]/g, '').trim() || 'fiber';
+      const rawArg = expr.match(/inventory\.count\((.*?)\)/)?.[1]?.trim();
+      const evaluated = rawArg ? this.evalExpression(rawArg, ctx) : 'fiber';
+      const res = evaluated !== undefined && evaluated !== null ? String(evaluated) : 'fiber';
       return this.engine.getResourceCount(res);
     }
 

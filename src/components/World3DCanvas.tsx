@@ -1,79 +1,362 @@
 import React, { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
+import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
+import { RenderPixelatedPass } from 'three/examples/jsm/postprocessing/RenderPixelatedPass.js';
+import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
 import { GameEngine } from '../engine/GameEngine';
 import { CropType, GroundType, TileState } from '../types/game';
-import { RotateCw, RotateCcw, Info, Zap, Activity, Gauge, Eye, EyeOff, HardDrive, Target, Star, ZoomIn, ZoomOut, Trash2 } from 'lucide-react';
+import { RotateCw, RotateCcw, Info, Zap, Activity, Gauge, Eye, EyeOff, HardDrive, Target, Star, ZoomIn, ZoomOut, Trash2, Sparkles, Sliders } from 'lucide-react';
 import { GameLogo } from './GameLogo';
 
 interface World3DCanvasProps {
   engine: GameEngine;
 }
 
+// Helper to create crisp 32x32 procedural pixel art textures for Three.js
+function createPixelArtTexture(
+  drawFn: (ctx: CanvasRenderingContext2D, size: number) => void,
+  size = 32
+): THREE.CanvasTexture {
+  const canvas = document.createElement('canvas');
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext('2d')!;
+  ctx.imageSmoothingEnabled = false;
+  drawFn(ctx, size);
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.magFilter = THREE.NearestFilter;
+  texture.minFilter = THREE.NearestFilter;
+  texture.generateMipmaps = false;
+  return texture;
+}
+
 // ==========================================
 // STATIC GEOMETRY & MATERIAL CACHE (POOLS)
-// Prevents thousands of object allocations & RAM leaks
+// High-Detail Procedural Pixel Art & Voxel Assets
 // ==========================================
 class ThreeAssetCache {
-  // Geometries
-  public static baseTileGeo = new THREE.BoxGeometry(1.1, 0.2, 1.1);
+  // Shared Geometries
+  public static baseTileGeo = new THREE.BoxGeometry(1.1, 0.45, 1.1);
   public static tileEdgesGeo = new THREE.EdgesGeometry(ThreeAssetCache.baseTileGeo);
   
-  public static stalkGeo = new THREE.CylinderGeometry(0.02, 0.03, 0.5, 5);
-  public static bushGeo = new THREE.DodecahedronGeometry(0.35, 1);
-  public static treeTrunkGeo = new THREE.CylinderGeometry(0.08, 0.1, 0.4, 5);
-  public static treeFoliageGeo = new THREE.ConeGeometry(0.4, 0.8, 5);
-  public static rootGeo = new THREE.SphereGeometry(0.2, 6, 6);
-  public static flowerGeo = new THREE.OctahedronGeometry(0.25, 0);
-  public static gradedGeo = new THREE.BoxGeometry(0.3, 0.5, 0.3);
-  public static defaultCropGeo = new THREE.BoxGeometry(0.3, 0.3, 0.3);
-  public static prestigeCropGeo = new THREE.OctahedronGeometry(0.35, 1);
-  public static prestigeCropMat = new THREE.MeshStandardMaterial({ color: 0xfef08a, emissive: 0xeab308, emissiveIntensity: 0.9, roughness: 0.1, metalness: 0.9 });
+  // Crop Geometries
+  public static voxelBlockGeo = new THREE.BoxGeometry(0.1, 0.1, 0.1);
+  public static stalkStemGeo = new THREE.BoxGeometry(0.04, 0.45, 0.04);
+  public static wheatHeadGeo = new THREE.BoxGeometry(0.12, 0.25, 0.12);
   
-  // Alien Agent Ship Geometries
-  public static agentHullGeo = new THREE.CylinderGeometry(0.42, 0.22, 0.12, 16);
-  public static agentDomeGeo = new THREE.SphereGeometry(0.18, 12, 12, 0, Math.PI * 2, 0, Math.PI * 0.5);
-  public static agentRingGeo = new THREE.TorusGeometry(0.38, 0.04, 12, 24);
-  public static agentBeamGeo = new THREE.ConeGeometry(0.28, 0.45, 12, 1, true);
+  public static bushLeafBaseGeo = new THREE.BoxGeometry(0.55, 0.35, 0.55);
+  public static bushLeafTopGeo = new THREE.BoxGeometry(0.4, 0.25, 0.4);
+  public static bushTrunkGeo = new THREE.BoxGeometry(0.12, 0.25, 0.12);
 
-  public static selectionBoxGeo = new THREE.BoxGeometry(1.15, 0.25, 1.15);
+  public static treeTrunkGeo = new THREE.BoxGeometry(0.18, 0.45, 0.18);
+  public static treeLeafTier1Geo = new THREE.BoxGeometry(0.7, 0.3, 0.7);
+  public static treeLeafTier2Geo = new THREE.BoxGeometry(0.5, 0.3, 0.5);
+  public static treeLeafTier3Geo = new THREE.BoxGeometry(0.3, 0.25, 0.3);
+
+  public static rootCanopyGeo = new THREE.BoxGeometry(0.4, 0.15, 0.4);
+  public static rootCropGeo = new THREE.ConeGeometry(0.12, 0.35, 4);
+
+  public static fruitBushGeo = new THREE.BoxGeometry(0.48, 0.4, 0.48);
+  public static fruitBerryGeo = new THREE.BoxGeometry(0.12, 0.12, 0.12);
+
+  public static energyCoreGeo = new THREE.OctahedronGeometry(0.2, 0);
+  public static energyPetalGeo = new THREE.BoxGeometry(0.18, 0.08, 0.28);
+  public static energyStemGeo = new THREE.CylinderGeometry(0.03, 0.04, 0.35, 4);
+
+  public static gradedHelixGeo = new THREE.BoxGeometry(0.2, 0.12, 0.2);
+  public static prestigeOctaGeo = new THREE.OctahedronGeometry(0.32, 1);
+  public static prestigeRingGeo = new THREE.TorusGeometry(0.45, 0.025, 8, 16);
+
+  // Agent Sci-Fi Harvester Flying Saucer (UFO) Geometries
+  public static agentBodyGeo = new THREE.CylinderGeometry(0.48, 0.28, 0.12, 16);
+  public static agentBottomSaucerGeo = new THREE.CylinderGeometry(0.28, 0.1, 0.08, 16);
+  public static agentTopDomeGeo = new THREE.SphereGeometry(0.2, 16, 12, 0, Math.PI * 2, 0, Math.PI * 0.5);
+  public static agentThrusterGeo = new THREE.ConeGeometry(0.06, 0.18, 8);
+  public static agentRingGeo = new THREE.TorusGeometry(0.5, 0.03, 8, 24);
+  public static agentBeamGeo = new THREE.ConeGeometry(0.38, 0.5, 16, 1, true);
+
+  public static selectionBoxGeo = new THREE.BoxGeometry(1.15, 0.48, 1.15);
   public static selectionEdgesGeo = new THREE.EdgesGeometry(ThreeAssetCache.selectionBoxGeo);
 
-  // Shared Materials
-  public static lineMat = new THREE.LineBasicMaterial({ color: 0x334155 });
+  // Line Materials
+  public static lineMat = new THREE.LineBasicMaterial({ color: 0x1e293b, transparent: true, opacity: 0.6 });
   public static selectionLineMat = new THREE.LineBasicMaterial({ color: 0x38bdf8 });
 
-  // Ground Materials
-  public static groundMaterials: Record<GroundType, THREE.MeshStandardMaterial> = {
-    NATURAL: new THREE.MeshStandardMaterial({ color: 0x15803d, roughness: 0.8, metalness: 0.1 }),
-    SOIL: new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.8, metalness: 0.1 }),
-    TILLED: new THREE.MeshStandardMaterial({ color: 0x5b21b6, roughness: 0.8, metalness: 0.1 }),
-    IRRIGATED: new THREE.MeshStandardMaterial({ color: 0x0284c7, roughness: 0.8, metalness: 0.1 }),
-    SOAKED: new THREE.MeshStandardMaterial({ color: 0x172554, roughness: 0.9, metalness: 0.3 }),
-    PRESTIGE: new THREE.MeshStandardMaterial({ color: 0xf59e0b, emissive: 0xd97706, emissiveIntensity: 0.7, roughness: 0.2, metalness: 0.9 }),
+  // ----------------------------------------------------
+  // PROCEDURAL CANVAS PIXEL ART TEXTURES (32x32 NearestFilter)
+  // ----------------------------------------------------
+
+  // 1. NATURAL Grass Top Pixel Texture (Rich Forest Green Base)
+  public static texNaturalTop = createPixelArtTexture((ctx, size) => {
+    ctx.fillStyle = '#14532d'; // Deep forest dark grass
+    ctx.fillRect(0, 0, size, size);
+
+    // Dark border/dither
+    ctx.fillStyle = '#052e16';
+    for (let i = 0; i < size; i += 2) {
+      ctx.fillRect(i, 0, 1, 1);
+      ctx.fillRect(0, i, 1, 1);
+      ctx.fillRect(size - 1, i, 1, 1);
+      ctx.fillRect(i, size - 1, 1, 1);
+    }
+
+    // Grass blades & tuft pixels
+    const greens = ['#166534', '#15803d', '#14532d', '#0d3d20', '#16a34a'];
+    for (let i = 0; i < 90; i++) {
+      const rx = Math.floor(Math.random() * size);
+      const ry = Math.floor(Math.random() * size);
+      ctx.fillStyle = greens[Math.floor(Math.random() * greens.length)];
+      ctx.fillRect(rx, ry, 1, 1);
+    }
+
+    // Flowers & pebbles
+    for (let i = 0; i < 6; i++) {
+      ctx.fillStyle = Math.random() > 0.5 ? '#facc15' : '#f43f5e';
+      ctx.fillRect(Math.floor(Math.random() * (size - 2)) + 1, Math.floor(Math.random() * (size - 2)) + 1, 1, 1);
+    }
+  });
+
+  // 2. SOIL Earth Top Pixel Texture
+  public static texSoilTop = createPixelArtTexture((ctx, size) => {
+    ctx.fillStyle = '#78350f'; // Earthy brown
+    ctx.fillRect(0, 0, size, size);
+
+    // Dither soil grains & pebbles
+    const browns = ['#92400e', '#b45309', '#451a03', '#d97706', '#581c87'];
+    for (let i = 0; i < 110; i++) {
+      const rx = Math.floor(Math.random() * size);
+      const ry = Math.floor(Math.random() * size);
+      ctx.fillStyle = browns[Math.floor(Math.random() * browns.length)];
+      ctx.fillRect(rx, ry, 1, 1);
+    }
+
+    // Stone granules
+    ctx.fillStyle = '#a1a1aa';
+    for (let i = 0; i < 8; i++) {
+      ctx.fillRect(Math.floor(Math.random() * size), Math.floor(Math.random() * size), 1, 1);
+    }
+  });
+
+  // 3. TILLED Furrowed Soil Top Pixel Texture (Rich Earth Browns)
+  public static texTilledTop = createPixelArtTexture((ctx, size) => {
+    ctx.fillStyle = '#451a03'; // Deep rich earth brown
+    ctx.fillRect(0, 0, size, size);
+
+    // 4 Parallel furrow stripes across canvas
+    for (let y = 0; y < size; y++) {
+      const groove = y % 8;
+      if (groove < 2) {
+        ctx.fillStyle = '#290f02'; // Shadow furrow groove
+      } else if (groove < 5) {
+        ctx.fillStyle = '#78350f'; // Ridge
+      } else if (groove < 7) {
+        ctx.fillStyle = '#92400e'; // Ridge highlight
+      } else {
+        ctx.fillStyle = '#581c0c';
+      }
+      ctx.fillRect(0, y, size, 1);
+    }
+
+    // Soil clump noise over ridges
+    ctx.fillStyle = '#1c0a00';
+    for (let i = 0; i < 50; i++) {
+      ctx.fillRect(Math.floor(Math.random() * size), Math.floor(Math.random() * size), 1, 1);
+    }
+  });
+
+  // 4. IRRIGATED Hydrated Soil Top Pixel Texture
+  public static texIrrigatedTop = createPixelArtTexture((ctx, size) => {
+    ctx.fillStyle = '#0e7490'; // Moist cyan-teal earth
+    ctx.fillRect(0, 0, size, size);
+
+    // Dark damp soil noise
+    ctx.fillStyle = '#155e75';
+    for (let i = 0; i < 80; i++) {
+      ctx.fillRect(Math.floor(Math.random() * size), Math.floor(Math.random() * size), 1, 1);
+    }
+
+    // Sparkling water droplet pixels
+    const drops = ['#06b6d4', '#67e8f9', '#a5f3fc', '#e0f2fe'];
+    for (let i = 0; i < 24; i++) {
+      ctx.fillStyle = drops[Math.floor(Math.random() * drops.length)];
+      ctx.fillRect(Math.floor(Math.random() * size), Math.floor(Math.random() * size), 1, 1);
+    }
+  });
+
+  // 5. SOAKED Flooded Pool Top Pixel Texture
+  public static texSoakedTop = createPixelArtTexture((ctx, size) => {
+    ctx.fillStyle = '#1e1b4b'; // Mud border rim
+    ctx.fillRect(0, 0, size, size);
+
+    // Flooded water pool inner area
+    ctx.fillStyle = '#1e40af';
+    ctx.fillRect(3, 3, size - 6, size - 6);
+
+    // Water ripple concentric square rings
+    ctx.fillStyle = '#3b82f6';
+    ctx.fillRect(6, 6, size - 12, size - 12);
+    ctx.fillStyle = '#60a5fa';
+    ctx.fillRect(9, 9, size - 18, size - 18);
+    ctx.fillStyle = '#93c5fd';
+    ctx.fillRect(12, 12, size - 24, size - 24);
+
+    // Reflection specks
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(10, 10, 2, 2);
+    ctx.fillRect(18, 14, 2, 1);
+  });
+
+  // 6. PRESTIGE Cyber Gold Plate Top Pixel Texture
+  public static texPrestigeTop = createPixelArtTexture((ctx, size) => {
+    ctx.fillStyle = '#d97706'; // Metallic gold alloy
+    ctx.fillRect(0, 0, size, size);
+
+    // Bevel frame border
+    ctx.fillStyle = '#b45309';
+    ctx.fillRect(0, 0, size, 2);
+    ctx.fillRect(0, 0, 2, size);
+    ctx.fillRect(0, size - 2, size, 2);
+    ctx.fillRect(size - 2, 0, 2, size);
+
+    // Circuit traces
+    ctx.fillStyle = '#fef08a';
+    ctx.fillRect(4, 16, 24, 2);
+    ctx.fillRect(16, 4, 2, 24);
+
+    ctx.fillStyle = '#facc15';
+    ctx.fillRect(8, 8, 4, 4);
+    ctx.fillRect(20, 8, 4, 4);
+    ctx.fillRect(8, 20, 4, 4);
+    ctx.fillRect(20, 20, 4, 4);
+
+    // Glowing LED corners
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(1, 1, 2, 2);
+    ctx.fillRect(size - 3, 1, 2, 2);
+    ctx.fillRect(1, size - 3, 2, 2);
+    ctx.fillRect(size - 3, size - 3, 2, 2);
+  });
+
+  // 7. Side Wall Stratified Dirt Texture
+  public static texSideDirt = createPixelArtTexture((ctx, size) => {
+    // Top 25% Surface Transition
+    ctx.fillStyle = '#15803d';
+    ctx.fillRect(0, 0, size, 8);
+
+    // Dither teeth
+    ctx.fillStyle = '#14532d';
+    for (let x = 0; x < size; x += 2) {
+      ctx.fillRect(x, 7, 1, 2);
+    }
+
+    // Mid 50% Soil Strata
+    ctx.fillStyle = '#78350f';
+    ctx.fillRect(0, 8, size, 16);
+
+    ctx.fillStyle = '#451a03';
+    for (let i = 0; i < 40; i++) {
+      ctx.fillRect(Math.floor(Math.random() * size), 8 + Math.floor(Math.random() * 16), 1, 1);
+    }
+
+    // Bottom 25% Bedrock Strata
+    ctx.fillStyle = '#292524';
+    ctx.fillRect(0, 24, size, 8);
+
+    ctx.fillStyle = '#1c1917';
+    for (let x = 0; x < size; x += 3) {
+      ctx.fillRect(x, 24, 2, 8);
+    }
+  });
+
+  // 8. Side Wall Prestige Gold Panel Texture
+  public static texSidePrestige = createPixelArtTexture((ctx, size) => {
+    ctx.fillStyle = '#b45309';
+    ctx.fillRect(0, 0, size, size);
+
+    ctx.fillStyle = '#78350f';
+    ctx.fillRect(0, 0, 2, size);
+    ctx.fillRect(size - 2, 0, 2, size);
+
+    ctx.fillStyle = '#eab308';
+    ctx.fillRect(6, 0, 2, size);
+    ctx.fillRect(24, 0, 2, size);
+
+    ctx.fillStyle = '#fef08a';
+    ctx.fillRect(15, 4, 2, 24);
+  });
+
+  // Foliage / Crop Texture Canvas (High Contrast Electric Lime & Emerald)
+  public static texFoliage = createPixelArtTexture((ctx, size) => {
+    ctx.fillStyle = '#22c55e'; // Vibrant spring green
+    ctx.fillRect(0, 0, size, size);
+
+    const shades = ['#84cc16', '#a3e635', '#10b981', '#34d399', '#facc15', '#065f46'];
+    for (let i = 0; i < 110; i++) {
+      ctx.fillStyle = shades[Math.floor(Math.random() * shades.length)];
+      ctx.fillRect(Math.floor(Math.random() * size), Math.floor(Math.random() * size), 1, 1);
+    }
+  });
+
+  public static texBark = createPixelArtTexture((ctx, size) => {
+    ctx.fillStyle = '#78350f';
+    ctx.fillRect(0, 0, size, size);
+
+    ctx.fillStyle = '#451a03';
+    for (let x = 0; x < size; x += 4) {
+      ctx.fillRect(x, 0, 2, size);
+    }
+  });
+
+  // ----------------------------------------------------
+  // SHARED MATERIALS (6-FACE GROUND BOX ARRAYS)
+  // ----------------------------------------------------
+
+  public static matSideDirt = new THREE.MeshStandardMaterial({ map: ThreeAssetCache.texSideDirt, roughness: 0.8 });
+  public static matSidePrestige = new THREE.MeshStandardMaterial({ map: ThreeAssetCache.texSidePrestige, metalness: 0.8, roughness: 0.2 });
+  public static matBedrock = new THREE.MeshStandardMaterial({ color: 0x1c1917, roughness: 0.9 });
+
+  public static matNaturalTop = new THREE.MeshStandardMaterial({ map: ThreeAssetCache.texNaturalTop, roughness: 0.7 });
+  public static matSoilTop = new THREE.MeshStandardMaterial({ map: ThreeAssetCache.texSoilTop, roughness: 0.85 });
+  public static matTilledTop = new THREE.MeshStandardMaterial({ map: ThreeAssetCache.texTilledTop, roughness: 0.85 });
+  public static matIrrigatedTop = new THREE.MeshStandardMaterial({ map: ThreeAssetCache.texIrrigatedTop, roughness: 0.5, metalness: 0.1 });
+  public static matSoakedTop = new THREE.MeshStandardMaterial({ map: ThreeAssetCache.texSoakedTop, roughness: 0.2, metalness: 0.3 });
+  public static matPrestigeTop = new THREE.MeshStandardMaterial({ map: ThreeAssetCache.texPrestigeTop, metalness: 0.85, roughness: 0.15, emissive: 0xd97706, emissiveIntensity: 0.3 });
+
+  // 6-Material Box Arrays for 3D Tile Voxels [px, nx, py, ny, pz, nz]
+  public static groundBoxMaterials: Record<GroundType, THREE.Material[]> = {
+    NATURAL: [ThreeAssetCache.matSideDirt, ThreeAssetCache.matSideDirt, ThreeAssetCache.matNaturalTop, ThreeAssetCache.matBedrock, ThreeAssetCache.matSideDirt, ThreeAssetCache.matSideDirt],
+    SOIL: [ThreeAssetCache.matSideDirt, ThreeAssetCache.matSideDirt, ThreeAssetCache.matSoilTop, ThreeAssetCache.matBedrock, ThreeAssetCache.matSideDirt, ThreeAssetCache.matSideDirt],
+    TILLED: [ThreeAssetCache.matSideDirt, ThreeAssetCache.matSideDirt, ThreeAssetCache.matTilledTop, ThreeAssetCache.matBedrock, ThreeAssetCache.matSideDirt, ThreeAssetCache.matSideDirt],
+    IRRIGATED: [ThreeAssetCache.matSideDirt, ThreeAssetCache.matSideDirt, ThreeAssetCache.matIrrigatedTop, ThreeAssetCache.matBedrock, ThreeAssetCache.matSideDirt, ThreeAssetCache.matSideDirt],
+    SOAKED: [ThreeAssetCache.matSideDirt, ThreeAssetCache.matSideDirt, ThreeAssetCache.matSoakedTop, ThreeAssetCache.matBedrock, ThreeAssetCache.matSideDirt, ThreeAssetCache.matSideDirt],
+    PRESTIGE: [ThreeAssetCache.matSidePrestige, ThreeAssetCache.matSidePrestige, ThreeAssetCache.matPrestigeTop, ThreeAssetCache.matSidePrestige, ThreeAssetCache.matSidePrestige, ThreeAssetCache.matSidePrestige],
   };
 
-  // Crop Materials
-  public static stalkMat = new THREE.MeshStandardMaterial({ color: 0xfacc15, roughness: 0.6 });
-  public static bushMat = new THREE.MeshStandardMaterial({ color: 0x16a34a, roughness: 0.7 });
-  public static trunkMat = new THREE.MeshStandardMaterial({ color: 0x78350f });
-  public static foliageMat = new THREE.MeshStandardMaterial({ color: 0x047857, roughness: 0.5 });
-  public static rootMat = new THREE.MeshStandardMaterial({ color: 0xf97316, roughness: 0.5 });
-  public static fruitMat = new THREE.MeshStandardMaterial({ color: 0xeb5757, roughness: 0.5 });
-  public static flowerMat = new THREE.MeshStandardMaterial({ color: 0x02b8cc, emissive: 0x0284c7, emissiveIntensity: 0.8 });
-  public static gradedMat = new THREE.MeshStandardMaterial({ color: 0x8b5cf6, roughness: 0.4 });
-  public static defaultCropMat = new THREE.MeshStandardMaterial({ color: 0x10b981 });
+  // Crop Materials (High Contrast)
+  public static matFoliage = new THREE.MeshStandardMaterial({ map: ThreeAssetCache.texFoliage, roughness: 0.4, emissive: 0x10b981, emissiveIntensity: 0.35 });
+  public static matBrightLime = new THREE.MeshStandardMaterial({ color: 0xa3e635, emissive: 0x84cc16, emissiveIntensity: 0.5, roughness: 0.3 });
+  public static matBark = new THREE.MeshStandardMaterial({ map: ThreeAssetCache.texBark, roughness: 0.8 });
+  public static matWheatHead = new THREE.MeshStandardMaterial({ color: 0xfacc15, roughness: 0.5 });
+  public static matStem = new THREE.MeshStandardMaterial({ color: 0xca8a04, roughness: 0.6 });
+  public static matBerry = new THREE.MeshStandardMaterial({ color: 0xef4444, emissive: 0xd97706, emissiveIntensity: 0.4, roughness: 0.3 });
+  public static matFruitCrystal = new THREE.MeshStandardMaterial({ color: 0xf43f5e, emissive: 0xe11d48, emissiveIntensity: 0.7, roughness: 0.2, metalness: 0.8 });
+  public static matEnergyCore = new THREE.MeshStandardMaterial({ color: 0x06b6d4, emissive: 0x22d3ee, emissiveIntensity: 0.9, roughness: 0.1, metalness: 0.9 });
+  public static matEnergyPetal = new THREE.MeshStandardMaterial({ color: 0x38bdf8, roughness: 0.3 });
+  public static matRootCrop = new THREE.MeshStandardMaterial({ color: 0xf97316, roughness: 0.5 });
+  public static matGradedHelix = new THREE.MeshStandardMaterial({ color: 0xa855f7, emissive: 0x9333ea, emissiveIntensity: 0.7, roughness: 0.3 });
+  public static matPrestigeCrystal = new THREE.MeshStandardMaterial({ color: 0xfef08a, emissive: 0xeab308, emissiveIntensity: 0.9, roughness: 0.1, metalness: 0.9 });
 
-  // Agent Hull Materials Cache by Hex Color
+  // Agent Drone Ship Materials
   private static agentHullMatCache = new Map<string, THREE.MeshStandardMaterial>();
   public static getAgentHullMat(colorHex: string): THREE.MeshStandardMaterial {
     if (!this.agentHullMatCache.has(colorHex)) {
-      this.agentHullMatCache.set(colorHex, new THREE.MeshStandardMaterial({ color: colorHex, metalness: 0.85, roughness: 0.15 }));
+      this.agentHullMatCache.set(colorHex, new THREE.MeshStandardMaterial({ color: colorHex, metalness: 0.8, roughness: 0.2 }));
     }
     return this.agentHullMatCache.get(colorHex)!;
   }
-  public static agentDomeMat = new THREE.MeshStandardMaterial({ color: 0x38bdf8, emissive: 0x0284c7, emissiveIntensity: 0.8, roughness: 0.1, metalness: 0.9, transparent: true, opacity: 0.85 });
-  public static agentRingMat = new THREE.MeshStandardMaterial({ color: 0xc084fc, emissive: 0x9333ea, emissiveIntensity: 0.9, roughness: 0.2, metalness: 0.8 });
-  public static agentBeamMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.35, side: THREE.DoubleSide });
+  public static matAgentDome = new THREE.MeshStandardMaterial({ color: 0x38bdf8, emissive: 0x0284c7, emissiveIntensity: 0.8, roughness: 0.1, metalness: 0.9, transparent: true, opacity: 0.85 });
+  public static matAgentThruster = new THREE.MeshStandardMaterial({ color: 0xf97316, emissive: 0xeab308, emissiveIntensity: 0.9 });
+  public static matAgentBeam = new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.3, side: THREE.DoubleSide });
 }
 
 // Safely disposes non-cached dynamic 3D objects
@@ -118,6 +401,23 @@ export const World3DCanvas: React.FC<World3DCanvasProps> = ({ engine }) => {
     return 15; // 15° slight tilt angle by default
   });
 
+  const [pixelMode, setPixelMode] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('terrascript_pixel_mode');
+      return saved ? saved === 'true' : true; // Default: v2.5.0 Pixelated 3D Pass ON
+    }
+    return true;
+  });
+
+  // Fixed 2p Pixelated 3D Postprocessing Pass
+  const pixelSize = 2;
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('terrascript_pixel_mode', String(pixelMode));
+    }
+  }, [pixelMode]);
+
   const primaryAgent = engine.getPrimaryAgent();
   const activeCoords = (followAgent && primaryAgent)
     ? { x: primaryAgent.x, y: primaryAgent.y }
@@ -156,11 +456,24 @@ export const World3DCanvas: React.FC<World3DCanvasProps> = ({ engine }) => {
   const sceneRef = useRef<THREE.Scene | null>(null);
   const cameraRef = useRef<THREE.OrthographicCamera | null>(null);
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
+  const composerRef = useRef<EffectComposer | null>(null);
+  const pixelPassRef = useRef<RenderPixelatedPass | null>(null);
   const dirLightRef = useRef<THREE.DirectionalLight | null>(null);
 
   const tileMeshesRef = useRef<Map<string, THREE.Group>>(new Map());
   const agentMeshesRef = useRef<Map<number, THREE.Group>>(new Map());
   const selectionMeshRef = useRef<THREE.LineSegments | null>(null);
+
+  const pixelModeRef = useRef(pixelMode);
+  useEffect(() => {
+    pixelModeRef.current = pixelMode;
+  }, [pixelMode]);
+
+  useEffect(() => {
+    if (pixelPassRef.current) {
+      pixelPassRef.current.setPixelSize(pixelSize);
+    }
+  }, [pixelSize]);
 
   // Mouse wheel zoom listener
   useEffect(() => {
@@ -218,11 +531,21 @@ export const World3DCanvas: React.FC<World3DCanvasProps> = ({ engine }) => {
     containerRef.current.appendChild(renderer.domElement);
     rendererRef.current = renderer;
 
+    // 3.5. Postprocessing Setup (v2.5.0 Pixelated 3D Pass)
+    const composer = new EffectComposer(renderer);
+    const pixelPass = new RenderPixelatedPass(pixelSize, scene, camera);
+    pixelPass.normalEdgeStrength = 0.15;
+    pixelPass.depthEdgeStrength = 0.45;
+    composer.addPass(pixelPass);
+    composer.addPass(new OutputPass());
+    composerRef.current = composer;
+    pixelPassRef.current = pixelPass;
+
     // 4. Lighting Setup
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.85);
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.95);
     scene.add(ambientLight);
 
-    const dirLight = new THREE.DirectionalLight(0xfffbeb, 1.2);
+    const dirLight = new THREE.DirectionalLight(0xfffbeb, 1.3);
     dirLight.position.set(20, 30, 15);
     dirLight.castShadow = !isPerfMode;
     dirLight.shadow.mapSize.width = 1024;
@@ -239,7 +562,7 @@ export const World3DCanvas: React.FC<World3DCanvasProps> = ({ engine }) => {
     const hemiLight = new THREE.HemisphereLight(0x38bdf8, 0x059669, 0.4);
     scene.add(hemiLight);
 
-    // 5. Animation Loop with FPS Limiter
+    // 5. Animation Loop with FPS Limiter & Pixelated Postpass
     let animationFrameId: number;
     let clock = new THREE.Clock();
 
@@ -276,7 +599,9 @@ export const World3DCanvas: React.FC<World3DCanvasProps> = ({ engine }) => {
         }
       });
 
-      if (rendererRef.current && sceneRef.current && cameraRef.current) {
+      if (pixelModeRef.current && composerRef.current) {
+        composerRef.current.render();
+      } else if (rendererRef.current && sceneRef.current && cameraRef.current) {
         rendererRef.current.render(sceneRef.current, cameraRef.current);
       }
     };
@@ -294,6 +619,9 @@ export const World3DCanvas: React.FC<World3DCanvasProps> = ({ engine }) => {
       cameraRef.current.bottom = -frustumSize / 2;
       cameraRef.current.updateProjectionMatrix();
       rendererRef.current.setSize(w, h);
+      if (composerRef.current) {
+        composerRef.current.setSize(w, h);
+      }
     };
     window.addEventListener('resize', handleResize);
 
@@ -413,13 +741,13 @@ export const World3DCanvas: React.FC<World3DCanvasProps> = ({ engine }) => {
 
     if (activeCoords) {
       const selectionMesh = new THREE.LineSegments(ThreeAssetCache.selectionEdgesGeo, ThreeAssetCache.selectionLineMat);
-      selectionMesh.position.set(activeCoords.x * 1.2, -0.05, activeCoords.y * 1.2);
+      selectionMesh.position.set(activeCoords.x * 1.2, -0.225, activeCoords.y * 1.2);
       scene.add(selectionMesh);
       selectionMeshRef.current = selectionMesh;
     }
   }, [activeCoords?.x, activeCoords?.y, engine.getGridWidth(), engine.getGridHeight()]);
 
-  // Helper 3D Tile Creator (Uses Pooled Geometries/Materials)
+  // Helper 3D Voxel Tile Creator (Uses Multi-Material Array with Pixel Art Textures)
   const create3DTileGroup = (tile: TileState, x: number, y: number): THREE.Group => {
     const group = new THREE.Group();
     group.userData = { tileX: x, tileY: y, lastGround: tile.ground, lastCrop: tile.crop, lastGrowth: tile.growth };
@@ -427,41 +755,100 @@ export const World3DCanvas: React.FC<World3DCanvasProps> = ({ engine }) => {
     const posZ = y * 1.2;
     group.position.set(posX, 0, posZ);
 
-    // Ground Base Box
-    const baseMat = ThreeAssetCache.groundMaterials[tile.ground] || ThreeAssetCache.groundMaterials.NATURAL;
-    const baseMesh = new THREE.Mesh(ThreeAssetCache.baseTileGeo, baseMat);
+    // Ground Base Box (6 Multi-material Array with Stratified Side Walls - Height 0.45)
+    const boxMats = ThreeAssetCache.groundBoxMaterials[tile.ground] || ThreeAssetCache.groundBoxMaterials.NATURAL;
+    const baseMesh = new THREE.Mesh(ThreeAssetCache.baseTileGeo, boxMats);
     baseMesh.name = 'groundMesh';
     baseMesh.userData = { tileX: x, tileY: y };
-    baseMesh.position.y = -0.1;
-    baseMesh.receiveShadow = !isPerfMode;
+    baseMesh.position.y = -0.225;
     group.add(baseMesh);
 
     // Grid border outline
     const line = new THREE.LineSegments(ThreeAssetCache.tileEdgesGeo, ThreeAssetCache.lineMat);
-    line.position.y = -0.1;
+    line.position.y = -0.225;
     group.add(line);
 
-    // 3D Crop Rendering
+    // Sub-tile Voxel Terrain Relevo Highlights
+    const terrainDetailGroup = createTerrainSubDetails(tile.ground);
+    terrainDetailGroup.name = 'terrainDetailGroup';
+    group.add(terrainDetailGroup);
+
+    // 3D Crop Voxel Assembly
     if (tile.crop !== 'NONE') {
       const cropGroup = create3DCropMesh(tile.crop, tile.growth);
       cropGroup.name = 'cropGroup';
-      cropGroup.position.y = 0.05;
+      cropGroup.position.y = 0.01;
       group.add(cropGroup);
     }
 
     return group;
   };
 
-  // In-Place Tile Updater (prevents Garbage Collection pressure)
+  // Create Sub-tile Voxel Details (Relevo nos solos)
+  const createTerrainSubDetails = (ground: GroundType): THREE.Group => {
+    const detailGroup = new THREE.Group();
+
+    if (ground === 'TILLED') {
+      // 2 Raised Furrow Ridges across the soil tile
+      const ridge1 = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.04, 0.18), ThreeAssetCache.matTilledTop);
+      ridge1.position.set(0, 0.02, -0.22);
+      const ridge2 = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.04, 0.18), ThreeAssetCache.matTilledTop);
+      ridge2.position.set(0, 0.02, 0.22);
+      detailGroup.add(ridge1, ridge2);
+    } else if (ground === 'IRRIGATED') {
+      // Translucent wet water sheen layer
+      const waterLayer = new THREE.Mesh(
+        new THREE.PlaneGeometry(0.9, 0.9),
+        new THREE.MeshStandardMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.35, roughness: 0.1, metalness: 0.8 })
+      );
+      waterLayer.rotation.x = -Math.PI / 2;
+      waterLayer.position.y = 0.005;
+      detailGroup.add(waterLayer);
+    } else if (ground === 'SOAKED') {
+      // Flooded water puddle plane
+      const pool = new THREE.Mesh(
+        new THREE.PlaneGeometry(1.0, 1.0),
+        new THREE.MeshStandardMaterial({ color: 0x0284c7, transparent: true, opacity: 0.6, roughness: 0.05, metalness: 0.9 })
+      );
+      pool.rotation.x = -Math.PI / 2;
+      pool.position.y = 0.008;
+      detailGroup.add(pool);
+    } else if (ground === 'PRESTIGE') {
+      // 4 Glowing Corner LED Posts
+      const postGeo = new THREE.BoxGeometry(0.08, 0.12, 0.08);
+      const postMat = new THREE.MeshStandardMaterial({ color: 0xfef08a, emissive: 0xeab308, emissiveIntensity: 0.9 });
+      [
+        [-0.45, -0.45],
+        [0.45, -0.45],
+        [-0.45, 0.45],
+        [0.45, 0.45],
+      ].forEach(([px, pz]) => {
+        const post = new THREE.Mesh(postGeo, postMat);
+        post.position.set(px, 0.06, pz);
+        detailGroup.add(post);
+      });
+    }
+
+    return detailGroup;
+  };
+
+  // In-Place Tile Updater
   const update3DTileGroup = (group: THREE.Group, tile: TileState) => {
     const u = group.userData;
     
-    // Update ground material if changed
+    // Update ground material & terrain details if ground type changed
     if (u.lastGround !== tile.ground) {
       const groundMesh = group.getObjectByName('groundMesh') as THREE.Mesh;
       if (groundMesh) {
-        groundMesh.material = ThreeAssetCache.groundMaterials[tile.ground] || ThreeAssetCache.groundMaterials.NATURAL;
+        groundMesh.material = ThreeAssetCache.groundBoxMaterials[tile.ground] || ThreeAssetCache.groundBoxMaterials.NATURAL;
       }
+      let oldDetailGroup = group.getObjectByName('terrainDetailGroup');
+      if (oldDetailGroup) {
+        group.remove(oldDetailGroup);
+      }
+      const newDetailGroup = createTerrainSubDetails(tile.ground);
+      newDetailGroup.name = 'terrainDetailGroup';
+      group.add(newDetailGroup);
       u.lastGround = tile.ground;
     }
 
@@ -474,7 +861,7 @@ export const World3DCanvas: React.FC<World3DCanvasProps> = ({ engine }) => {
       if (tile.crop !== 'NONE') {
         const cropGroup = create3DCropMesh(tile.crop, tile.growth);
         cropGroup.name = 'cropGroup';
-        cropGroup.position.y = 0.05;
+        cropGroup.position.y = 0.01;
         group.add(cropGroup);
       }
       u.lastCrop = tile.crop;
@@ -482,87 +869,170 @@ export const World3DCanvas: React.FC<World3DCanvasProps> = ({ engine }) => {
     }
   };
 
-  // Helper 3D Crop Mesh Creator (Pooled Geometries)
+  // Helper 3D Crop Mesh Creator (Pixel-Art Voxel Assemblies)
   const create3DCropMesh = (type: CropType, growth: number): THREE.Group => {
     const cropGroup = new THREE.Group();
-    const scale = 0.2 + (growth / 100) * 0.8;
+    const scale = 0.25 + (growth / 100) * 0.75;
 
     if (type === 'WILD_FIBER') {
+      // 3 Stalks with textured wheat head cubes
       for (let i = 0; i < 3; i++) {
-        const stalk = new THREE.Mesh(ThreeAssetCache.stalkGeo, ThreeAssetCache.stalkMat);
-        stalk.position.set((i - 1) * 0.15, 0.25, (i % 2 === 0 ? 0.05 : -0.05));
+        const stalk = new THREE.Group();
+        const stem = new THREE.Mesh(ThreeAssetCache.stalkStemGeo, ThreeAssetCache.matStem);
+        stem.position.y = 0.22;
+        const head = new THREE.Mesh(ThreeAssetCache.wheatHeadGeo, ThreeAssetCache.matWheatHead);
+        head.position.y = 0.42;
+        stalk.add(stem, head);
+
+        stalk.position.set((i - 1) * 0.18, 0, (i % 2 === 0 ? 0.06 : -0.06));
         stalk.scale.set(scale, scale, scale);
         cropGroup.add(stalk);
       }
     } else if (type === 'WOODY_BUSH') {
-      const bush = new THREE.Mesh(ThreeAssetCache.bushGeo, ThreeAssetCache.bushMat);
-      bush.position.y = 0.3 * scale;
-      bush.scale.set(scale, scale, scale);
-      cropGroup.add(bush);
-    } else if (type === 'TREE') {
-      const trunk = new THREE.Mesh(ThreeAssetCache.treeTrunkGeo, ThreeAssetCache.trunkMat);
-      trunk.position.y = 0.2;
+      // Multi-layer foliage block with berry specks
+      const trunk = new THREE.Mesh(ThreeAssetCache.bushTrunkGeo, ThreeAssetCache.matBark);
+      trunk.position.y = 0.12;
       cropGroup.add(trunk);
 
-      const foliage = new THREE.Mesh(ThreeAssetCache.treeFoliageGeo, ThreeAssetCache.foliageMat);
-      foliage.position.y = 0.7 * scale;
-      foliage.scale.set(scale, scale, scale);
-      cropGroup.add(foliage);
+      const leafBase = new THREE.Mesh(ThreeAssetCache.bushLeafBaseGeo, ThreeAssetCache.matFoliage);
+      leafBase.position.y = 0.3 * scale;
+      leafBase.scale.set(scale, scale, scale);
+
+      const leafTop = new THREE.Mesh(ThreeAssetCache.bushLeafTopGeo, ThreeAssetCache.matBrightLime);
+      leafTop.position.y = 0.5 * scale;
+      leafTop.scale.set(scale, scale, scale);
+
+      // Berry specks
+      const berry1 = new THREE.Mesh(ThreeAssetCache.fruitBerryGeo, ThreeAssetCache.matBerry);
+      berry1.position.set(0.18, 0.35, 0.18);
+      const berry2 = new THREE.Mesh(ThreeAssetCache.fruitBerryGeo, ThreeAssetCache.matBerry);
+      berry2.position.set(-0.18, 0.4, -0.15);
+
+      cropGroup.add(leafBase, leafTop, berry1, berry2);
+    } else if (type === 'TREE') {
+      // Robust timber trunk & 3-tiered pine/oak foliage pyramid
+      const trunk = new THREE.Mesh(ThreeAssetCache.treeTrunkGeo, ThreeAssetCache.matBark);
+      trunk.position.y = 0.22;
+      cropGroup.add(trunk);
+
+      const t1 = new THREE.Mesh(ThreeAssetCache.treeLeafTier1Geo, ThreeAssetCache.matFoliage);
+      t1.position.y = 0.45 * scale;
+      t1.scale.set(scale, scale, scale);
+
+      const t2 = new THREE.Mesh(ThreeAssetCache.treeLeafTier2Geo, ThreeAssetCache.matFoliage);
+      t2.position.y = 0.7 * scale;
+      t2.scale.set(scale, scale, scale);
+
+      const t3 = new THREE.Mesh(ThreeAssetCache.treeLeafTier3Geo, ThreeAssetCache.matBrightLime);
+      t3.position.y = 0.92 * scale;
+      t3.scale.set(scale, scale, scale);
+
+      cropGroup.add(t1, t2, t3);
     } else if (type === 'CULTIVATED_ROOT') {
-      const root = new THREE.Mesh(ThreeAssetCache.rootGeo, ThreeAssetCache.rootMat);
-      root.position.y = 0.15 * scale;
+      // Green leafy top & protruding root crop
+      const canopy = new THREE.Mesh(ThreeAssetCache.rootCanopyGeo, ThreeAssetCache.matBrightLime);
+      canopy.position.y = 0.28 * scale;
+      canopy.scale.set(scale, scale, scale);
+
+      const root = new THREE.Mesh(ThreeAssetCache.rootCropGeo, ThreeAssetCache.matRootCrop);
+      root.rotation.x = Math.PI;
+      root.position.y = 0.12 * scale;
       root.scale.set(scale, scale, scale);
-      cropGroup.add(root);
+
+      cropGroup.add(canopy, root);
     } else if (type === 'FRUIT_COLONY') {
-      const fruit = new THREE.Mesh(ThreeAssetCache.rootGeo, ThreeAssetCache.fruitMat);
-      fruit.position.y = 0.2 * scale;
-      fruit.scale.set(scale, scale, scale);
-      cropGroup.add(fruit);
+      // Lush bush with ruby fruit crystals
+      const bush = new THREE.Mesh(ThreeAssetCache.fruitBushGeo, ThreeAssetCache.matFoliage);
+      bush.position.y = 0.25 * scale;
+      bush.scale.set(scale, scale, scale);
+
+      for (let i = 0; i < 4; i++) {
+        const fruit = new THREE.Mesh(ThreeAssetCache.fruitBerryGeo, ThreeAssetCache.matFruitCrystal);
+        const angle = (i * Math.PI) / 2;
+        fruit.position.set(Math.cos(angle) * 0.22, 0.28 * scale, Math.sin(angle) * 0.22);
+        cropGroup.add(fruit);
+      }
+      cropGroup.add(bush);
     } else if (type === 'ENERGY_FLOWER') {
-      const flower = new THREE.Mesh(ThreeAssetCache.flowerGeo, ThreeAssetCache.flowerMat);
-      flower.position.y = 0.3 * scale;
-      flower.scale.set(scale, scale, scale);
-      cropGroup.add(flower);
+      // Cybernetic flower with floating core
+      const stem = new THREE.Mesh(ThreeAssetCache.energyStemGeo, ThreeAssetCache.matEnergyPetal);
+      stem.position.y = 0.18;
+      cropGroup.add(stem);
+
+      const core = new THREE.Mesh(ThreeAssetCache.energyCoreGeo, ThreeAssetCache.matEnergyCore);
+      core.position.y = 0.42 * scale;
+      core.userData = { isAnimatable: true, animType: 'rotate' };
+      cropGroup.add(core);
+
+      // 4 Petals
+      for (let i = 0; i < 4; i++) {
+        const petal = new THREE.Mesh(ThreeAssetCache.energyPetalGeo, ThreeAssetCache.matEnergyPetal);
+        const angle = (i * Math.PI) / 2;
+        petal.position.set(Math.cos(angle) * 0.18, 0.38 * scale, Math.sin(angle) * 0.18);
+        petal.rotation.y = angle;
+        cropGroup.add(petal);
+      }
     } else if (type === 'GRADED_PLANT') {
-      const p = new THREE.Mesh(ThreeAssetCache.gradedGeo, ThreeAssetCache.gradedMat);
-      p.position.y = 0.25 * scale;
-      cropGroup.add(p);
+      // Alien DNA Helix Plant
+      for (let i = 0; i < 4; i++) {
+        const block = new THREE.Mesh(ThreeAssetCache.gradedHelixGeo, ThreeAssetCache.matGradedHelix);
+        block.position.y = (0.12 + i * 0.12) * scale;
+        block.rotation.y = (i * Math.PI) / 4;
+        block.scale.set(scale, scale, scale);
+        cropGroup.add(block);
+      }
     } else if (type === 'PRESTIGE') {
-      const trophy = new THREE.Mesh(ThreeAssetCache.prestigeCropGeo, ThreeAssetCache.prestigeCropMat);
-      trophy.position.y = 0.35;
-      cropGroup.add(trophy);
+      // Floating Golden Octahedron Trophy Crystal
+      const crystal = new THREE.Mesh(ThreeAssetCache.prestigeOctaGeo, ThreeAssetCache.matPrestigeCrystal);
+      crystal.position.y = 0.42;
+      crystal.userData = { isAnimatable: true, animType: 'rotate' };
+
+      const ring = new THREE.Mesh(ThreeAssetCache.prestigeRingGeo, ThreeAssetCache.matPrestigeCrystal);
+      ring.position.y = 0.42;
+      ring.rotation.x = Math.PI / 3;
+
+      cropGroup.add(crystal, ring);
     } else {
-      const m = new THREE.Mesh(ThreeAssetCache.defaultCropGeo, ThreeAssetCache.defaultCropMat);
-      m.position.y = 0.15 * scale;
-      cropGroup.add(m);
+      const defaultCrop = new THREE.Mesh(ThreeAssetCache.bushLeafBaseGeo, ThreeAssetCache.matFoliage);
+      defaultCrop.position.y = 0.2 * scale;
+      defaultCrop.scale.set(scale, scale, scale);
+      cropGroup.add(defaultCrop);
     }
 
     return cropGroup;
   };
 
-  // Helper Alien Agent Ship Mesh Creator
+  // Helper Alien Agent Sci-Fi Flying Saucer (UFO) Mesh Creator
   const createAgentShipMesh = (colorHex: string): THREE.Group => {
     const shipGroup = new THREE.Group();
 
-    // 1. Sleek Alien Hull
     const hullMat = ThreeAssetCache.getAgentHullMat(colorHex);
-    const hull = new THREE.Mesh(ThreeAssetCache.agentHullGeo, hullMat);
-    shipGroup.add(hull);
 
-    // 2. Glowing Cockpit / Sensor Dome on Top
-    const dome = new THREE.Mesh(ThreeAssetCache.agentDomeGeo, ThreeAssetCache.agentDomeMat);
-    dome.position.set(0, 0.06, 0);
+    // 1. Main Metallic Flying Saucer Disc Body
+    const body = new THREE.Mesh(ThreeAssetCache.agentBodyGeo, hullMat);
+    body.position.y = 0.2;
+    shipGroup.add(body);
+
+    // 2. Lower Saucer Bottom Cone/Dish
+    const bottomDish = new THREE.Mesh(ThreeAssetCache.agentBottomSaucerGeo, hullMat);
+    bottomDish.position.y = 0.1;
+    shipGroup.add(bottomDish);
+
+    // 3. Glowing Glass Cockpit / Sensor Dome
+    const dome = new THREE.Mesh(ThreeAssetCache.agentTopDomeGeo, ThreeAssetCache.matAgentDome);
+    dome.position.set(0, 0.26, 0);
     shipGroup.add(dome);
 
-    // 3. Levitating Energy / Plasma Ring around Hull
-    const ring = new THREE.Mesh(ThreeAssetCache.agentRingGeo, ThreeAssetCache.agentRingMat);
+    // 4. Levitating Outer Ring around Saucer Edge
+    const ring = new THREE.Mesh(ThreeAssetCache.agentRingGeo, ThreeAssetCache.matAgentDome);
     ring.name = 'energyRing';
     ring.rotation.x = Math.PI / 2;
+    ring.position.y = 0.2;
     shipGroup.add(ring);
 
-    // 4. Anti-Gravity Scanner Beam underneath
-    const beam = new THREE.Mesh(ThreeAssetCache.agentBeamGeo, ThreeAssetCache.agentBeamMat);
-    beam.position.set(0, -0.28, 0);
+    // 5. Anti-Gravity Laser Beam underneath
+    const beam = new THREE.Mesh(ThreeAssetCache.agentBeamGeo, ThreeAssetCache.matAgentBeam);
+    beam.position.set(0, -0.1, 0);
     shipGroup.add(beam);
 
     return shipGroup;
@@ -612,15 +1082,31 @@ export const World3DCanvas: React.FC<World3DCanvasProps> = ({ engine }) => {
     <div className="flex-1 bg-[#08090a] flex flex-col h-full relative overflow-hidden font-sans select-none">
       {/* Canvas Controls Header Bar */}
       <div className="h-9 bg-[#08090a] border-b border-[#23252a] flex items-center justify-between px-3 text-xs text-slate-300 font-mono z-10">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
           <GameLogo className="w-4 h-4" />
           <span className="font-semibold text-white">3D</span>
           <span className="text-[10px] bg-[#161718] border border-[#23252a] px-2 py-0.5 rounded text-slate-400">
             Grade: {engine.getGridWidth()}x{engine.getGridHeight()} ({engine.getGridWidth() * engine.getGridHeight()} blocos)
           </span>
+
+          {/* v2.5.0 Pixelated 3D Shader Controls (Fixed 2p) */}
+          <div className="flex items-center gap-1.5 bg-[#121316] border border-[#23252a] rounded px-2 py-0.5 ml-1">
+            <button
+              onClick={() => setPixelMode(!pixelMode)}
+              className={`flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded transition-all ${
+                pixelMode
+                  ? 'bg-indigo-600/30 text-indigo-300 border border-indigo-500/50 shadow-[0_0_8px_rgba(99,102,241,0.25)]'
+                  : 'bg-[#18191c] text-slate-400 hover:text-slate-200 border border-transparent'
+              }`}
+              title="Alternar Renderizador v2.5.0 Pixelated 3D Postprocessing (Fixado em 2p)"
+            >
+              <Sparkles className="w-3 h-3 text-indigo-400" />
+              <span>Pixel 3D (2p)</span>
+            </button>
+          </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 shrink-0">
           {/* Zoom Controls */}
           <div className="flex items-center gap-1 bg-[#08090a]/90 border border-[#23252a] rounded px-1 py-0.5">
             <button
@@ -692,6 +1178,14 @@ export const World3DCanvas: React.FC<World3DCanvasProps> = ({ engine }) => {
             </div>
 
             <div className="space-y-1.5 text-[10px]">
+              <div className="flex items-center justify-between">
+                <span className="text-slate-400 flex items-center gap-1">
+                  <Sparkles className="w-3 h-3 text-indigo-400" /> Pass:
+                </span>
+                <span className="text-indigo-300 font-bold">
+                  {pixelMode ? `Pixel 3D (${pixelSize}px)` : 'Native 3D'}
+                </span>
+              </div>
               <div className="flex items-center justify-between">
                 <span className="text-slate-400 flex items-center gap-1">
                   <HardDrive className="w-3 h-3 text-emerald-400" /> RAM:

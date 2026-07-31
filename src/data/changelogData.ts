@@ -8,10 +8,25 @@ export interface ChangelogRelease {
 
 export const CHANGELOG_HISTORY: ChangelogRelease[] = [
   {
+    version: 'v2.5.0',
+    date: '2026-07-31',
+    title: 'Redesign Motor 3D Pixel Art & Ativos Voxel Procedurais (Nave, Terrenos, Solos e Culturas)',
+    isCurrent: true,
+    changes: [
+      'Renderizador Pixelated 3D Postprocessing: Integração nativa do RenderPixelatedPass com alternância instantânea entre Pixel 3D e 3D Nativo, controle de tamanho de pixel (2p, 3p, 4p, 6p) e shader de contorno estilizado.',
+      'Texturização Procedural em Pixel Art (Texturas Canvas 32x32 com NearestFilter): Cada tipo de solo possui textura exclusiva desenhada via código com dithering, grãos minerais e padrões de textura pixel-art.',
+      'Detalhamento de Solos e Terrenos Trabalhados: NATURAL com gramado denso e tufos em relevo; SOIL com terra arada e pedriscos; TILLED com sulcos de aração em relevo roxo/escuro; IRRIGATED com brilho de umidade cyan e gotas; SOAKED com poça alagada e efeito de ondulação; PRESTIGE com placa dourada e circuitos cibernéticos de LED.',
+      'Estrutura de Blocos Voxel com Estratigrafia Lateral: Os blocos de solo possuem paredes laterais com camadas geológicas (camada superior de cultivo, subsolo de rocha dithered e leito rochoso).',
+      'Redesign Completo de Culturas em Voxel 3D: FIBRA SILVESTRE com feixes de espigas douradas e palha detalhada; ARBUSTO MADEIRÁVEL com blocos de folhagem sobrepostos e bagas coloridas; ÁRVORE com tronco robusto e copa de pinheiro em camadas com sombra pixelada; RAIZ CULTIVADA com tubérculos salientes da terra; COLÔNIA DE FRUTAS com arbusto pontilhado por cristais rubi; FLOR DE ENERGIA cibernética com núcleo flutuante reluzente; PLANTA GRADUADA com espiral de DNA bioluminescente; CRISTAL DE PRESTÍGIO dourado flutuante com anel de partículas.',
+      'Redesign da Nave Harvest Drone Sci-Fi: Casco metálico multifacetado com painéis pixelados, propulsores duplos de plasma, cúpula de vidro futurista, feixe de escaneamento holográfico e anel levitante com iluminação orbital.',
+      'Melhorias de Performance e Animações em Tempo Real: Preservação total do pool de geometrias e materiais, rotação animada de cristais/flores e efeito de pulso flutuante do drone sem causar vazamento de memória ou sobrecarga de draw calls.'
+    ]
+  },
+  {
     version: 'v2.4.1',
     date: '2026-07-31',
     title: 'Atualização de Guardrails, Atalho do Editor & Barra de Recursos Progressiva',
-    isCurrent: true,
+    isCurrent: false,
     changes: [
       'Sincronização de Guardrails de Execução: Os interpretadores nativos (Pyodide Python WASM e JavaScript Sandbox) agora aplicam verificações de segurança via AST para garantir que tanto recursos da linguagem (if/else, loops, funções, variáveis) quanto comandos de API estejam bloqueados até a respectiva pesquisa na Árvore de Tecnologias.',
       'Diretriz de Manutenção na Documentação: Adicionada nota arquitetural na documentação do sistema (techApiMap.ts) para revisão obrigatória dos guardrails em futuras expansões da Árvore de Pesquisas.',
