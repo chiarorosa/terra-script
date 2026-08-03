@@ -492,8 +492,9 @@ export const World3DCanvas: React.FC<World3DCanvasProps> = ({ engine }) => {
     return 1.0;
   });
 
-  // Persist zoomLevel across tab switches & sessions
+  // Persist zoomLevel across tab switches & sessions and sync ref
   useEffect(() => {
+    zoomLevelRef.current = zoomLevel;
     if (typeof window !== 'undefined') {
       localStorage.setItem('terrascript_zoom_level', String(zoomLevel));
     }
@@ -564,7 +565,28 @@ export const World3DCanvas: React.FC<World3DCanvasProps> = ({ engine }) => {
   // Keyboard Arrow Navigation Listener (▲, ▼, ◄, ►)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+      const target = e.target as HTMLElement | null;
+      if (
+        target &&
+        (target.tagName === 'INPUT' ||
+         target.tagName === 'TEXTAREA' ||
+         target.isContentEditable ||
+         !!target.closest('input, textarea, [contenteditable="true"], .cm-editor, .cm-content, .monaco-editor'))
+      ) {
+        return;
+      }
+
+      const activeEl = document.activeElement as HTMLElement | null;
+      if (
+        activeEl &&
+        (activeEl.tagName === 'INPUT' ||
+         activeEl.tagName === 'TEXTAREA' ||
+         activeEl.isContentEditable ||
+         !!activeEl.closest('input, textarea, [contenteditable="true"], .cm-editor, .cm-content, .monaco-editor'))
+      ) {
+        return;
+      }
+
       if (e.code === 'ArrowUp') {
         e.preventDefault();
         panPOV('up', 1.0);
@@ -1427,22 +1449,6 @@ export const World3DCanvas: React.FC<World3DCanvasProps> = ({ engine }) => {
           <span className="text-[10px] bg-[#161718] border border-[#23252a] px-2 py-0.5 rounded text-slate-400">
             {engine.getGridWidth()}x{engine.getGridHeight()}
           </span>
-
-          {/* v2.5.0 Pixelated 3D Shader Controls (Fixed 2p) */}
-          <div className="flex items-center gap-1.5 bg-[#121316] border border-[#23252a] rounded px-1.5 py-0.5 ml-1">
-            <button
-              onClick={() => setPixelMode(!pixelMode)}
-              className={`flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded transition-all ${
-                pixelMode
-                  ? 'bg-indigo-600/30 text-indigo-300 border border-indigo-500/50 shadow-[0_0_8px_rgba(99,102,241,0.25)]'
-                  : 'bg-[#18191c] text-slate-400 hover:text-slate-200 border border-transparent'
-              }`}
-              title="Alternar Renderizador v2.5.0 Pixelated 3D Postprocessing (Fixado em 2p)"
-            >
-              <Sparkles className="w-3 h-3 text-indigo-400" />
-              <span>Pixel 3D (2p)</span>
-            </button>
-          </div>
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
