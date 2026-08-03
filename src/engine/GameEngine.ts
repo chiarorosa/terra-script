@@ -28,38 +28,38 @@ import { computeSyncChecksum, verifySyncChecksum } from '../utils/cryptoUtils';
 export const INITIAL_TECH_TREE: TechNode[] = [
   // AUTOMATION BRANCH
   { id: 'AUTO_1', branch: 'AUTOMATION', name: 'Comandos Sequenciais', description: 'Desbloqueia execução em sequência e comandos básicos de fazenda.', tier: 0, cost: {}, unlocked: true },
-  { id: 'AUTO_2', branch: 'AUTOMATION', name: 'Variáveis e Operadores', description: 'Permite atribuição de variáveis e expressões matemáticas.', tier: 1, cost: { fiber: 10 }, unlocked: false, requires: ['AUTO_1'] },
-  { id: 'AUTO_3', branch: 'AUTOMATION', name: 'Condicionais & Operadores Lógicos', description: 'Permite lógica de ramificação (if/elif/else) e combinação de condições com operadores lógicos (and, or, &&, ||).', tier: 2, cost: { fiber: 25, wood: 10 }, unlocked: false, requires: ['AUTO_2'] },
-  { id: 'AUTO_4', branch: 'AUTOMATION', name: 'Loops (while / for)', description: 'Permite loops repetitivos contínuos.', tier: 3, cost: { fiber: 50, wood: 25 }, unlocked: false, requires: ['AUTO_3'] },
-  { id: 'AUTO_5', branch: 'AUTOMATION', name: 'Funções', description: 'Agrupa código reutilizável em funções modulares.', tier: 4, cost: { fiber: 100, wood: 50, roots: 20 }, unlocked: false, requires: ['AUTO_4'] },
-  { id: 'AUTO_6', branch: 'AUTOMATION', name: 'Comunicação Inter-Agentes (IPC)', description: 'Sinais em tempo real e barramento de mensagens para coordenação entre naves agentes.', tier: 8, cost: { roots: 100, fruits: 50, energy: 20 }, unlocked: false, requires: ['AUTO_5'] },
+  { id: 'AUTO_2', branch: 'AUTOMATION', name: 'Variáveis e Operadores', description: 'Permite atribuição de variáveis e expressões matemáticas.', tier: 1, cost: { fiber: 25 }, unlocked: false, requires: ['AUTO_1'] },
+  { id: 'AUTO_3', branch: 'AUTOMATION', name: 'Condicionais & Operadores Lógicos', description: 'Permite lógica de ramificação (if/elif/else) e combinação de condições com operadores lógicos (and, or, &&, ||).', tier: 2, cost: { fiber: 60, wood: 25 }, unlocked: false, requires: ['AUTO_2'] },
+  { id: 'AUTO_4', branch: 'AUTOMATION', name: 'Loops (while / for)', description: 'Permite loops repetitivos contínuos.', tier: 3, cost: { fiber: 150, wood: 75 }, unlocked: false, requires: ['AUTO_3'] },
+  { id: 'AUTO_5', branch: 'AUTOMATION', name: 'Funções', description: 'Agrupa código reutilizável em funções modulares.', tier: 4, cost: { fiber: 250, wood: 125, roots: 60 }, unlocked: false, requires: ['AUTO_4'] },
+  { id: 'AUTO_6', branch: 'AUTOMATION', name: 'Comunicação Inter-Agentes (IPC)', description: 'Sinais em tempo real e barramento de mensagens para coordenação entre naves agentes.', tier: 8, cost: { roots: 400, fruits: 250, energy: 150 }, unlocked: false, requires: ['AUTO_5'] },
 
   // AGRONOMY BRANCH
   { id: 'AGRO_1', branch: 'AGRONOMY', name: 'Fibra Selvagem e Irrigação', description: 'Colha fibras e use farm.water() para irrigar e restaurar a umidade do solo.', tier: 0, cost: {}, unlocked: true },
-  { id: 'AGRO_2', branch: 'AGRONOMY', name: 'Arbustos de Madeira', description: 'Plante arbustos para produzir madeira estrutural.', tier: 1, cost: { fiber: 15 }, unlocked: false, requires: ['AGRO_1'] },
-  { id: 'AGRO_3', branch: 'AGRONOMY', name: 'Solo Arado e Raízes', description: 'Arare o solo e cultive raízes agrícolas.', tier: 2, cost: { fiber: 30, wood: 15 }, unlocked: false, requires: ['AGRO_2'] },
-  { id: 'AGRO_4', branch: 'AGRONOMY', name: 'Árvores e Madeira Nobre', description: 'Plante árvores. Evite árvores adjacentes para acelerar o crescimento.', tier: 3, cost: { wood: 50, roots: 25 }, unlocked: false, requires: ['AGRO_3'] },
-  { id: 'AGRO_5', branch: 'AGRONOMY', name: 'Colônias de Frutas', description: 'Plantações de frutas conectadas geram recompensas multiplicadas.', tier: 5, cost: { wood: 100, roots: 50 }, unlocked: false, requires: ['AGRO_4'] },
-  { id: 'AGRO_6', branch: 'AGRONOMY', name: 'Flores de Energia', description: 'Meça o nível de energia das flores com measure() e colha no pico.', tier: 6, cost: { roots: 100, fruits: 40 }, unlocked: false, requires: ['AGRO_5'] },
-  { id: 'AGRO_7', branch: 'AGRONOMY', name: 'Culturas Graduadas', description: 'Plante culturas graduadas e ordene fileiras com swap() para biomassa.', tier: 8, cost: { fruits: 80, energy: 50 }, unlocked: false, requires: ['AGRO_6'] },
-  { id: 'AGRO_8', branch: 'AGRONOMY', name: 'Labirinto Vivo', description: 'Transforme a terra em um labirinto e navegue para colher o núcleo.', tier: 9, cost: { energy: 100, biomass: 50 }, unlocked: false, requires: ['AGRO_7'] },
+  { id: 'AGRO_2', branch: 'AGRONOMY', name: 'Arbustos de Madeira', description: 'Plante arbustos para produzir madeira estrutural.', tier: 1, cost: { fiber: 30 }, unlocked: false, requires: ['AGRO_1'] },
+  { id: 'AGRO_3', branch: 'AGRONOMY', name: 'Solo Arado e Raízes', description: 'Arare o solo e cultive raízes agrícolas.', tier: 2, cost: { fiber: 80, wood: 40 }, unlocked: false, requires: ['AGRO_2'] },
+  { id: 'AGRO_4', branch: 'AGRONOMY', name: 'Árvores e Madeira Nobre', description: 'Plante árvores. Evite árvores adjacentes para acelerar o crescimento.', tier: 3, cost: { wood: 150, roots: 60 }, unlocked: false, requires: ['AGRO_3'] },
+  { id: 'AGRO_5', branch: 'AGRONOMY', name: 'Colônias de Frutas', description: 'Plantações de frutas conectadas geram recompensas multiplicadas.', tier: 5, cost: { wood: 300, roots: 150 }, unlocked: false, requires: ['AGRO_4'] },
+  { id: 'AGRO_6', branch: 'AGRONOMY', name: 'Flores de Energia', description: 'Meça o nível de energia das flores com measure() e colha no pico.', tier: 6, cost: { roots: 300, fruits: 180 }, unlocked: false, requires: ['AGRO_5'] },
+  { id: 'AGRO_7', branch: 'AGRONOMY', name: 'Culturas Graduadas', description: 'Plante culturas graduadas e ordene fileiras com swap() para biomassa.', tier: 8, cost: { fruits: 450, energy: 250 }, unlocked: false, requires: ['AGRO_6'] },
+  { id: 'AGRO_8', branch: 'AGRONOMY', name: 'Labirinto Vivo', description: 'Transforme a terra em um labirinto e navegue para colher o núcleo.', tier: 9, cost: { energy: 600, biomass: 300 }, unlocked: false, requires: ['AGRO_7'] },
 
   // SYSTEMS BRANCH
   { id: 'SYS_1', branch: 'SYSTEMS', name: 'Saída do Console print()', description: 'Exiba mensagens e dados de depuração no console stdout.', tier: 0, cost: {}, unlocked: true },
-  { id: 'SYS_2', branch: 'SYSTEMS', name: 'Sensores Básicos e Coordenadas', description: 'Inspecione o ambiente com os sensores world.ground(), world.entity() e world.moisture().', tier: 1, cost: { fiber: 10 }, unlocked: false, requires: ['SYS_1'] },
-  { id: 'SYS_3', branch: 'SYSTEMS', name: 'Medição de Lotes', description: 'Use world.measure() para inspecionar graus de plantas e valores de energia.', tier: 3, cost: { fiber: 40, wood: 20 }, unlocked: false, requires: ['SYS_2'] },
-  { id: 'SYS_4', branch: 'SYSTEMS', name: 'Telemetria & Estatísticas do Agente', description: 'Leitura do dicionário de telemetria e estatísticas individuais via sys.get_agent_stats() ou agent.get_stats().', tier: 4, cost: { fiber: 50, wood: 25, roots: 15 }, unlocked: false, requires: ['SYS_3'] },
+  { id: 'SYS_2', branch: 'SYSTEMS', name: 'Sensores Básicos e Coordenadas', description: 'Inspecione o ambiente com os sensores world.ground(), world.entity() e world.moisture().', tier: 1, cost: { fiber: 20 }, unlocked: false, requires: ['SYS_1'] },
+  { id: 'SYS_3', branch: 'SYSTEMS', name: 'Medição de Lotes', description: 'Use world.measure() para inspecionar graus de plantas e valores de energia.', tier: 3, cost: { fiber: 100, wood: 60 }, unlocked: false, requires: ['SYS_2'] },
+  { id: 'SYS_4', branch: 'SYSTEMS', name: 'Telemetria & Estatísticas do Agente', description: 'Leitura do dicionário de telemetria e estatísticas individuais via sys.get_agent_stats() ou agent.get_stats().', tier: 4, cost: { fiber: 150, wood: 100, roots: 50 }, unlocked: false, requires: ['SYS_3'] },
 
   // SCALE BRANCH
   { id: 'SCALE_1', branch: 'SCALE', name: 'Micro Fazenda 1x1', description: 'Lote inicial de terreno com um único bloco.', tier: 0, cost: {}, unlocked: true },
-  { id: 'SCALE_2', branch: 'SCALE', name: 'Corredor 1x3', description: 'Expanda o terreno para um corredor horizontal 1x3.', tier: 1, cost: { fiber: 20 }, unlocked: false, requires: ['SCALE_1'] },
-  { id: 'SCALE_3', branch: 'SCALE', name: 'Matriz 3x3', description: 'Expanda o terreno para uma matriz de grade 3x3.', tier: 2, cost: { fiber: 50, wood: 20 }, unlocked: false, requires: ['SCALE_2'] },
-  { id: 'SCALE_4', branch: 'SCALE', name: 'Fazenda Expandida 5x5', description: 'Expanda o terreno para uma zona agrícola 5x5.', tier: 4, cost: { wood: 100, roots: 40 }, unlocked: false, requires: ['SCALE_3'] },
-  { id: 'SCALE_5', branch: 'SCALE', name: 'Segundo Agente', description: 'Desbloqueie a Nave Agente nº 2 para automatizar em paralelo.', tier: 5, cost: { roots: 100, fruits: 30 }, unlocked: false, requires: ['SCALE_4'] },
-  { id: 'SCALE_6', branch: 'SCALE', name: 'Grade Industrial 7x7', description: 'Expanda o terreno para uma grade 7x7.', tier: 6, cost: { fruits: 100, energy: 50 }, unlocked: false, requires: ['SCALE_5'] },
-  { id: 'SCALE_7', branch: 'SCALE', name: 'Matriz Complexa 9x9', description: 'Expanda o terreno para uma grade 9x9.', tier: 7, cost: { energy: 100, biomass: 50 }, unlocked: false, requires: ['SCALE_6'] },
-  { id: 'SCALE_8', branch: 'SCALE', name: 'Terceiro Agente', description: 'Desbloqueie a Nave Agente nº 3 para automatizar em paralelo.', tier: 8, cost: { biomass: 100, crystals: 25 }, unlocked: false, requires: ['SCALE_7'] },
-  { id: 'SCALE_9', branch: 'SCALE', name: 'Mega Zona 12x12', description: 'Expanda o terreno para um lote mega agrícola 12x12.', tier: 9, cost: { biomass: 200, crystals: 50 }, unlocked: false, requires: ['SCALE_8'] }
+  { id: 'SCALE_2', branch: 'SCALE', name: 'Corredor 1x3', description: 'Expanda o terreno para um corredor horizontal 1x3.', tier: 1, cost: { fiber: 40 }, unlocked: false, requires: ['SCALE_1'] },
+  { id: 'SCALE_3', branch: 'SCALE', name: 'Matriz 3x3', description: 'Expanda o terreno para uma matriz de grade 3x3.', tier: 2, cost: { fiber: 120, wood: 50 }, unlocked: false, requires: ['SCALE_2'] },
+  { id: 'SCALE_4', branch: 'SCALE', name: 'Fazenda Expandida 5x5', description: 'Expanda o terreno para uma zona agrícola 5x5.', tier: 4, cost: { wood: 250, roots: 100 }, unlocked: false, requires: ['SCALE_3'] },
+  { id: 'SCALE_5', branch: 'SCALE', name: 'Segundo Agente', description: 'Desbloqueie a Nave Agente nº 2 para automatizar em paralelo.', tier: 5, cost: { roots: 250, fruits: 120 }, unlocked: false, requires: ['SCALE_4'] },
+  { id: 'SCALE_6', branch: 'SCALE', name: 'Grade Industrial 7x7', description: 'Expanda o terreno para uma grade 7x7.', tier: 6, cost: { fruits: 350, energy: 150 }, unlocked: false, requires: ['SCALE_5'] },
+  { id: 'SCALE_7', branch: 'SCALE', name: 'Matriz Complexa 9x9', description: 'Expanda o terreno para uma grade 9x9.', tier: 7, cost: { energy: 400, biomass: 200 }, unlocked: false, requires: ['SCALE_6'] },
+  { id: 'SCALE_8', branch: 'SCALE', name: 'Terceiro Agente', description: 'Desbloqueie a Nave Agente nº 3 para automatizar em paralelo.', tier: 8, cost: { biomass: 350, crystals: 75 }, unlocked: false, requires: ['SCALE_7'] },
+  { id: 'SCALE_9', branch: 'SCALE', name: 'Mega Zona 12x12', description: 'Expanda o terreno para um lote mega agrícola 12x12.', tier: 9, cost: { biomass: 600, crystals: 150 }, unlocked: false, requires: ['SCALE_8'] }
 ];
 
 export function getInitialTechTree(): TechNode[] {
@@ -695,6 +695,11 @@ export class GameEngine {
         const effectiveRate = baseRate * moistureFactor;
         tile.growth = Math.min(100, tile.growth + effectiveRate);
         
+        // Oscilação de energia para ENERGY_FLOWER (faixa de 10 a 90)
+        if (tile.crop === 'ENERGY_FLOWER') {
+          tile.energyValue = Math.round(50 + 40 * Math.sin((this.currentTick * 0.15) + tile.x * 1.5 + tile.y * 2.5));
+        }
+
         // Crops consume moisture as they grow
         tile.moisture = Math.max(0, Math.round((tile.moisture - 0.003) * 1000) / 1000);
       } else if (tile.crop === 'NONE' && tile.moisture > 0.5) {
@@ -770,6 +775,18 @@ export class GameEngine {
     return false;
   }
 
+  private countAdjacentMatureCrops(x: number, y: number, crop: CropType): number {
+    const dirs = [[0,1], [0,-1], [1,0], [-1,0]];
+    let count = 0;
+    for (const [dx, dy] of dirs) {
+      const nx = (x + dx + this.width) % this.width;
+      const ny = (y + dy + this.height) % this.height;
+      const t = this.getTile(nx, ny);
+      if (t.crop === crop && t.growth >= 100) count++;
+    }
+    return count;
+  }
+
   // Game API implementation
   public getTile(x: number, y: number): TileState {
     const key = `${x},${y}`;
@@ -821,10 +838,13 @@ export class GameEngine {
       this.resources.roots += 2;
       if (ag) ag.stats.harvestedResources.roots += 2;
     } else if (t.crop === 'FRUIT_COLONY') {
-      this.resources.fruits += 4;
-      if (ag) ag.stats.harvestedResources.fruits += 4;
+      // Sinergia de bloco: 4 frutas base + 2 por colônia vizinha madura (até 12 frutas por lote)
+      const adjCount = this.countAdjacentMatureCrops(x, y, 'FRUIT_COLONY');
+      const fruitBonus = 4 + (adjCount * 2);
+      this.resources.fruits += fruitBonus;
+      if (ag) ag.stats.harvestedResources.fruits += fruitBonus;
     } else if (t.crop === 'ENERGY_FLOWER') {
-      const bonus = Math.floor((t.energyValue || 50) / 10);
+      const bonus = Math.max(1, Math.floor((t.energyValue || 50) / 10));
       this.resources.energy += bonus;
       if (ag) ag.stats.harvestedResources.energy += bonus;
     } else if (t.crop === 'GRADED_PLANT') {

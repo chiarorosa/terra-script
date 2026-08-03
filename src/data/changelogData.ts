@@ -8,10 +8,23 @@ export interface ChangelogRelease {
 
 export const CHANGELOG_HISTORY: ChangelogRelease[] = [
   {
+    version: 'v2.5.1',
+    date: '2026-08-03',
+    title: 'Rebalanceamento de Colheitas, Exigências de Solo e Reestruturação da Árvore de Pesquisas',
+    isCurrent: true,
+    changes: [
+      'Transições Mutuamente Exclusivas de Solo: farm.water() converte solo Arado (TILLED) em IRRIGATED (elevação da umidade a 100%), enquanto farm.till() cancela a irrigação convertendo solo Irrigado (IRRIGATED) em TILLED.',
+      'Crescimento Restrito a Solo Arado (TILLED): Raízes Cultivadas (CULTIVATED_ROOT) e Árvores Nobres (TREE) agora exigem EXCLUSIVAMENTE Solo Arado para crescer (taxa de crescimento zerada em solos NATURAL ou IRRIGATED). Estratégia recomendada: irrigue primeiro para elevar a umidade e are em seguida.',
+      'Rebalanceamento e Sinergias de Colheita: Grama Selvagem (+1 Fibra), Arbusto (+1 Madeira), Raízes (+2 Raízes), Árvores (+5 Madeira em xadrez / +2 com vizinho), Colônias de Frutas (+4 Frutas base +2 por vizinho maduro, até 12 Frutas por lote) e Flores de Energia (+1 a +9 Energia com oscilação contínua medida via world.measure()).',
+      'Rebalanceamento Completo da Árvore de Pesquisas: Reajuste progressivo dos custos de desbloqueio em todas as ramificações (Automação, Agronomia, Sistemas e Escala), estendendo a vida útil do gameplay e valorizando a automação de recursos avançados.',
+      'Atualização Abrangente da Wiki de API & Guia de Jogo: Documentação atualizada para farm.water(), farm.till(), farm.plant() e guias de mecânicas de solo (mech_soil_water) e crescimento de culturas (mech_crop_growth).'
+    ]
+  },
+  {
     version: 'v2.5.0',
     date: '2026-07-31',
     title: 'Redesign Motor 3D Pixel Art & Ativos Voxel Procedurais (Nave, Terrenos, Solos e Culturas)',
-    isCurrent: true,
+    isCurrent: false,
     changes: [
       'Renderizador Pixelated 3D Postprocessing: Integração nativa do RenderPixelatedPass com alternância instantânea entre Pixel 3D e 3D Nativo, controle de tamanho de pixel (2p, 3p, 4p, 6p) e shader de contorno estilizado.',
       'Texturização Procedural em Pixel Art (Texturas Canvas 32x32 com NearestFilter): Cada tipo de solo possui textura exclusiva desenhada via código com dithering, grãos minerais e padrões de textura pixel-art.',

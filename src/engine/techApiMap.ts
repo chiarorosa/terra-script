@@ -346,11 +346,11 @@ export const API_CATALOG: ApiItem[] = [
     signature: 'farm.plant(cropName: string): boolean',
     pythonSnippet: 'farm.plant("FRUIT_COLONY")',
     jsSnippet: 'farm.plant("FRUIT_COLONY")',
-    description: 'Planta Colônias de Frutas com bônus multiplicador superlinear.',
+    description: 'Planta Colônias de Frutas com sinergia de bloco (4 a 12 frutas por lote).',
     techId: 'AGRO_5',
     category: 'Comandos da Fazenda',
-    docDetail: 'Colônias de frutas adjacentes conectadas multiplicam o rendimento total de Frutas ao serem colhidas em bloco.',
-    exampleCode: 'farm.plant("FRUIT_COLONY")',
+    docDetail: 'Colônias de Frutas são culturas delicadas que exigem umidade >= 75% para crescer. Quando maduras, concedem +4 Frutas base +2 Frutas por colônia madura vizinha (até 12 Frutas por lote em blocos 3x3).',
+    exampleCode: 'farm.water()\nfarm.plant("FRUIT_COLONY")',
     parameters: [
       {
         name: 'cropName',
@@ -365,7 +365,8 @@ export const API_CATALOG: ApiItem[] = [
       description: 'Retorna true se a colônia foi semeada.'
     },
     usabilityNotes: [
-      'Plante colônias em blocos contínuos 2x2 ou 3x3 para maximizar a sinergia de frutos.'
+      'Requer umidade >= 75% para se desenvolver. Mantenha o solo bem irrigado com farm.water().',
+      'Plante colônias em blocos contínuos (2x2 ou 3x3) para ativar a sinergia e obter até 12 Frutas por lote!'
     ],
     expectedOutput: 'Colônia de Frutas semeada.'
   },
@@ -377,11 +378,11 @@ export const API_CATALOG: ApiItem[] = [
     signature: 'farm.plant(cropName: string): boolean',
     pythonSnippet: 'farm.plant("ENERGY_FLOWER")',
     jsSnippet: 'farm.plant("ENERGY_FLOWER")',
-    description: 'Semeia Flores de Energia, cuja energia oscila com o tempo.',
+    description: 'Semeia Flores de Energia com potencial oscilante (1 a 9 Energia por colheita).',
     techId: 'AGRO_6',
     category: 'Comandos da Fazenda',
-    docDetail: 'Flores de energia geram o recurso Energia. O nível de energia oscila e pode ser medido com world.measure(). Colha no pico!',
-    exampleCode: 'farm.plant("ENERGY_FLOWER")\nif world.measure() > 50:\n    farm.harvest()',
+    docDetail: 'Flores de Energia geram o recurso Energia. Exigem umidade >= 75% para crescer. O nível de energia oscila continuamente (10 a 90) e deve ser medido com world.measure(). Colha no pico (>= 70) para obter de 7 a 9 de Energia!',
+    exampleCode: 'farm.plant("ENERGY_FLOWER")\nif world.measure() >= 70:\n    farm.harvest()',
     parameters: [
       {
         name: 'cropName',
@@ -396,7 +397,8 @@ export const API_CATALOG: ApiItem[] = [
       description: 'Retorna true se plantado.'
     },
     usabilityNotes: [
-      'Consulte o valor numérico com world.measure() antes de colher para obter os maiores picos de energia.'
+      'Requer umidade >= 75% para crescer.',
+      'Consulte o valor numérico com world.measure() antes de colher para obter os maiores picos de energia (1 a 9 de Energia).'
     ],
     expectedOutput: 'Flor de Energia semeada.'
   },
@@ -1021,14 +1023,14 @@ export const API_CATALOG: ApiItem[] = [
     id: 'mech_crop_growth',
     namespace: 'mechanics',
     methodName: 'Crescimento e Colheita das Culturas',
-    displayText: 'Sinergia e Regras de Crescimento das Plantas',
+    displayText: 'Sinergia e Regras de Crescimento das Plantas v2.5.1',
     signature: 'Mecânicas de Maturação e Rendimento',
-    pythonSnippet: '# Padrão de verificação de maturação antes de colher\nif farm.can_harvest():\n    farm.harvest()',
-    jsSnippet: '// Padrão de verificação de maturação antes de colher\nif (farm.can_harvest()) {\n  farm.harvest();\n}',
-    description: 'Estágios de maturação (0% a 100%), rendimentos por espécie vegetal e bônus de vizinhança.',
+    pythonSnippet: '# Padrão de verificação de maturação e medição antes de colher\nif farm.can_harvest():\n    if world.crop() == "ENERGY_FLOWER" and world.measure() < 70:\n        pass # Aguarda o pico de energia!\n    else:\n        farm.harvest()',
+    jsSnippet: '// Padrão de verificação de maturação e medição antes de colher\nif (farm.can_harvest()) {\n  if (world.crop() === "ENERGY_FLOWER" && world.measure() < 70) {\n    // Aguarda o pico de energia!\n  } else {\n    farm.harvest();\n  }\n}',
+    description: 'Guia detalhado de solo, maturação e rendimentos para as 6 culturas principais.',
     techId: 'AGRO_1',
     category: 'Mecânicas de Jogo',
-    docDetail: 'Cada espécie vegetal possui características únicas: Fibra Selvagem cresce rapidamente em qualquer solo; Arbustos geram Madeira; Raízes prosperam em solo arado; Árvores exigem espaço em xadrez; Colônias de Frutas multiplicam recompensas quando plantadas juntas; e Flores de Energia variam o rendimento numérico ao longo do tempo.',
+    docDetail: 'Regras e rendimentos das culturas no v2.5.1:\n1. Grama Selvagem (WILD_FIBER): +1 Fibra. Cresce em qualquer solo e surge espontaneamente em terrenos desocupados.\n2. Arbusto de Madeira (WOODY_BUSH): +1 Madeira. Crescimento rápido em qualquer solo.\n3. Raízes Cultivadas (CULTIVATED_ROOT): +2 Raízes. Exige EXCLUSIVAMENTE Solo Arado (TILLED). Em solo NATURAL ou IRRIGATED, o crescimento fica zerado (0%).\n4. Árvore Nobre (TREE): +5 Madeira em xadrez sem vizinhos / +2 Madeira com vizinho. Exige EXCLUSIVAMENTE Solo Arado (TILLED).\n5. Colônia de Frutas (FRUIT_COLONY): +4 Frutas base +2 por vizinho maduro (até 12 Frutas por lote em bloco 3x3). Requer umidade >= 75%.\n6. Flor de Energia (ENERGY_FLOWER): +1 a +9 Energia conforme o pico de oscilação medido com world.measure(). Requer umidade >= 75%.',
     exampleCode: 'if farm.can_harvest():\n    farm.harvest()',
     parameters: [],
     returns: {
@@ -1036,7 +1038,9 @@ export const API_CATALOG: ApiItem[] = [
       description: 'Regras de maximização de rendimentos agrícolas.'
     },
     usabilityNotes: [
-      'Consulte a Matriz de Desbloqueios da Árvore de Pesquisas para liberar novas culturas e sementes.'
+      'Grama Selvagem e Arbustos: Crescem em qualquer solo (NATURAL, TILLED, IRRIGATED).',
+      'Raízes e Árvores: Requerem OBRIGATORIAMENTE Solo Arado (TILLED). Dica: irrigue antes (water) e are depois (till) para manter umidade alta no Solo Arado.',
+      'Frutas e Flores: Exigem umidade >= 75%. Frutas rendem bônus quando plantadas juntas; Flores oscilam energia e devem ser colhidas no pico lido com world.measure().'
     ],
     expectedOutput: 'Aumento expressivo na taxa de colheita e acúmulo de recursos.'
   },
