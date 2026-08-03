@@ -10,9 +10,11 @@ export const CHANGELOG_HISTORY: ChangelogRelease[] = [
   {
     version: 'v2.6.0',
     date: '2026-08-03',
-    title: 'Transformação Visual Pixel Art Retro UI & Estética Arcade 8-Bit',
+    title: 'Trilha Sonora Original 16-Bit Zero-Click & Redesign Visual Pixel Art Retro UI',
     isCurrent: true,
     changes: [
+      'Trilha Sonora Original "TerraScript: Vale da Automação": Composição e síntese procedural 100% autoral em 4 compassos cativantes (~107 BPM), combinando melodia flautada 16-bit (Sine/Triangle blend), linha de baixo aveludada NES/SNES e percussão chiptune leve.',
+      'Sistema de Áudio Zero-Click (Fim dos Estalos): Implementação de rampas de envelope de amplitude ultra-suaves (attack de 15ms e release de 35ms), buffer de ruído rosa pré-gerado e canal de saída com filtro Lowpass Global (2200Hz, Q=0.7) eliminando qualquer ruído ou estalo de frequências e cortes de DC Offset.',
       'Redesign Geral de Interface Pixel Art 8-Bit: Toda a interface do jogo (cabeçalho, modais, painéis laterais e barra inferior) foi adaptada para o estilo Pixel Art com bordas biseladas dithered/stepped, cantos retos sem arredondamento e sombras projetadas em pixels.',
       'Tipografia Arcade e Fontes Pixeladas: Integração das fontes de estilo arcade "Press Start 2P" para títulos e badges, "Pixelify Sans" para botões/cabeçalhos e "VT323" para contadores e status.',
       'Botões e Modais Retro Reativos: Todos os botões e painéis foram remodelados com efeitos táteis 3D de relevo estilo botão de fliperama e cores vibrantes (Ouro, Verde Cibernético, Ciano e Violeta).',

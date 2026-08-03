@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { GameEngine } from '../engine/GameEngine';
 import { TechBranch, TechNode } from '../types/game';
+import { PixelResourceIcon } from './PixelResourceIcon';
 
 interface TechTreeModalProps {
   engine: GameEngine;
@@ -127,13 +128,14 @@ export const TechTreeModal: React.FC<TechTreeModalProps> = ({ engine, onOpenGuid
                           <span
                             key={res}
                             style={{ color: hasEnough ? info.color : '#ef4444' }}
-                            className={`px-1.5 py-0.5 pixel-badge ${
+                            className={`px-1.5 py-0.5 pixel-badge flex items-center gap-1 ${
                               hasEnough 
                                 ? 'bg-[#161718]' 
                                 : 'bg-[#ef4444]/20'
                             }`}
                           >
-                            {cost} {info.name}
+                            <PixelResourceIcon type={res} className="w-3 h-3 shrink-0" />
+                            <span>{cost} {info.name}</span>
                           </span>
                         );
                       })}

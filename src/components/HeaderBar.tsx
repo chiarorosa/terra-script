@@ -10,12 +10,6 @@ import {
   Cpu, 
   Gauge, 
   FlaskConical,
-  TreePine,
-  Wheat,
-  Sprout,
-  Apple,
-  Flame,
-  Gem,
   RotateCcw,
   Save,
   Download,
@@ -28,6 +22,14 @@ import {
 import { GameLogo } from './GameLogo';
 import { GameEngine } from '../engine/GameEngine';
 import { audioManager } from '../utils/audioManager';
+import { 
+  PixelFiberIcon, 
+  PixelWoodIcon, 
+  PixelRootsIcon, 
+  PixelFruitsIcon, 
+  PixelEnergyIcon, 
+  PixelBiomassIcon 
+} from './PixelResourceIcon';
 
 interface HeaderBarProps {
   engine: GameEngine;
@@ -148,7 +150,7 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({ engine, activeTab, setActi
       {/* Resource Indicators Bar (Progressive Disclosure) */}
       <div className="hidden lg:flex items-center gap-3 bg-[#08090a] px-3 py-1 pixel-box text-xs font-pixel-mono">
         <div className="flex items-center gap-1.5 text-[#facc15]" title="Fibra Selvagem">
-          <Wheat className="w-3.5 h-3.5 text-[#facc15]" />
+          <PixelFiberIcon className="w-4 h-4" />
           <span>{resources.fiber}</span>
         </div>
 
@@ -156,7 +158,7 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({ engine, activeTab, setActi
           <>
             <div className="w-px h-3 bg-[#23252a]" />
             <div className="flex items-center gap-1.5 text-[#22c55e]" title="Madeira">
-              <TreePine className="w-3.5 h-3.5 text-[#22c55e]" />
+              <PixelWoodIcon className="w-4 h-4" />
               <span>{resources.wood}</span>
             </div>
           </>
@@ -166,7 +168,7 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({ engine, activeTab, setActi
           <>
             <div className="w-px h-3 bg-[#23252a]" />
             <div className="flex items-center gap-1.5 text-[#f97316]" title="Raízes Cultivadas">
-              <Sprout className="w-3.5 h-3.5 text-[#f97316]" />
+              <PixelRootsIcon className="w-4 h-4" />
               <span>{resources.roots}</span>
             </div>
           </>
@@ -176,7 +178,7 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({ engine, activeTab, setActi
           <>
             <div className="w-px h-3 bg-[#23252a]" />
             <div className="flex items-center gap-1.5 text-[#ef4444]" title="Frutas">
-              <Apple className="w-3.5 h-3.5 text-[#ef4444]" />
+              <PixelFruitsIcon className="w-4 h-4" />
               <span>{resources.fruits}</span>
             </div>
           </>
@@ -186,7 +188,7 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({ engine, activeTab, setActi
           <>
             <div className="w-px h-3 bg-[#23252a]" />
             <div className="flex items-center gap-1.5 text-[#06b6d4]" title="Flor de Energia">
-              <Zap className="w-3.5 h-3.5 text-[#06b6d4]" />
+              <PixelEnergyIcon className="w-4 h-4" />
               <span>{resources.energy}</span>
             </div>
           </>
@@ -196,18 +198,8 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({ engine, activeTab, setActi
           <>
             <div className="w-px h-3 bg-[#23252a]" />
             <div className="flex items-center gap-1.5 text-[#a855f7]" title="Biomassa">
-              <Flame className="w-3.5 h-3.5 text-[#a855f7]" />
+              <PixelBiomassIcon className="w-4 h-4" />
               <span>{resources.biomass}</span>
-            </div>
-          </>
-        )}
-
-        {(resources.crystals > 0 || engine.isTechUnlocked('AGRO_8')) && (
-          <>
-            <div className="w-px h-3 bg-[#23252a]" />
-            <div className="flex items-center gap-1.5 text-[#3b82f6]" title="Cristais">
-              <Gem className="w-3.5 h-3.5 text-[#3b82f6]" />
-              <span>{resources.crystals}</span>
             </div>
           </>
         )}

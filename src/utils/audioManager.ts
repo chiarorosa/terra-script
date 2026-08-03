@@ -70,10 +70,6 @@ class AudioManager {
     localStorage.setItem('terrascript_bgm_volume', String(vol));
     localStorage.setItem('terrascript_bgm_muted', String(vol === 0));
 
-    if (this.vinylGainNode && this.ctx) {
-      this.vinylGainNode.gain.setValueAtTime(0.012 * vol, this.ctx.currentTime);
-    }
-
     if (vol === 0) {
       this.stopBGM();
     } else if (!this.isBgmPlaying) {
@@ -318,211 +314,213 @@ class AudioManager {
     osc.stop(now + 0.2);
   }
 
-  // --- MÚSICA DE FUNDO PROCEDURAL (LO-FI TEMA OFICIAL TERRASCRIPT) ---
+  // --- MÚSICA DE FUNDO PROCEDURAL (TEMA OFICIAL TERRASCRIPT 100% ORIGINAL & SEM ESTALOS) ---
 
-  private vinylNoiseNode: AudioBufferSourceNode | null = null;
-  private vinylGainNode: GainNode | null = null;
+  private sharedNoiseBuffer: AudioBuffer | null = null;
+  private masterBgmGain: GainNode | null = null;
+  private masterBgmFilter: BiquadFilterNode | null = null;
 
-  // Acordes da Progressão Emblemática (Cmaj9 -> Am9 -> Fmaj7 -> G11)
-  private chordProgression = [
-    [261.63, 329.63, 392.00, 493.88, 587.33], // Cmaj9 (Dó4, Mi4, Sol4, Si4, Ré5)
-    [220.00, 261.63, 329.63, 392.00, 523.25], // Am9 (Lá3, Dó4, Mi4, Sol4, Dó5)
-    [174.61, 220.00, 261.63, 329.63, 523.25], // Fmaj7 (Fá3, Lá3, Dó4, Mi4, Dó5)
-    [196.00, 246.94, 293.66, 349.23, 523.25], // G11 (Sol3, Si3, Ré4, Fá4, Dó5)
-  ];
-
-  // Melodia Marcante e Inconfundível do TerraScript (Tema do Claudio)
-  // Cada medida possui notas com tempos offset e frequências
-  private themeMelody = [
-    // Medida 1 (Cmaj9) - Gancho Inicial
-    [
-      { time: 0.00, freq: 659.25, duration: 0.35, vol: 0.025 }, // E5
-      { time: 0.38, freq: 783.99, duration: 0.30, vol: 0.028 }, // G5
-      { time: 0.75, freq: 659.25, duration: 0.30, vol: 0.025 }, // E5
-      { time: 1.12, freq: 523.25, duration: 0.40, vol: 0.022 }, // C5
-      { time: 1.65, freq: 587.33, duration: 0.25, vol: 0.020 }, // D5
-      { time: 2.00, freq: 659.25, duration: 0.65, vol: 0.030 }, // E5 (Sustentado)
-    ],
-    // Medida 2 (Am9) - Resposta
-    [
-      { time: 0.00, freq: 523.25, duration: 0.35, vol: 0.025 }, // C5
-      { time: 0.38, freq: 440.00, duration: 0.35, vol: 0.022 }, // A4
-      { time: 0.75, freq: 523.25, duration: 0.35, vol: 0.025 }, // C5
-      { time: 1.12, freq: 587.33, duration: 0.35, vol: 0.025 }, // D5
-      { time: 1.65, freq: 493.88, duration: 0.70, vol: 0.028 }, // B4 (Pausa dramática)
-    ],
-    // Medida 3 (Fmaj7) - Crescendo
-    [
-      { time: 0.00, freq: 440.00, duration: 0.35, vol: 0.022 }, // A4
-      { time: 0.38, freq: 523.25, duration: 0.35, vol: 0.025 }, // C5
-      { time: 0.75, freq: 659.25, duration: 0.35, vol: 0.028 }, // E5
-      { time: 1.12, freq: 783.99, duration: 0.45, vol: 0.032 }, // G5
-      { time: 1.65, freq: 698.46, duration: 0.35, vol: 0.026 }, // F5
-      { time: 2.10, freq: 659.25, duration: 0.50, vol: 0.028 }, // E5
-    ],
-    // Medida 4 (G11) - Resolução Clássica
-    [
-      { time: 0.00, freq: 659.25, duration: 0.35, vol: 0.028 }, // E5
-      { time: 0.38, freq: 587.33, duration: 0.35, vol: 0.025 }, // D5
-      { time: 0.75, freq: 523.25, duration: 0.45, vol: 0.028 }, // C5
-      { time: 1.30, freq: 587.33, duration: 0.30, vol: 0.024 }, // D5
-      { time: 1.70, freq: 523.25, duration: 1.00, vol: 0.035 }, // C5 (Resolução Final em Dó)
-    ]
-  ];
-
-  private currentChordIndex = 0;
-
-  // Gera o buffer sintético de textura vinil/chuva suave
-  private createVinylNoiseBuffer(): AudioBuffer | null {
+  private getOrCreateNoiseBuffer(): AudioBuffer | null {
     if (!this.ctx) return null;
-    const bufferSize = this.ctx.sampleRate * 3; // Ruído em loop de 3 segundos
-    const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
-    const data = buffer.getChannelData(0);
-
-    let lastOut = 0.0;
-    for (let i = 0; i < bufferSize; i++) {
-      // Ruído de fundo marrom/rosa para chiado suave
-      const white = Math.random() * 2 - 1;
-      data[i] = (lastOut + (0.02 * white)) / 1.02;
-      lastOut = data[i];
-
-      // Estalidos sutis de vinil
-      if (Math.random() < 0.00015) {
-        data[i] += (Math.random() - 0.5) * 0.4;
+    if (!this.sharedNoiseBuffer) {
+      const sampleRate = this.ctx.sampleRate;
+      const bufferSize = sampleRate * 1.0; // 1 segundo de ruído rosa/branco pré-gerado
+      this.sharedNoiseBuffer = this.ctx.createBuffer(1, bufferSize, sampleRate);
+      const data = this.sharedNoiseBuffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) {
+        data[i] = (Math.random() * 2 - 1) * 0.5;
       }
     }
-    return buffer;
+    return this.sharedNoiseBuffer;
   }
 
-  private startVinylCrackle() {
-    if (!this.ctx || this.vinylNoiseNode) return;
-    try {
-      const buffer = this.createVinylNoiseBuffer();
-      if (!buffer) return;
+  private getBgmDestination(): AudioNode {
+    if (!this.ctx) throw new Error("AudioContext não inicializado");
+    if (!this.masterBgmGain) {
+      this.masterBgmGain = this.ctx.createGain();
+      this.masterBgmGain.gain.setValueAtTime(1.0, this.ctx.currentTime);
 
-      this.vinylNoiseNode = this.ctx.createBufferSource();
-      this.vinylNoiseNode.buffer = buffer;
-      this.vinylNoiseNode.loop = true;
+      // Filtro Lowpass Global para suavizar todas as frequências e eliminar qualquer aspereza
+      this.masterBgmFilter = this.ctx.createBiquadFilter();
+      this.masterBgmFilter.type = 'lowpass';
+      this.masterBgmFilter.frequency.setValueAtTime(2200, this.ctx.currentTime);
+      this.masterBgmFilter.Q.setValueAtTime(0.7, this.ctx.currentTime);
 
-      // Filter to keep noise warm and low-frequency
-      const filter = this.ctx.createBiquadFilter();
-      filter.type = 'bandpass';
-      filter.frequency.setValueAtTime(1000, this.ctx.currentTime);
-      filter.Q.setValueAtTime(0.8, this.ctx.currentTime);
-
-      this.vinylGainNode = this.ctx.createGain();
-      // Subtle background noise level scaled by bgmVolume
-      this.vinylGainNode.gain.setValueAtTime(0.012 * this.bgmVolume, this.ctx.currentTime);
-
-      this.vinylNoiseNode.connect(filter);
-      filter.connect(this.vinylGainNode);
-      this.vinylGainNode.connect(this.ctx.destination);
-
-      this.vinylNoiseNode.start();
-    } catch (err) {
-      console.warn('Could not start vinyl noise background:', err);
+      this.masterBgmFilter.connect(this.masterBgmGain);
+      this.masterBgmGain.connect(this.ctx.destination);
     }
+    return this.masterBgmFilter;
   }
 
-  private stopVinylCrackle() {
-    if (this.vinylNoiseNode) {
-      try {
-        this.vinylNoiseNode.stop();
-        this.vinylNoiseNode.disconnect();
-      } catch (e) {}
-      this.vinylNoiseNode = null;
-    }
-    this.vinylGainNode = null;
+  // Toca uma nota melódica principal (Melodia Flautada 16-bit Aconchegante) SEM ESTALOS
+  private playTerraLeadNote(freq: number, startTime: number, duration: number, vol: number = 0.032) {
+    if (!this.ctx || this.isBgmMuted || this.bgmVolume === 0) return;
+    
+    const targetNode = this.getBgmDestination();
+    const oscSine = this.ctx.createOscillator();
+    const oscTri = this.ctx.createOscillator();
+    const noteGain = this.ctx.createGain();
+
+    oscSine.type = 'sine';
+    oscTri.type = 'triangle';
+
+    oscSine.frequency.setValueAtTime(freq, startTime);
+    oscTri.frequency.setValueAtTime(freq, startTime);
+
+    const attack = 0.015;  // 15ms de ramp up suave para eliminar clique inicial
+    const release = 0.035; // 35ms de ramp down suave para eliminar clique final
+    const endTime = startTime + duration;
+    const targetVol = vol * this.bgmVolume;
+
+    noteGain.gain.setValueAtTime(0, startTime);
+    noteGain.gain.linearRampToValueAtTime(targetVol, startTime + attack);
+    noteGain.gain.setValueAtTime(targetVol, Math.max(startTime + attack, endTime - release));
+    noteGain.gain.linearRampToValueAtTime(0, endTime);
+
+    oscSine.connect(noteGain);
+    oscTri.connect(noteGain);
+    noteGain.connect(targetNode);
+
+    oscSine.start(startTime);
+    oscTri.start(startTime);
+
+    oscSine.stop(endTime + 0.02);
+    oscTri.stop(endTime + 0.02);
   }
 
-  // Tocador de Kick Drum Lo-Fi
-  private playLoFiKick(now: number) {
-    if (!this.ctx) return;
+  // Toca uma nota de baixo aveludado (NES/SNES Bass) SEM ESTALOS
+  private playTerraBassNote(freq: number, startTime: number, duration: number, vol: number = 0.038) {
+    if (!this.ctx || this.isBgmMuted || this.bgmVolume === 0) return;
+
+    const targetNode = this.getBgmDestination();
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
 
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(110, now);
-    osc.frequency.exponentialRampToValueAtTime(38, now + 0.12);
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(freq, startTime);
 
-    gain.gain.setValueAtTime(0.18 * this.bgmVolume, now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+    const attack = 0.012;
+    const release = 0.04;
+    const endTime = startTime + duration;
+    const targetVol = vol * this.bgmVolume;
+
+    gain.gain.setValueAtTime(0, startTime);
+    gain.gain.linearRampToValueAtTime(targetVol, startTime + attack);
+    gain.gain.setValueAtTime(targetVol, Math.max(startTime + attack, endTime - release));
+    gain.gain.linearRampToValueAtTime(0, endTime);
 
     osc.connect(gain);
-    gain.connect(this.ctx.destination);
+    gain.connect(targetNode);
 
-    osc.start(now);
-    osc.stop(now + 0.22);
+    osc.start(startTime);
+    osc.stop(endTime + 0.02);
   }
 
-  // Tocador de Snare / Rimshot Lo-Fi
-  private playLoFiSnare(now: number) {
-    if (!this.ctx) return;
-    // Tone component
-    const osc = this.ctx.createOscillator();
-    const oscGain = this.ctx.createGain();
-    osc.type = 'triangle';
-    osc.frequency.setValueAtTime(180, now);
-    osc.frequency.exponentialRampToValueAtTime(80, now + 0.08);
-    oscGain.gain.setValueAtTime(0.08 * this.bgmVolume, now);
-    oscGain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+  // Percussão Suave (Hi-Hat / Snare Chiptune) usando buffer reutilizado e envelope de ganho suave
+  private playTerraPercussion(startTime: number, isSnare: boolean = false, vol: number = 0.010) {
+    if (!this.ctx || this.isBgmMuted || this.bgmVolume === 0) return;
 
-    // Noise component
-    const bufferSize = this.ctx.sampleRate * 0.1;
-    const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
-    const data = buffer.getChannelData(0);
-    for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+    const noiseBuffer = this.getOrCreateNoiseBuffer();
+    if (!noiseBuffer) return;
 
+    const targetNode = this.getBgmDestination();
     const noise = this.ctx.createBufferSource();
-    noise.buffer = buffer;
+    noise.buffer = noiseBuffer;
 
     const filter = this.ctx.createBiquadFilter();
-    filter.type = 'highpass';
-    filter.frequency.setValueAtTime(1200, now);
-
-    const noiseGain = this.ctx.createGain();
-    noiseGain.gain.setValueAtTime(0.06 * this.bgmVolume, now);
-    noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
-
-    osc.connect(oscGain);
-    oscGain.connect(this.ctx.destination);
-
-    noise.connect(filter);
-    filter.connect(noiseGain);
-    noiseGain.connect(this.ctx.destination);
-
-    osc.start(now);
-    osc.stop(now + 0.08);
-    noise.start(now);
-    noise.stop(now + 0.1);
-  }
-
-  // Tocador de Hi-Hat Lo-Fi
-  private playLoFiHiHat(now: number, vol: number = 0.02) {
-    if (!this.ctx) return;
-    const bufferSize = this.ctx.sampleRate * 0.04;
-    const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
-    const data = buffer.getChannelData(0);
-    for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
-
-    const noise = this.ctx.createBufferSource();
-    noise.buffer = buffer;
-
-    const filter = this.ctx.createBiquadFilter();
-    filter.type = 'bandpass';
-    filter.frequency.setValueAtTime(7000, now);
+    filter.type = isSnare ? 'bandpass' : 'highpass';
+    filter.frequency.setValueAtTime(isSnare ? 1800 : 5500, startTime);
 
     const gain = this.ctx.createGain();
-    gain.gain.setValueAtTime(vol * this.bgmVolume, now);
-    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.035);
+    const duration = isSnare ? 0.06 : 0.025;
+    const attack = 0.004;
+    const endTime = startTime + duration;
+    const targetVol = vol * this.bgmVolume;
+
+    gain.gain.setValueAtTime(0, startTime);
+    gain.gain.linearRampToValueAtTime(targetVol, startTime + attack);
+    gain.gain.linearRampToValueAtTime(0, endTime);
 
     noise.connect(filter);
     filter.connect(gain);
-    gain.connect(this.ctx.destination);
+    gain.connect(targetNode);
 
-    noise.start(now);
-    noise.stop(now + 0.035);
+    noise.start(startTime);
+    noise.stop(endTime + 0.01);
   }
+
+  // Melodia do Tema Original "TerraScript: Vale da Automação" (4 Compassos Cativantes)
+  private terraTheme = [
+    // Compasso 1 (Dó Maior - "Vale dos Brotos")
+    {
+      melody: [
+        { time: 0.00, freq: 523.25, dur: 0.20 }, // C5
+        { time: 0.25, freq: 659.25, dur: 0.20 }, // E5
+        { time: 0.50, freq: 783.99, dur: 0.32 }, // G5
+        { time: 0.90, freq: 698.46, dur: 0.18 }, // F5
+        { time: 1.15, freq: 659.25, dur: 0.18 }, // E5
+        { time: 1.40, freq: 587.33, dur: 0.32 }, // D5
+      ],
+      bass: [
+        { time: 0.00, freq: 130.81, dur: 0.22 }, // C3
+        { time: 0.45, freq: 164.81, dur: 0.22 }, // E3
+        { time: 0.90, freq: 196.00, dur: 0.22 }, // G3
+        { time: 1.35, freq: 164.81, dur: 0.22 }, // E3
+      ]
+    },
+    // Compasso 2 (Lá Menor - "Linhas de Código")
+    {
+      melody: [
+        { time: 0.00, freq: 523.25, dur: 0.20 }, // C5
+        { time: 0.25, freq: 659.25, dur: 0.20 }, // E5
+        { time: 0.50, freq: 880.00, dur: 0.35 }, // A5 (Clímax Inspirador)
+        { time: 0.90, freq: 783.99, dur: 0.18 }, // G5
+        { time: 1.15, freq: 659.25, dur: 0.18 }, // E5
+        { time: 1.40, freq: 523.25, dur: 0.32 }, // C5
+      ],
+      bass: [
+        { time: 0.00, freq: 110.00, dur: 0.22 }, // A2
+        { time: 0.45, freq: 130.81, dur: 0.22 }, // C3
+        { time: 0.90, freq: 164.81, dur: 0.22 }, // E3
+        { time: 1.35, freq: 130.81, dur: 0.22 }, // C3
+      ]
+    },
+    // Compasso 3 (Fá Maior - "Colheita Automatizada")
+    {
+      melody: [
+        { time: 0.00, freq: 698.46, dur: 0.20 }, // F5
+        { time: 0.25, freq: 880.00, dur: 0.20 }, // A5
+        { time: 0.50, freq: 783.99, dur: 0.22 }, // G5
+        { time: 0.80, freq: 698.46, dur: 0.22 }, // F5
+        { time: 1.10, freq: 659.25, dur: 0.22 }, // E5
+        { time: 1.40, freq: 587.33, dur: 0.32 }, // D5
+      ],
+      bass: [
+        { time: 0.00, freq: 87.31,  dur: 0.22 }, // F2
+        { time: 0.45, freq: 110.00, dur: 0.22 }, // A2
+        { time: 0.90, freq: 130.81, dur: 0.22 }, // C3
+        { time: 1.35, freq: 110.00, dur: 0.22 }, // A2
+      ]
+    },
+    // Compasso 4 (Sol Maior - "Horizonte Verde")
+    {
+      melody: [
+        { time: 0.00, freq: 587.33, dur: 0.18 }, // D5
+        { time: 0.25, freq: 739.99, dur: 0.18 }, // F#5
+        { time: 0.50, freq: 783.99, dur: 0.30 }, // G5
+        { time: 0.90, freq: 987.77, dur: 0.22 }, // B5
+        { time: 1.20, freq: 1046.50, dur: 0.50 }, // C6 (Resolução Brilhante e Aconchegante)
+      ],
+      bass: [
+        { time: 0.00, freq: 98.00,  dur: 0.22 }, // G2
+        { time: 0.45, freq: 123.47, dur: 0.22 }, // B2
+        { time: 0.90, freq: 146.83, dur: 0.22 }, // D3
+        { time: 1.35, freq: 98.00,  dur: 0.22 }, // G2
+      ]
+    }
+  ];
+
+  private currentChordIndex = 0;
 
   public startBGM() {
     if (this.isBgmMuted || this.bgmVolume === 0 || this.isBgmPlaying) return;
@@ -530,124 +528,36 @@ class AudioManager {
     if (!this.ctx) return;
 
     this.isBgmPlaying = true;
-    this.startVinylCrackle();
 
-    // Loop de reprodução a cada medida (~3.0 segundos por compasso = ~80 BPM)
+    // Loop de reprodução a cada medida (~1.8s por compasso = ~107 BPM Tempo Relaxante)
     const playMeasure = () => {
       if (!this.isBgmPlaying || this.isBgmMuted || this.bgmVolume === 0 || !this.ctx) return;
 
       const now = this.ctx.currentTime;
-      const measureIndex = this.currentChordIndex % this.chordProgression.length;
-      const currentChord = this.chordProgression[measureIndex];
-      const currentMelody = this.themeMelody[measureIndex];
+      const measureIndex = this.currentChordIndex % this.terraTheme.length;
+      const currentMeasure = this.terraTheme[measureIndex];
       this.currentChordIndex++;
 
-      // 1. Acordes Teclado Rhodes / Wurlitzer Quente (Símbolo do Tema)
-      currentChord.forEach((freq, i) => {
-        const oscSine = this.ctx!.createOscillator();
-        const oscTri = this.ctx!.createOscillator();
-        const chordGain = this.ctx!.createGain();
-        const chordFilter = this.ctx!.createBiquadFilter();
-
-        oscSine.type = 'sine';
-        oscTri.type = 'triangle';
-
-        // Detune e vibrato sutil para sensação de fita cassete / vinil
-        const detuneAmt = (Math.random() - 0.5) * 8;
-        oscSine.detune.setValueAtTime(detuneAmt, now);
-        oscTri.detune.setValueAtTime(detuneAmt, now);
-
-        const strumDelay = i * 0.04;
-        oscSine.frequency.setValueAtTime(freq, now + strumDelay);
-        oscTri.frequency.setValueAtTime(freq, now + strumDelay);
-
-        chordFilter.type = 'lowpass';
-        chordFilter.frequency.setValueAtTime(750, now);
-
-        chordGain.gain.setValueAtTime(0.0001, now + strumDelay);
-        chordGain.gain.linearRampToValueAtTime(0.024 * this.bgmVolume, now + strumDelay + 0.25);
-        chordGain.gain.exponentialRampToValueAtTime(0.0001, now + 2.9);
-
-        oscSine.connect(chordFilter);
-        oscTri.connect(chordFilter);
-        chordFilter.connect(chordGain);
-        chordGain.connect(this.ctx!.destination);
-
-        oscSine.start(now + strumDelay);
-        oscTri.start(now + strumDelay);
-        oscSine.stop(now + 2.9);
-        oscTri.stop(now + 2.9);
+      // 1. Melodia Líder Flautada 16-bit
+      currentMeasure.melody.forEach((note) => {
+        this.playTerraLeadNote(note.freq, now + note.time, note.dur, 0.035);
       });
 
-      // 2. Sub-Baixo Profundo (Walking Bass)
-      const rootFreq = currentChord[0] / 2;
-      const bassOsc = this.ctx.createOscillator();
-      const bassGain = this.ctx.createGain();
-      const bassFilter = this.ctx.createBiquadFilter();
+      // 2. Linha de Baixo Aconchegante
+      currentMeasure.bass.forEach((note) => {
+        this.playTerraBassNote(note.freq, now + note.time, note.dur, 0.040);
+      });
 
-      bassOsc.type = 'sine';
-      bassOsc.frequency.setValueAtTime(rootFreq, now);
-
-      bassFilter.type = 'lowpass';
-      bassFilter.frequency.setValueAtTime(220, now);
-
-      bassGain.gain.setValueAtTime(0.0001, now);
-      bassGain.gain.linearRampToValueAtTime(0.045 * this.bgmVolume, now + 0.12);
-      bassGain.gain.exponentialRampToValueAtTime(0.0001, now + 2.8);
-
-      bassOsc.connect(bassFilter);
-      bassFilter.connect(bassGain);
-      bassGain.connect(this.ctx.destination);
-
-      bassOsc.start(now);
-      bassOsc.stop(now + 2.8);
-
-      // 3. Batida de Bateria Lo-Fi Hip Hop (Kick, Snare, Hi-Hats)
-      // Kick no beat 1 (0.0s) e beat 3.5 (2.25s)
-      this.playLoFiKick(now);
-      this.playLoFiKick(now + 2.25);
-
-      // Snare no beat 2 (0.75s) e beat 4 (2.25s)
-      this.playLoFiSnare(now + 0.75);
-      this.playLoFiSnare(now + 2.25);
-
-      // Hi-hats em colcheias (a cada 0.375s)
+      // 3. Batida de Bateria Leve e Sem Estalos (Hi-Hat / Snare)
+      const hatStep = 0.225;
       for (let h = 0; h < 8; h++) {
-        const hatTime = now + h * 0.375;
-        const vol = h % 2 === 0 ? 0.022 : 0.012; // Swing de acentos
-        this.playLoFiHiHat(hatTime, vol);
+        const hTime = now + h * hatStep;
+        const isSnare = (h === 2 || h === 6);
+        this.playTerraPercussion(hTime, isSnare, isSnare ? 0.018 : 0.008);
       }
 
-      // 4. Melodia Líder Inconfundível ("Tema de TerraScript")
-      currentMelody.forEach((note) => {
-        const melOsc = this.ctx!.createOscillator();
-        const melGain = this.ctx!.createGain();
-        const melFilter = this.ctx!.createBiquadFilter();
-
-        melOsc.type = 'sine';
-        melOsc.frequency.setValueAtTime(note.freq, now + note.time);
-
-        // Vibrato leve para calor de sintonia
-        melOsc.detune.setValueAtTime(3, now + note.time);
-        melOsc.detune.linearRampToValueAtTime(-3, now + note.time + note.duration);
-
-        melFilter.type = 'lowpass';
-        melFilter.frequency.setValueAtTime(1600, now + note.time);
-
-        melGain.gain.setValueAtTime(0.0001, now + note.time);
-        melGain.gain.linearRampToValueAtTime(note.vol * this.bgmVolume, now + note.time + 0.06);
-        melGain.gain.exponentialRampToValueAtTime(0.0001, now + note.time + note.duration);
-
-        melOsc.connect(melFilter);
-        melFilter.connect(melGain);
-        melGain.connect(this.ctx!.destination);
-
-        melOsc.start(now + note.time);
-        melOsc.stop(now + note.time + note.duration);
-      });
-
-      // Agenda o próximo compasso (3.0s = exatamente 80 BPM)
-      this.bgmIntervalId = window.setTimeout(playMeasure, 2950);
+      // Agenda o próximo compasso em exatamente 1.8s
+      this.bgmIntervalId = window.setTimeout(playMeasure, 1780);
     };
 
     playMeasure();
@@ -655,7 +565,6 @@ class AudioManager {
 
   public stopBGM() {
     this.isBgmPlaying = false;
-    this.stopVinylCrackle();
     if (this.bgmIntervalId !== null) {
       clearTimeout(this.bgmIntervalId);
       this.bgmIntervalId = null;
