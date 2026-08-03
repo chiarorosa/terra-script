@@ -72,57 +72,57 @@ export const BottomPanel: React.FC<BottomPanelProps> = ({ engine }) => {
   const agents = engine.getAgents();
 
   return (
-    <div className={`bg-[#0f1011] border-t border-[#23252a] flex flex-col transition-all font-sans text-[#d0d6e0] shrink-0 ${
-      isExpanded ? 'h-52' : 'h-8'
+    <div className={`bg-[#0f1011] border-t-2 border-[#23252a] flex flex-col transition-all font-pixel-body text-[#d0d6e0] shrink-0 ${
+      isExpanded ? 'h-56' : 'h-8'
     }`}>
       {/* Panel Header Bar */}
-      <div className="h-8 bg-[#08090a] px-3 flex items-center justify-between text-xs font-mono select-none border-b border-[#23252a]">
+      <div className="h-8 bg-[#08090a] px-3 flex items-center justify-between text-xs font-pixel-mono select-none border-b-2 border-[#23252a]">
         <div className="flex items-center gap-1">
           <button
             onClick={() => { setActiveTab('console'); setIsExpanded(true); }}
-            className={`flex items-center gap-1.5 px-3 py-1 rounded-t text-xs font-medium transition-all ${
+            className={`flex items-center gap-1.5 px-3 py-1 pixel-btn text-xs font-medium transition-all ${
               activeTab === 'console' && isExpanded 
-                ? 'border-b-2 border-[#27a644] text-[#ffffff] bg-[#0f1011]' 
-                : 'border-b-2 border-transparent text-[#8a8f98] hover:text-[#ffffff]'
+                ? 'pixel-btn-green' 
+                : 'text-[#8a8f98] hover:text-[#ffffff]'
             }`}
           >
-            <Terminal className="w-3.5 h-3.5 text-[#27a644]" />
+            <Terminal className="w-3.5 h-3.5" />
             Saída do Console ({logs.length})
           </button>
 
           <button
             onClick={() => { setActiveTab('problems'); setIsExpanded(true); }}
-            className={`flex items-center gap-1.5 px-3 py-1 rounded-t text-xs font-medium transition-all ${
+            className={`flex items-center gap-1.5 px-3 py-1 pixel-btn text-xs font-medium transition-all ${
               activeTab === 'problems' && isExpanded 
-                ? 'border-b-2 border-[#eb5757] text-[#eb5757] bg-[#0f1011]' 
-                : 'border-b-2 border-transparent text-[#8a8f98] hover:text-[#ffffff]'
+                ? 'bg-[#ef4444] text-[#ffffff] shadow-[inset_-3px_-3px_0px_0px_#991b1b,inset_3px_3px_0px_0px_#fca5a5]' 
+                : 'text-[#8a8f98] hover:text-[#ffffff]'
             }`}
           >
-            <AlertCircle className="w-3.5 h-3.5 text-[#eb5757]" />
+            <AlertCircle className="w-3.5 h-3.5 text-[#ef4444]" />
             Problemas ({logs.filter(l => l.type === 'stderr').length})
           </button>
 
           <button
             onClick={() => { setActiveTab('variables'); setIsExpanded(true); }}
-            className={`flex items-center gap-1.5 px-3 py-1 rounded-t text-xs font-medium transition-all ${
+            className={`flex items-center gap-1.5 px-3 py-1 pixel-btn text-xs font-medium transition-all ${
               activeTab === 'variables' && isExpanded 
-                ? 'border-b-2 border-[#02b8cc] text-[#02b8cc] bg-[#0f1011]' 
-                : 'border-b-2 border-transparent text-[#8a8f98] hover:text-[#ffffff]'
+                ? 'pixel-btn-cyan' 
+                : 'text-[#8a8f98] hover:text-[#ffffff]'
             }`}
           >
-            <Variable className="w-3.5 h-3.5 text-[#02b8cc]" />
+            <Variable className="w-3.5 h-3.5" />
             Variáveis e Estado
           </button>
 
           <button
             onClick={() => { setActiveTab('changelog'); setIsExpanded(true); }}
-            className={`flex items-center gap-1.5 px-3 py-1 rounded-t text-xs font-medium transition-all ${
+            className={`flex items-center gap-1.5 px-3 py-1 pixel-btn text-xs font-medium transition-all ${
               activeTab === 'changelog' && isExpanded 
-                ? 'border-b-2 border-[#d0d6e0] text-[#ffffff] bg-[#0f1011]' 
-                : 'border-b-2 border-transparent text-[#8a8f98] hover:text-[#ffffff]'
+                ? 'pixel-btn-amber' 
+                : 'text-[#8a8f98] hover:text-[#ffffff]'
             }`}
           >
-            <History className="w-3.5 h-3.5 text-[#d0d6e0]" />
+            <History className="w-3.5 h-3.5" />
             Changelog
           </button>
         </div>
@@ -131,24 +131,24 @@ export const BottomPanel: React.FC<BottomPanelProps> = ({ engine }) => {
           {(activeTab === 'console' || activeTab === 'problems') && (
             <button
               onClick={() => engine.clearLogs()}
-              className="flex items-center gap-1.5 px-2 py-0.5 text-xs text-[#8a8f98] hover:text-[#eb5757] bg-[#161718] hover:bg-[#23252a] border border-[#23252a] rounded-[4px] transition-colors"
+              className="flex items-center gap-1.5 px-2 py-0.5 pixel-btn text-xs text-[#8a8f98] hover:text-[#ef4444] transition-colors"
               title="Limpar Saída do Console"
             >
-              <Trash2 className="w-3.5 h-3.5 text-[#8a8f98] group-hover:text-[#eb5757]" />
+              <Trash2 className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">Limpar Console</span>
             </button>
           )}
 
           <button
             onClick={() => setIsExpanded(!isExpanded)}
-            className="p-1 text-[#8a8f98] hover:text-[#ffffff] hover:bg-[#161718] rounded-[4px] transition-colors"
+            className="p-1 text-[#8a8f98] hover:text-[#ffffff] pixel-btn transition-colors"
             title={isExpanded ? 'Recolher Painel' : 'Expandir Painel'}
           >
             {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
           </button>
 
-          <span className="text-[10px] font-mono font-medium tracking-wider px-1.5 py-0.5 rounded-[4px] bg-[#27a644]/10 text-[#27a644] border border-[#27a644]/30 select-none ml-1">
-            {CHANGELOG_HISTORY.find(r => r.isCurrent)?.version || 'v2.2.0'}
+          <span className="pixel-badge bg-[#22c55e] text-[#052e16] font-bold">
+            {CHANGELOG_HISTORY.find(r => r.isCurrent)?.version || 'v2.6.0'}
           </span>
         </div>
       </div>

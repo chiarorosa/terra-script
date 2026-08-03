@@ -45,8 +45,8 @@ export const TechTreeModal: React.FC<TechTreeModalProps> = ({ engine, onOpenGuid
     const branchNodes = techTree.filter(n => n.branch === branch);
 
     return (
-      <div className="bg-[#0f1011] border border-[#23252a] rounded-[12px] p-4 flex flex-col gap-3">
-        <div className={`flex items-center gap-2 font-medium text-xs border-b border-[#23252a] pb-2 ${colorClass}`}>
+      <div className="bg-[#0f1011] pixel-box p-4 flex flex-col gap-3 font-pixel-body">
+        <div className={`flex items-center gap-2 font-pixel-header text-xs border-b-2 border-[#23252a] pb-2 ${colorClass}`}>
           {icon}
           {title}
         </div>
@@ -69,36 +69,36 @@ export const TechTreeModal: React.FC<TechTreeModalProps> = ({ engine, onOpenGuid
             return (
               <div
                 key={node.id}
-                className={`p-3 rounded-[8px] border transition-all ${
+                className={`p-3 pixel-box transition-all ${
                   isUnlocked
-                    ? 'bg-[#27a644]/10 border-[#27a644]/30 text-[#ffffff]'
+                    ? 'bg-[#22c55e]/15 text-[#ffffff]'
                     : reqsMet
-                      ? 'bg-[#161718] border-[#23252a] text-[#d0d6e0] hover:border-[#383b3f]'
-                      : 'bg-[#08090a]/60 border-[#23252a] text-[#62666d] opacity-60'
+                      ? 'bg-[#161718] text-[#d0d6e0]'
+                      : 'bg-[#08090a]/60 text-[#62666d] opacity-60'
                 }`}
               >
                 <div className="flex items-center justify-between mb-1">
-                  <div className="font-medium text-xs flex items-center gap-2">
+                  <div className="font-pixel-header text-xs flex items-center gap-2">
                     {isUnlocked ? (
-                      <CheckCircle2 className="w-4 h-4 text-[#27a644] shrink-0" />
+                      <CheckCircle2 className="w-4 h-4 text-[#22c55e] shrink-0" />
                     ) : (
                       <Lock className="w-3.5 h-3.5 text-[#62666d] shrink-0" />
                     )}
-                    <span className={isUnlocked ? 'text-[#27a644] font-medium' : ''}>{node.name}</span>
+                    <span className={isUnlocked ? 'text-[#22c55e]' : ''}>{node.name}</span>
                   </div>
-                  <span className="text-[10px] uppercase font-mono px-1.5 py-0.5 rounded-[4px] bg-[#08090a] border border-[#23252a] text-[#8a8f98]">
+                  <span className="text-[10px] uppercase font-pixel-mono px-1.5 py-0.5 pixel-badge bg-[#08090a] text-[#8a8f98]">
                     Nível {node.tier}
                   </span>
                 </div>
 
-                <p className="text-[11px] text-[#8a8f98] mb-2 leading-relaxed font-sans">{node.description}</p>
+                <p className="text-[11px] text-[#8a8f98] mb-2 leading-relaxed font-pixel-body">{node.description}</p>
 
                 {/* Ver no Guia Button for Unlocked Techs */}
                 {isUnlocked && onOpenGuideForTech && (
-                  <div className="flex items-center justify-end mt-2 pt-2 border-t border-[#27a644]/20">
+                  <div className="flex items-center justify-end mt-2 pt-2 border-t border-[#22c55e]/20">
                     <button
                       onClick={() => onOpenGuideForTech(node.id)}
-                      className="flex items-center gap-1.5 px-2.5 py-1 rounded-[6px] bg-[#27a644]/15 hover:bg-[#27a644]/25 text-[#27a644] border border-[#27a644]/30 text-[11px] font-medium transition-all active:scale-95 cursor-pointer"
+                      className="flex items-center gap-1.5 px-2.5 py-1 pixel-btn pixel-btn-green text-[11px] transition-all cursor-pointer"
                       title="Ver documentação técnica no Guia de API"
                     >
                       <BookOpen className="w-3.5 h-3.5" />
@@ -110,27 +110,27 @@ export const TechTreeModal: React.FC<TechTreeModalProps> = ({ engine, onOpenGuid
                 {/* Costs & Unlock Button */}
                 {!isUnlocked && (
                   <div className="flex items-center justify-between mt-2 pt-2 border-t border-[#23252a]">
-                    <div className="flex items-center gap-2 text-[10px] font-mono">
+                    <div className="flex items-center gap-1.5 text-[10px] font-pixel-mono">
                       {Object.entries(node.cost).map(([res, cost]) => {
                         const hasEnough = (resources[res as keyof typeof resources] || 0) >= (cost || 0);
                         const resMap: Record<string, { name: string; color: string }> = {
-                          fiber: { name: 'Fibra', color: '#e4f222' },
-                          wood: { name: 'Madeira', color: '#27a644' },
+                          fiber: { name: 'Fibra', color: '#facc15' },
+                          wood: { name: 'Madeira', color: '#22c55e' },
                           roots: { name: 'Raízes', color: '#f97316' },
-                          fruits: { name: 'Frutas', color: '#eb5757' },
-                          energy: { name: 'Energia', color: '#02b8cc' },
-                          biomass: { name: 'Biomassa', color: '#8b5cf6' }
+                          fruits: { name: 'Frutas', color: '#ef4444' },
+                          energy: { name: 'Energia', color: '#06b6d4' },
+                          biomass: { name: 'Biomassa', color: '#a855f7' }
                         };
                         const info = resMap[res] || { name: res, color: '#d0d6e0' };
 
                         return (
                           <span
                             key={res}
-                            style={{ color: hasEnough ? info.color : '#eb5757' }}
-                            className={`px-1.5 py-0.5 rounded-[4px] border ${
+                            style={{ color: hasEnough ? info.color : '#ef4444' }}
+                            className={`px-1.5 py-0.5 pixel-badge ${
                               hasEnough 
-                                ? 'bg-[#161718] border-[#23252a]' 
-                                : 'bg-[#eb5757]/10 border-[#eb5757]/30'
+                                ? 'bg-[#161718]' 
+                                : 'bg-[#ef4444]/20'
                             }`}
                           >
                             {cost} {info.name}
@@ -138,17 +138,17 @@ export const TechTreeModal: React.FC<TechTreeModalProps> = ({ engine, onOpenGuid
                         );
                       })}
                       {Object.keys(node.cost).length === 0 && (
-                        <span className="text-[#27a644]">GRÁTIS</span>
+                        <span className="text-[#22c55e]">GRÁTIS</span>
                       )}
                     </div>
 
                     <button
                       disabled={!reqsMet || !canAfford}
                       onClick={() => handleUnlock(node)}
-                      className={`px-3 py-1 rounded-[6px] text-xs font-medium transition-all ${
+                      className={`px-3 py-1 pixel-btn text-xs font-pixel-header transition-all ${
                         reqsMet && canAfford
-                          ? 'bg-[#27a644] hover:bg-[#27a644]/90 text-[#ffffff] active:scale-95 cursor-pointer'
-                          : 'bg-[#161718] text-[#62666d] cursor-not-allowed border border-[#23252a]'
+                          ? 'pixel-btn-green text-[#ffffff] cursor-pointer'
+                          : 'opacity-50 cursor-not-allowed text-[#62666d]'
                       }`}
                     >
                       Desbloquear
@@ -164,16 +164,16 @@ export const TechTreeModal: React.FC<TechTreeModalProps> = ({ engine, onOpenGuid
   };
 
   return (
-    <div className="flex-1 bg-[#08090a] p-6 overflow-y-auto font-sans">
+    <div className="flex-1 bg-[#08090a] p-6 overflow-y-auto font-pixel-body">
       <div className="max-w-6xl mx-auto space-y-6">
         {/* Header Title */}
-        <div className="flex items-center justify-between border-b border-[#23252a] pb-4">
+        <div className="flex items-center justify-between border-b-2 border-[#23252a] pb-4">
           <div>
-            <h1 className="text-lg font-medium text-[#ffffff] flex items-center gap-2">
-              <FlaskConical className="w-5 h-5 text-[#27a644]" />
+            <h1 className="text-sm font-pixel-header text-[#ffffff] flex items-center gap-2">
+              <FlaskConical className="w-5 h-5 text-[#22c55e]" />
               Árvore de Tecnologia e Pesquisa
             </h1>
-            <p className="text-xs text-[#8a8f98] mt-0.5 leading-relaxed">
+            <p className="text-xs text-[#8a8f98] mt-1 leading-relaxed font-pixel-body">
               O compilador da sua fazenda. Invista recursos agrícolas para liberar sintaxes de programação, métodos de API, sensores de terreno e expansão de memória da grade.
             </p>
           </div>

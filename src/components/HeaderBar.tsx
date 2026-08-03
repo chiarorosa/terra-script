@@ -62,22 +62,22 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({ engine, activeTab, setActi
   };
 
   return (
-    <header className="h-13 bg-[#0f1011] border-b border-[#23252a] flex items-center justify-between px-3 text-[#d0d6e0] select-none shrink-0 z-20 font-sans text-xs">
+    <header className="h-13 bg-[#0f1011] border-b-2 border-[#23252a] flex items-center justify-between px-3 text-[#d0d6e0] select-none shrink-0 z-20 font-pixel-body text-xs">
       {/* App Branding */}
       <div className="flex items-center gap-2.5">
-        <div className="w-8 h-8 rounded-[6px] bg-[#08090a] border border-[#23252a] flex items-center justify-center p-1 group hover:border-[#383b3f] transition-all cursor-pointer">
-          <GameLogo className="w-6 h-6" />
+        <div className="w-8 h-8 bg-[#08090a] pixel-box flex items-center justify-center p-1 group hover:brightness-125 transition-all cursor-pointer">
+          <GameLogo className="w-6 h-6 pixelated" />
         </div>
         <div>
           <div className="flex items-center gap-2">
-            <span className="font-medium text-xs tracking-tight text-[#ffffff]">TerraScript <span className="text-[#27a644] font-semibold">3D</span></span>
+            <span className="font-pixel-header text-xs tracking-tight text-[#ffffff]">TerraScript <span className="text-[#facc15]">3D</span></span>
             {onOpenWelcome && (
               <button
                 onClick={onOpenWelcome}
                 title="Clique para alterar seu nome de programador(a)"
-                className="hidden sm:flex items-center gap-1.5 px-2 py-0.5 rounded-[4px] bg-[#161718] hover:bg-[#23252a] border border-[#23252a] hover:border-[#383b3f] text-[11px] text-[#d0d6e0] font-mono transition-all cursor-pointer"
+                className="hidden sm:flex items-center gap-1.5 px-2 py-0.5 pixel-btn text-[11px] text-[#d0d6e0] font-pixel-mono transition-all cursor-pointer"
               >
-                <User className="w-3 h-3 text-[#27a644]" />
+                <User className="w-3 h-3 text-[#22c55e]" />
                 <span className="font-normal truncate max-w-[120px]">{programmerName}</span>
               </button>
             )}
@@ -86,33 +86,33 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({ engine, activeTab, setActi
       </div>
 
       {/* Navigation Tabs */}
-      <div className="flex items-center gap-1 bg-[#08090a] p-1 rounded-[6px] border border-[#23252a]">
+      <div className="flex items-center gap-1 bg-[#08090a] p-1 pixel-box">
         <button
           onClick={() => setActiveTab('workspace')}
-          className={`flex items-center gap-1.5 px-3 py-1 rounded-[6px] text-xs font-normal transition-all ${
+          className={`flex items-center gap-1.5 px-3 py-1 pixel-btn text-xs font-normal transition-all ${
             activeTab === 'workspace' 
-              ? 'bg-[#161718] text-[#ffffff] border border-[#23252a]' 
-              : 'text-[#8a8f98] hover:text-[#ffffff] hover:bg-[#0f1011]'
+              ? 'pixel-btn-amber text-[#0f172a]' 
+              : 'text-[#8a8f98] hover:text-[#ffffff]'
           }`}
         >
-          <Cpu className="w-3.5 h-3.5 text-[#5e6ad2]" />
+          <Cpu className="w-3.5 h-3.5" />
           IDE
         </button>
 
         <button
           onClick={() => setActiveTab('research')}
-          className={`relative flex items-center gap-1.5 px-3 py-1 rounded-[6px] text-xs font-normal transition-all ${
+          className={`relative flex items-center gap-1.5 px-3 py-1 pixel-btn text-xs font-normal transition-all ${
             activeTab === 'research' 
-              ? 'bg-[#161718] text-[#ffffff] border border-[#23252a]' 
+              ? 'pixel-btn-purple text-[#ffffff]' 
               : hasUpgrades
-                ? 'bg-[#5e6ad2]/15 text-[#ffffff] border border-[#5e6ad2]/40 hover:bg-[#5e6ad2]/25'
-                : 'text-[#8a8f98] hover:text-[#ffffff] hover:bg-[#0f1011]'
+                ? 'pixel-btn-cyan text-[#083344]'
+                : 'text-[#8a8f98] hover:text-[#ffffff]'
           }`}
         >
-          <FlaskConical className={`w-3.5 h-3.5 ${hasUpgrades ? 'text-[#5e6ad2]' : 'text-[#8a8f98]'}`} />
+          <FlaskConical className="w-3.5 h-3.5" />
           <span>Árvore de Pesquisa</span>
           {hasUpgrades && (
-            <span className="ml-0.5 px-1.5 py-0.2 rounded-[4px] text-[10px] font-mono font-bold bg-[#5e6ad2] text-white">
+            <span className="ml-0.5 pixel-badge bg-[#a855f7] text-white">
               {unlockableCount}
             </span>
           )}
@@ -121,42 +121,42 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({ engine, activeTab, setActi
         {(engine.isTechUnlocked('SCALE_5') || engine.isTechUnlocked('AUTO_6') || engine.getAgents().length > 1) && (
           <button
             onClick={() => setActiveTab('agents')}
-            className={`flex items-center gap-1.5 px-3 py-1 rounded-[6px] text-xs font-normal transition-all ${
+            className={`flex items-center gap-1.5 px-3 py-1 pixel-btn text-xs font-normal transition-all ${
               activeTab === 'agents' 
-                ? 'bg-[#161718] text-[#ffffff] border border-[#23252a]' 
-                : 'text-[#8a8f98] hover:text-[#ffffff] hover:bg-[#0f1011]'
+                ? 'pixel-btn-cyan text-[#083344]' 
+                : 'text-[#8a8f98] hover:text-[#ffffff]'
             }`}
           >
-            <Bot className="w-3.5 h-3.5 text-[#8b5cf6]" />
+            <Bot className="w-3.5 h-3.5" />
             Agentes ({engine.getAgents().length})
           </button>
         )}
 
         <button
           onClick={() => setActiveTab('tutorial')}
-          className={`flex items-center gap-1.5 px-3 py-1 rounded-[6px] text-xs font-normal transition-all ${
+          className={`flex items-center gap-1.5 px-3 py-1 pixel-btn text-xs font-normal transition-all ${
             activeTab === 'tutorial' 
-              ? 'bg-[#161718] text-[#ffffff] border border-[#23252a]' 
-              : 'text-[#8a8f98] hover:text-[#ffffff] hover:bg-[#0f1011]'
+              ? 'pixel-btn-green text-[#052e16]' 
+              : 'text-[#8a8f98] hover:text-[#ffffff]'
           }`}
         >
-          <BookOpen className="w-3.5 h-3.5 text-[#27a644]" />
+          <BookOpen className="w-3.5 h-3.5" />
           Guia
         </button>
       </div>
 
       {/* Resource Indicators Bar (Progressive Disclosure) */}
-      <div className="hidden lg:flex items-center gap-3 bg-[#08090a] px-3 py-1 rounded-[6px] border border-[#23252a] text-xs font-mono">
-        <div className="flex items-center gap-1.5 text-[#e4f222]" title="Fibra Selvagem">
-          <Wheat className="w-3.5 h-3.5 text-[#e4f222]" />
+      <div className="hidden lg:flex items-center gap-3 bg-[#08090a] px-3 py-1 pixel-box text-xs font-pixel-mono">
+        <div className="flex items-center gap-1.5 text-[#facc15]" title="Fibra Selvagem">
+          <Wheat className="w-3.5 h-3.5 text-[#facc15]" />
           <span>{resources.fiber}</span>
         </div>
 
         {(resources.wood > 0 || engine.isTechUnlocked('AGRO_2')) && (
           <>
             <div className="w-px h-3 bg-[#23252a]" />
-            <div className="flex items-center gap-1.5 text-[#27a644]" title="Madeira">
-              <TreePine className="w-3.5 h-3.5 text-[#27a644]" />
+            <div className="flex items-center gap-1.5 text-[#22c55e]" title="Madeira">
+              <TreePine className="w-3.5 h-3.5 text-[#22c55e]" />
               <span>{resources.wood}</span>
             </div>
           </>
@@ -175,8 +175,8 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({ engine, activeTab, setActi
         {(resources.fruits > 0 || engine.isTechUnlocked('AGRO_5')) && (
           <>
             <div className="w-px h-3 bg-[#23252a]" />
-            <div className="flex items-center gap-1.5 text-[#eb5757]" title="Frutas">
-              <Apple className="w-3.5 h-3.5 text-[#eb5757]" />
+            <div className="flex items-center gap-1.5 text-[#ef4444]" title="Frutas">
+              <Apple className="w-3.5 h-3.5 text-[#ef4444]" />
               <span>{resources.fruits}</span>
             </div>
           </>
@@ -185,8 +185,8 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({ engine, activeTab, setActi
         {(resources.energy > 0 || engine.isTechUnlocked('AGRO_6')) && (
           <>
             <div className="w-px h-3 bg-[#23252a]" />
-            <div className="flex items-center gap-1.5 text-[#02b8cc]" title="Flor de Energia">
-              <Zap className="w-3.5 h-3.5 text-[#02b8cc]" />
+            <div className="flex items-center gap-1.5 text-[#06b6d4]" title="Flor de Energia">
+              <Zap className="w-3.5 h-3.5 text-[#06b6d4]" />
               <span>{resources.energy}</span>
             </div>
           </>
@@ -195,8 +195,8 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({ engine, activeTab, setActi
         {(resources.biomass > 0 || engine.isTechUnlocked('AGRO_7')) && (
           <>
             <div className="w-px h-3 bg-[#23252a]" />
-            <div className="flex items-center gap-1.5 text-[#8b5cf6]" title="Biomassa">
-              <Flame className="w-3.5 h-3.5 text-[#8b5cf6]" />
+            <div className="flex items-center gap-1.5 text-[#a855f7]" title="Biomassa">
+              <Flame className="w-3.5 h-3.5 text-[#a855f7]" />
               <span>{resources.biomass}</span>
             </div>
           </>
@@ -216,15 +216,15 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({ engine, activeTab, setActi
       {/* Execution Controls */}
       <div className="flex items-center gap-2">
         {/* Speed Controls */}
-        <div className="flex items-center gap-1 bg-[#08090a] px-1.5 py-0.5 rounded-[6px] border border-[#23252a] text-xs">
+        <div className="flex items-center gap-1 bg-[#08090a] px-1.5 py-0.5 pixel-box text-xs">
           {[1, 2].map(s => (
             <button
               key={s}
               onClick={() => engine.setSpeed(s)}
-              className={`px-1.5 py-0.5 rounded-[4px] text-[10px] font-mono transition-all ${
+              className={`px-1.5 py-0.5 pixel-btn text-[10px] font-pixel-mono transition-all ${
                 speed === s
-                  ? 'bg-[#ffffff] text-[#08090a] font-medium'
-                  : 'text-[#8a8f98] hover:text-[#ffffff] hover:bg-[#161718]'
+                  ? 'pixel-btn-amber'
+                  : 'text-[#8a8f98] hover:text-[#ffffff]'
               }`}
             >
               {s}x
@@ -233,27 +233,27 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({ engine, activeTab, setActi
         </div>
 
         {/* Audio Controls (SFX & Music) */}
-        <div className="flex items-center gap-1 bg-[#08090a] p-0.5 rounded-[6px] border border-[#23252a]">
+        <div className="flex items-center gap-1 bg-[#08090a] p-0.5 pixel-box">
           <button
             onClick={handleToggleSfx}
-            className={`p-1 rounded-[4px] text-xs transition-all ${
+            className={`p-1 pixel-btn text-xs transition-all ${
               !sfxMuted
-                ? 'text-[#27a644] bg-[#27a644]/10 border border-[#27a644]/30'
-                : 'text-[#8a8f98] hover:text-[#d0d6e0]'
+                ? 'pixel-btn-green'
+                : 'text-[#8a8f98]'
             }`}
             title={sfxMuted ? 'Ativar Efeitos Sonoros (SFX)' : 'Silenciar Efeitos Sonoros (SFX)'}
           >
-            {!sfxMuted ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5 text-[#eb5757]" />}
+            {!sfxMuted ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5 text-[#ef4444]" />}
           </button>
 
           <button
             onClick={handleToggleBgm}
-            className={`p-1 rounded-[4px] text-xs transition-all flex items-center gap-1.5 px-2 ${
+            className={`p-1 pixel-btn text-xs transition-all flex items-center gap-1.5 px-2 ${
               bgmVolume === 1.0
-                ? 'text-[#8b5cf6] bg-[#8b5cf6]/10 border border-[#8b5cf6]/30'
+                ? 'pixel-btn-purple'
                 : bgmVolume === 0.5
-                ? 'text-[#a78bfa] bg-[#8b5cf6]/10 border border-[#8b5cf6]/20'
-                : 'text-[#8a8f98] hover:text-[#d0d6e0] bg-[#161718] border border-[#23252a]'
+                ? 'pixel-btn-cyan'
+                : 'text-[#8a8f98]'
             }`}
             title={
               bgmVolume === 1.0
@@ -263,11 +263,11 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({ engine, activeTab, setActi
                 : 'Música de Fundo: Mudo (Clique para 100%)'
             }
           >
-            <Music className={`w-3.5 h-3.5 ${bgmVolume === 0 ? 'text-[#eb5757]' : ''}`} />
-            <span className="text-[10px] font-mono hidden md:inline">
+            <Music className={`w-3.5 h-3.5 ${bgmVolume === 0 ? 'text-[#ef4444]' : ''}`} />
+            <span className="text-[10px] font-pixel-mono hidden md:inline">
               {bgmVolume === 1.0 ? 'Música 100%' : bgmVolume === 0.5 ? 'Música 50%' : 'Música Mudo'}
             </span>
-            <span className="text-[10px] font-mono md:hidden">
+            <span className="text-[10px] font-pixel-mono md:hidden">
               {bgmVolume === 1.0 ? '100%' : bgmVolume === 0.5 ? '50%' : 'OFF'}
             </span>
           </button>
@@ -278,7 +278,7 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({ engine, activeTab, setActi
           {mode === 'RUNNING' ? (
             <button
               onClick={() => engine.pauseSimulation()}
-              className="flex items-center gap-1 px-3 py-1 bg-[#ffffff] hover:bg-[#e5e5e6] text-[#08090a] rounded-[6px] text-xs font-medium transition-all active:scale-95"
+              className="flex items-center gap-1 px-3 py-1 pixel-btn pixel-btn-amber text-xs transition-all"
               title="Pausar Execução"
             >
               <Pause className="w-3.5 h-3.5 fill-current" />
@@ -287,7 +287,7 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({ engine, activeTab, setActi
           ) : (
             <button
               onClick={() => engine.startSimulation()}
-              className="flex items-center gap-1 px-3 py-1 bg-[#5e6ad2] hover:bg-[#5e6ad2]/90 text-[#ffffff] rounded-[6px] text-xs font-medium transition-all active:scale-95 shadow-[0_0_12px_rgba(94,106,210,0.3)]"
+              className="flex items-center gap-1 px-3 py-1 pixel-btn pixel-btn-green text-xs transition-all"
               title="Executar Código (F5)"
             >
               <Play className="w-3.5 h-3.5 fill-current" />
@@ -297,18 +297,18 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({ engine, activeTab, setActi
 
           <button
             onClick={() => engine.stepSimulation()}
-            className="p-1.5 bg-[#161718] hover:bg-[#23252a] text-[#d0d6e0] rounded-[6px] transition-all active:scale-95 border border-[#23252a]"
+            className="p-1.5 pixel-btn pixel-btn-cyan transition-all"
             title="Avançar Uma Linha (F10)"
           >
-            <StepForward className="w-3.5 h-3.5 text-[#02b8cc]" />
+            <StepForward className="w-3.5 h-3.5" />
           </button>
 
           <button
             onClick={() => engine.stopSimulation()}
-            className="p-1.5 bg-[#161718] hover:bg-[#eb5757]/20 text-[#8a8f98] hover:text-[#eb5757] rounded-[6px] transition-all active:scale-95 border border-[#23252a]"
+            className="p-1.5 pixel-btn text-[#ef4444] hover:bg-[#ef4444]/20 transition-all"
             title="Parar & Reiniciar Execução (Shift+F5)"
           >
-            <Square className="w-3.5 h-3.5 fill-current text-[#eb5757]" />
+            <Square className="w-3.5 h-3.5 fill-current text-[#ef4444]" />
           </button>
         </div>
       </div>

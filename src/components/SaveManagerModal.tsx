@@ -142,7 +142,7 @@ export const SaveManagerModal: React.FC<SaveManagerModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200 font-pixel-body">
       {/* Hidden File Inputs */}
       <input 
         type="file" 
@@ -160,23 +160,23 @@ export const SaveManagerModal: React.FC<SaveManagerModalProps> = ({
         className="hidden" 
       />
 
-      <div className="bg-[#0f1011] border border-[#23252a] rounded-[12px] w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+      <div className="bg-[#0f1011] pixel-box-amber w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
         
         {/* Header */}
-        <div className="px-5 py-4 bg-[#08090a] border-b border-[#23252a] flex items-center justify-between">
+        <div className="px-5 py-4 bg-[#08090a] border-b-2 border-[#23252a] flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-[6px] bg-[#27a644]/10 border border-[#27a644]/30 flex items-center justify-center text-[#27a644]">
+            <div className="w-8 h-8 pixel-box bg-[#161718] flex items-center justify-center text-[#22c55e]">
               <Save className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-sm font-medium text-[#ffffff]">Gerenciador de Saves & Scripts</h2>
-              <p className="text-xs text-[#8a8f98]">Exporte/Importe o progresso do jogo ou arquivos de código Python/JS locais</p>
+              <h2 className="text-sm font-pixel-header text-[#ffffff]">Gerenciador de Saves & Scripts</h2>
+              <p className="text-xs text-[#8a8f98] font-pixel-body">Exporte/Importe o progresso do jogo ou arquivos de código Python/JS locais</p>
             </div>
           </div>
 
           <button
             onClick={onClose}
-            className="p-1.5 text-[#8a8f98] hover:text-[#ffffff] hover:bg-[#161718] rounded-[6px] transition-all"
+            className="p-1.5 text-[#8a8f98] hover:text-[#ffffff] pixel-btn transition-all"
           >
             <X className="w-5 h-5" />
           </button>

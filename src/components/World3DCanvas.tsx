@@ -79,6 +79,39 @@ class ThreeAssetCache {
   public static prestigeOctaGeo = new THREE.OctahedronGeometry(0.32, 1);
   public static prestigeRingGeo = new THREE.TorusGeometry(0.45, 0.025, 8, 16);
 
+  // 5-Pointed Super Mario 3D Star Shape & Geometry
+  public static starShape = (() => {
+    const shape = new THREE.Shape();
+    const outerRadius = 0.32;
+    const innerRadius = 0.13;
+    const numPoints = 5;
+    for (let i = 0; i < numPoints * 2; i++) {
+      const angle = (i * Math.PI) / numPoints - Math.PI / 2;
+      const r = i % 2 === 0 ? outerRadius : innerRadius;
+      const x = Math.cos(angle) * r;
+      const y = Math.sin(angle) * r;
+      if (i === 0) shape.moveTo(x, y);
+      else shape.lineTo(x, y);
+    }
+    shape.closePath();
+    return shape;
+  })();
+
+  public static marioStarGeo = (() => {
+    const geo = new THREE.ExtrudeGeometry(ThreeAssetCache.starShape, {
+      depth: 0.08,
+      bevelEnabled: true,
+      bevelSegments: 3,
+      steps: 1,
+      bevelSize: 0.035,
+      bevelThickness: 0.04,
+    });
+    geo.center();
+    return geo;
+  })();
+
+  public static marioStarEyeGeo = new THREE.CylinderGeometry(0.018, 0.018, 0.12, 12);
+
   // Agent Sci-Fi Harvester Flying Saucer (UFO) Geometries
   public static agentBodyGeo = new THREE.CylinderGeometry(0.48, 0.28, 0.12, 16);
   public static agentBottomSaucerGeo = new THREE.CylinderGeometry(0.28, 0.1, 0.08, 16);
@@ -365,6 +398,10 @@ class ThreeAssetCache {
   public static matRootCrop = new THREE.MeshStandardMaterial({ color: 0xf97316, roughness: 0.5 });
   public static matGradedHelix = new THREE.MeshStandardMaterial({ color: 0xa855f7, emissive: 0x9333ea, emissiveIntensity: 0.7, roughness: 0.3 });
   public static matPrestigeCrystal = new THREE.MeshStandardMaterial({ color: 0xfef08a, emissive: 0xeab308, emissiveIntensity: 0.9, roughness: 0.1, metalness: 0.9 });
+  public static matMarioStar = new THREE.MeshStandardMaterial({ color: 0xffd700, emissive: 0xfacc15, emissiveIntensity: 0.85, metalness: 0.95, roughness: 0.08 });
+  public static matMarioStarEye = new THREE.MeshStandardMaterial({ color: 0x0a0a0a, roughness: 0.2 });
+  public static matGoldPedestal = new THREE.MeshStandardMaterial({ color: 0xd97706, emissive: 0x78350f, emissiveIntensity: 0.35, metalness: 0.9, roughness: 0.15 });
+  public static matGoldSparkle = new THREE.MeshStandardMaterial({ color: 0xfffbeb, emissive: 0xfacc15, emissiveIntensity: 1.0, roughness: 0.05, metalness: 0.95 });
 
   // Agent Drone Ship Materials
   private static agentHullMatCache = new Map<string, THREE.MeshStandardMaterial>();
@@ -746,11 +783,21 @@ export const World3DCanvas: React.FC<World3DCanvasProps> = ({ engine }) => {
 
           // Animate rotating components & floating spores inside crop
           cropGroup.traverse((child) => {
-            if (child.userData && child.userData.animType === 'rotate') {
-              child.rotation.y += 0.02;
-            } else if (child.userData && child.userData.animType === 'float') {
-              const baseY = child.userData.baseY || 0.6;
-              child.position.y = baseY + Math.sin(elapsedTime * 3 + tileX) * 0.04;
+            if (child.userData) {
+              const { animType, baseY = 0.50, angleOffset = 0 } = child.userData;
+              if (animType === 'rotate') {
+                child.rotation.y += 0.02;
+              } else if (animType === 'marioStar') {
+                child.rotation.y += 0.035; // Spinning Mario Golden Star
+                child.position.y = baseY + Math.sin(elapsedTime * 3.5) * 0.06; // Bobbing up and down
+              } else if (animType === 'starOrbit') {
+                const curAngle = angleOffset + elapsedTime * 2.0;
+                child.position.x = Math.cos(curAngle) * 0.38;
+                child.position.z = Math.sin(curAngle) * 0.38;
+                child.position.y = 0.50 + Math.sin(elapsedTime * 4.0 + angleOffset) * 0.05;
+              } else if (animType === 'float') {
+                child.position.y = baseY + Math.sin(elapsedTime * 3 + tileX) * 0.04;
+              }
             }
           });
         }
@@ -1008,6 +1055,49 @@ export const World3DCanvas: React.FC<World3DCanvasProps> = ({ engine }) => {
   const create3DCropMesh = (type: CropType, growth: number): THREE.Group => {
     const cropGroup = new THREE.Group();
     cropGroup.userData.isCrop = true;
+
+    if (type === 'PRESTIGE') {
+      // PRESTIGE: Golden Pedestal & Spinning Super Mario 3D Golden Star
+      const pedestal = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.28, 0.06, 12), ThreeAssetCache.matGoldPedestal);
+      pedestal.position.y = 0.04;
+      cropGroup.add(pedestal);
+
+      // Super Mario Star Container
+      const starGroup = new THREE.Group();
+
+      // Golden Star Mesh
+      const starMesh = new THREE.Mesh(ThreeAssetCache.marioStarGeo, ThreeAssetCache.matMarioStar);
+      starGroup.add(starMesh);
+
+      // Iconic Vertical Black Eyes (front & back)
+      const eyeFL = new THREE.Mesh(ThreeAssetCache.marioStarEyeGeo, ThreeAssetCache.matMarioStarEye);
+      eyeFL.position.set(-0.065, -0.015, 0.046);
+      const eyeFR = new THREE.Mesh(ThreeAssetCache.marioStarEyeGeo, ThreeAssetCache.matMarioStarEye);
+      eyeFR.position.set(0.065, -0.015, 0.046);
+
+      const eyeBL = new THREE.Mesh(ThreeAssetCache.marioStarEyeGeo, ThreeAssetCache.matMarioStarEye);
+      eyeBL.position.set(-0.065, -0.015, -0.046);
+      const eyeBR = new THREE.Mesh(ThreeAssetCache.marioStarEyeGeo, ThreeAssetCache.matMarioStarEye);
+      eyeBR.position.set(0.065, -0.015, -0.046);
+
+      starGroup.add(eyeFL, eyeFR, eyeBL, eyeBR);
+
+      starGroup.position.y = 0.50;
+      starGroup.userData = { animType: 'marioStar', baseY: 0.50 };
+      cropGroup.add(starGroup);
+
+      // Orbiting Golden Sparkle Orbs
+      for (let i = 0; i < 4; i++) {
+        const angle = (i * Math.PI) / 2;
+        const sparkle = new THREE.Mesh(ThreeAssetCache.sporeBallGeo, ThreeAssetCache.matGoldSparkle);
+        sparkle.position.set(Math.cos(angle) * 0.38, 0.50, Math.sin(angle) * 0.38);
+        sparkle.scale.set(0.7, 0.7, 0.7);
+        sparkle.userData = { animType: 'starOrbit', angleOffset: angle };
+        cropGroup.add(sparkle);
+      }
+
+      return cropGroup;
+    }
 
     // Growth progression scale & stage
     const growthStage = growth < 25 ? 'SPROUT' : growth < 60 ? 'YOUNG' : 'MATURE';
@@ -1338,27 +1428,6 @@ export const World3DCanvas: React.FC<World3DCanvasProps> = ({ engine }) => {
       orb.scale.set(1.8, 1.8, 1.8);
       orb.userData = { animType: 'float', baseY: 0.65 * scale };
       cropGroup.add(orb);
-    } else if (type === 'PRESTIGE') {
-      // PRESTIGE: Golden Sun Crystal Trophy Crop
-      const pedestal = new THREE.Mesh(ThreeAssetCache.rootMoundGeo, ThreeAssetCache.matPrestigeTop);
-      pedestal.position.y = 0.04;
-      cropGroup.add(pedestal);
-
-      const crystal = new THREE.Mesh(ThreeAssetCache.prestigeOctaGeo, ThreeAssetCache.matPrestigeCrystal);
-      crystal.position.y = 0.45;
-      crystal.userData = { animType: 'rotate' };
-
-      const ring1 = new THREE.Mesh(ThreeAssetCache.prestigeRingGeo, ThreeAssetCache.matPrestigeCrystal);
-      ring1.position.y = 0.45;
-      ring1.rotation.x = Math.PI / 3;
-      ring1.userData = { animType: 'rotate' };
-
-      const ring2 = new THREE.Mesh(ThreeAssetCache.prestigeRingGeo, ThreeAssetCache.matPrestigeCrystal);
-      ring2.position.y = 0.45;
-      ring2.rotation.x = -Math.PI / 3;
-      ring2.userData = { animType: 'rotate' };
-
-      cropGroup.add(pedestal, crystal, ring1, ring2);
     } else {
       const defaultCrop = new THREE.Mesh(ThreeAssetCache.bushLeafBaseGeo, ThreeAssetCache.matFoliage);
       defaultCrop.position.y = 0.2 * scale;

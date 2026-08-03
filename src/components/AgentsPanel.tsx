@@ -16,26 +16,26 @@ export const AgentsPanel: React.FC<AgentsPanelProps> = ({ engine, vfs }) => {
   const isSys4Unlocked = engine.isTechUnlocked('SYS_4');
 
   return (
-    <div className="flex-1 bg-[#08090a] p-6 overflow-y-auto font-sans text-[#d0d6e0]">
+    <div className="flex-1 bg-[#08090a] p-6 overflow-y-auto font-pixel-body text-[#d0d6e0]">
       <div className="max-w-4xl mx-auto space-y-6">
-        <div className="border-b border-[#23252a] pb-4">
+        <div className="border-b-2 border-[#23252a] pb-4">
           <div className="flex items-center justify-between">
-            <h1 className="text-lg font-medium text-[#ffffff] flex items-center gap-2">
-              <Bot className="w-5 h-5 text-[#8b5cf6]" />
+            <h1 className="text-sm font-pixel-header text-[#ffffff] flex items-center gap-2">
+              <Bot className="w-5 h-5 text-[#a855f7]" />
               Gerenciamento de Agentes e Telemetria
             </h1>
-            <span className={`text-xs px-2.5 py-1 rounded-full font-mono flex items-center gap-1.5 border ${
+            <span className={`text-xs px-2.5 py-1 pixel-badge ${
               isSys4Unlocked
-                ? 'bg-[#10b981]/10 text-[#10b981] border-[#10b981]/30'
-                : 'bg-[#161718] text-[#8a8f98] border-[#23252a]'
+                ? 'bg-[#22c55e] text-[#052e16]'
+                : 'bg-[#161718] text-[#8a8f98]'
             }`}>
               <BarChart2 className="w-3.5 h-3.5" />
-              {isSys4Unlocked ? 'Telemetria SYS_4 Ativa' : 'Leitura Via Código Requer SYS_4'}
+              {isSys4Unlocked ? 'Telemetria SYS_4 Ativa' : 'Requer SYS_4'}
             </span>
           </div>
-          <p className="text-xs text-[#8a8f98] mt-1 flex items-center gap-1 flex-wrap leading-relaxed">
+          <p className="text-xs text-[#8a8f98] mt-2 flex items-center gap-1 flex-wrap leading-relaxed font-pixel-body">
             <span>Sua frota de Naves Agentes alienígenas. Monitore o desempenho individual, histórico de ações e recursos coletados por cada worker desde o início. O Agente Principal (marcado com</span>
-            <Star className="w-3 h-3 text-[#d0d6e0] fill-[#d0d6e0] inline shrink-0" />
+            <Star className="w-3 h-3 text-[#facc15] fill-[#facc15] inline shrink-0" />
             <span>) é acionado instantaneamente ao clicar no botão PLAY no Explorador.</span>
           </p>
         </div>

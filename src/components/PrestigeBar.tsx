@@ -28,25 +28,25 @@ export const PrestigeBar: React.FC<PrestigeBarProps> = ({ engine }) => {
   }, []);
 
   return (
-    <div className="w-full bg-[#0f1011] border-y border-[#23252a] px-3 py-1.5 flex items-center gap-3 text-xs select-none shrink-0 z-10 font-sans relative">
+    <div className="w-full bg-[#0f1011] border-y-2 border-[#23252a] px-3 py-1.5 flex items-center gap-3 text-xs select-none shrink-0 z-10 font-pixel-body relative">
       {/* Prestige Level Badge */}
-      <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-[6px] bg-[#161718] border border-[#23252a] text-[#ffffff] font-medium text-xs shrink-0">
-        <Trophy className="w-3.5 h-3.5 text-[#e4f222]" />
-        <span className="text-[#8a8f98]">Nível</span>
-        <span className="text-[#ffffff] font-mono text-xs font-semibold">{prestige.level}</span>
-        <span className="text-[10px] text-[#62666d]">/100</span>
+      <div className="flex items-center gap-1.5 px-2.5 py-0.5 pixel-box-amber text-[#ffffff] font-medium text-xs shrink-0">
+        <Trophy className="w-3.5 h-3.5 text-[#facc15]" />
+        <span className="text-[#fef08a] font-pixel-header text-[9px]">Nível</span>
+        <span className="text-[#ffffff] font-pixel-mono text-sm font-semibold">{prestige.level}</span>
+        <span className="text-[10px] text-[#fef08a]/60">/100</span>
       </div>
 
       {/* Prestige Progress Bar Container */}
-      <div className="flex-1 relative h-5 rounded-[6px] bg-[#08090a] border border-[#23252a] overflow-hidden flex items-center px-1 group cursor-pointer">
+      <div className="flex-1 relative h-5 pixel-box bg-[#08090a] overflow-hidden flex items-center px-1 group cursor-pointer">
         {/* Progress Fill */}
         <div 
-          className="absolute left-0 top-0 bottom-0 bg-[#e4f222] transition-all duration-300 rounded-[4px] shadow-[0_0_10px_rgba(228,242,34,0.3)]"
+          className="absolute left-0 top-0 bottom-0 bg-[#facc15] transition-all duration-300 shadow-[inset_0_-2px_0_0_#b45309]"
           style={{ width: `${progressPercent}%` }}
         />
 
         {/* Text Overlay inside bar */}
-        <div className="relative w-full flex items-center justify-between px-3 text-[11px] font-mono font-medium z-10 drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]">
+        <div className="relative w-full flex items-center justify-between px-3 text-[11px] font-pixel-mono font-medium z-10 drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]">
           <span className="text-[#ffffff] font-bold">
             <span className="hidden sm:inline">Progresso de Prestígio</span>
           </span>
@@ -64,56 +64,56 @@ export const PrestigeBar: React.FC<PrestigeBarProps> = ({ engine }) => {
       <div className="relative" ref={dropdownRef}>
         <button
           onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-          className={`flex items-center gap-1.5 px-2.5 py-1 rounded-[6px] border transition-all text-[11px] font-medium cursor-pointer ${
+          className={`flex items-center gap-1.5 px-2.5 py-1 pixel-btn transition-all text-[11px] cursor-pointer ${
             prestige.worldChangeUnlocked 
-              ? 'border-[#23252a] bg-[#161718] text-[#ffffff] hover:border-[#383b3f]' 
-              : 'border-[#23252a] bg-[#161718] text-[#8a8f98] hover:text-[#d0d6e0]'
+              ? 'pixel-btn-amber text-[#0f172a]' 
+              : 'text-[#8a8f98] hover:text-[#d0d6e0]'
           }`}
           title="Mudanças do Mundo"
         >
-          <Globe className={`w-3.5 h-3.5 ${prestige.worldChangeUnlocked ? 'text-[#27a644]' : 'text-[#8a8f98]'}`} />
-          <span className="hidden sm:inline">Mudança do Mundo</span>
+          <Globe className="w-3.5 h-3.5" />
+          <span className="hidden sm:inline font-pixel-body">Mudança do Mundo</span>
           <ChevronDown className={`w-3 h-3 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} />
         </button>
 
         {/* Dropdown Menu */}
         {isDropdownOpen && (
-          <div className="absolute right-0 top-full mt-1.5 w-80 bg-[#0f1011] border border-[#23252a] rounded-[12px] shadow-2xl p-3 z-50 text-xs space-y-2.5">
+          <div className="absolute right-0 top-full mt-1.5 w-80 bg-[#0f1011] pixel-box-amber p-3 z-50 text-xs space-y-2.5 font-pixel-body">
             <div className="flex items-center justify-between pb-2 border-b border-[#23252a]">
-              <span className="font-medium text-[#ffffff] flex items-center gap-1.5">
-                <Globe className="w-4 h-4 text-[#02b8cc]" />
+              <span className="font-pixel-header text-[10px] text-[#facc15] flex items-center gap-1.5">
+                <Globe className="w-4 h-4 text-[#06b6d4]" />
                 Mudanças do Mundo
               </span>
-              <span className="text-[10px] text-[#8a8f98]">Fenômenos Globais</span>
+              <span className="text-[10px] text-[#8a8f98] font-pixel-mono">Fenômenos Globais</span>
             </div>
 
             {/* List of World Changes */}
             <div className="space-y-2">
-              <div className={`p-2.5 rounded-[8px] border transition-all ${
+              <div className={`p-2.5 pixel-box transition-all ${
                 prestige.worldChangeUnlocked 
-                  ? 'bg-[#161718] border-[#383b3f]' 
-                  : 'bg-[#08090a] border-[#23252a] opacity-75'
+                  ? 'bg-[#161718]' 
+                  : 'bg-[#08090a] opacity-75'
               }`}>
                 <div className="flex items-center justify-between mb-1">
-                  <span className="font-medium text-xs text-[#ffffff] flex items-center gap-1.5">
+                  <span className="font-pixel-body text-xs text-[#ffffff] flex items-center gap-1.5">
                     {prestige.worldChangeUnlocked ? (
-                      <CheckCircle2 className="w-3.5 h-3.5 text-[#27a644]" />
+                      <CheckCircle2 className="w-3.5 h-3.5 text-[#22c55e]" />
                     ) : (
                       <Lock className="w-3.5 h-3.5 text-[#8a8f98]" />
                     )}
                     Bloco de Prestígio
                   </span>
-                  <span className={`text-[10px] font-medium px-1.5 py-0.2 rounded-[4px] border ${
+                  <span className={`text-[10px] font-pixel-mono px-1.5 py-0.2 pixel-badge ${
                     prestige.worldChangeUnlocked 
-                      ? 'border-[#27a644]/30 text-[#27a644] bg-[#27a644]/10' 
-                      : 'border-[#23252a] text-[#8a8f98] bg-[#161718]'
+                      ? 'bg-[#22c55e] text-[#052e16]' 
+                      : 'bg-[#23252a] text-[#8a8f98]'
                   }`}>
                     {prestige.worldChangeUnlocked ? 'Ativo' : 'Latente'}
                   </span>
                 </div>
                 
                 {/* Intriguing description */}
-                <p className="text-[11px] text-[#8a8f98] leading-relaxed font-sans italic">
+                <p className="text-[11px] text-[#8a8f98] leading-relaxed font-pixel-body italic">
                   {prestige.worldChangeUnlocked 
                     ? '"Uma ressonância antiga despertou no ecossistema. Um ponto de convergência reluzente manifestou-se na terra."' 
                     : '"Transformação latente. Os pilares primordiais do conhecimento buscam equilíbrio para alterar a realidade do mundo."'
@@ -123,7 +123,7 @@ export const PrestigeBar: React.FC<PrestigeBarProps> = ({ engine }) => {
             </div>
 
             {/* Subtle clue footer */}
-            <div className="pt-2 border-t border-[#23252a] text-[10px] text-[#8a8f98] font-sans leading-tight">
+            <div className="pt-2 border-t border-[#23252a] text-[10px] text-[#8a8f98] font-pixel-body leading-tight">
               Investigue a documentação, métodos de API e registros para encontrar pistas.
             </div>
           </div>
@@ -132,3 +132,4 @@ export const PrestigeBar: React.FC<PrestigeBarProps> = ({ engine }) => {
     </div>
   );
 };
+

@@ -640,6 +640,15 @@ export class GameEngine {
 
     // 1. Grow Crops across Grid (v2.0.1 Rules)
     this.tiles.forEach(tile => {
+      // PRESTIGE tile is completely immune to crop growth, overwatering, evaporation or wild fiber spawn
+      if (tile.ground === 'PRESTIGE' || tile.crop === 'PRESTIGE') {
+        tile.ground = 'PRESTIGE';
+        tile.crop = 'PRESTIGE';
+        tile.growth = 0;
+        tile.moisture = 0;
+        return;
+      }
+
       // Overwatered / Soaked soil handling
       if (tile.ground === 'SOAKED' || tile.moisture > 1.0) {
         tile.crop = 'NONE';
@@ -1203,6 +1212,15 @@ export class GameEngine {
   // ==========================================
   public getPrestige(): PrestigeState {
     return { ...this.prestige };
+  }
+
+  public getPrestigeBlockCoords(): { x: number; y: number } | null {
+    for (const tile of this.tiles.values()) {
+      if (tile.ground === 'PRESTIGE' || tile.crop === 'PRESTIGE') {
+        return { x: tile.x, y: tile.y };
+      }
+    }
+    return null;
   }
 
   public getRequiredPrestigePoints(): number {

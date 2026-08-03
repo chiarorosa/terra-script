@@ -160,7 +160,7 @@ export const ExplorerPanel: React.FC<ExplorerPanelProps> = ({
   const isProminent = !milestones.quickStartProminentDone;
 
   return (
-    <div className="w-64 bg-[#0f1011] border-r border-[#23252a] flex flex-col h-full text-[#d0d6e0] select-none shrink-0 font-sans text-xs">
+    <div className="w-64 bg-[#0f1011] border-r-2 border-[#23252a] flex flex-col h-full text-[#d0d6e0] select-none shrink-0 font-pixel-body text-xs">
       <input 
         type="file" 
         ref={fileInputRef} 
@@ -171,8 +171,8 @@ export const ExplorerPanel: React.FC<ExplorerPanelProps> = ({
       />
 
       {/* Panel Header */}
-      <div className="px-3 py-2 border-b border-[#23252a] flex items-center justify-between bg-[#08090a]">
-        <span className="text-xs font-medium uppercase tracking-wider text-[#8a8f98] flex items-center gap-1.5">
+      <div className="px-3 py-2 border-b-2 border-[#23252a] flex items-center justify-between bg-[#08090a]">
+        <span className="text-xs font-pixel-header tracking-wider text-[#8a8f98] flex items-center gap-1.5">
           <Folder className="w-3.5 h-3.5 text-[#d0d6e0]" />
           Explorador
         </span>
@@ -180,9 +180,9 @@ export const ExplorerPanel: React.FC<ExplorerPanelProps> = ({
           <button
             onClick={() => milestones.createFileUnlocked && setIsCreating(true)}
             disabled={!milestones.createFileUnlocked}
-            className={`p-1 rounded-[4px] transition-all ${
+            className={`p-1 pixel-btn text-xs transition-all ${
               milestones.createFileUnlocked 
-                ? 'hover:bg-[#161718] text-[#8a8f98] hover:text-[#27a644] cursor-pointer' 
+                ? 'pixel-btn-green' 
                 : 'opacity-40 cursor-not-allowed text-[#62666d]'
             }`}
             title={milestones.createFileUnlocked ? "Novo Arquivo de Script" : "Execute seu código pela 1ª vez para liberar a criação de arquivos!"}
@@ -191,7 +191,7 @@ export const ExplorerPanel: React.FC<ExplorerPanelProps> = ({
           </button>
           <button
             onClick={() => fileInputRef.current?.click()}
-            className="p-1 hover:bg-[#161718] text-[#8a8f98] hover:text-[#02b8cc] rounded-[4px] transition-all"
+            className="p-1 pixel-btn pixel-btn-cyan text-xs transition-all"
             title="Importar Script Local (.py / .js)"
           >
             <Upload className="w-3.5 h-3.5" />
@@ -199,7 +199,7 @@ export const ExplorerPanel: React.FC<ExplorerPanelProps> = ({
           {onOpenSaveManager && (
             <button
               onClick={onOpenSaveManager}
-              className="p-1 hover:bg-[#161718] text-[#8a8f98] hover:text-[#ffffff] rounded-[4px] transition-all"
+              className="p-1 pixel-btn text-xs text-[#d0d6e0] transition-all"
               title="Gerenciador de Saves e Backup"
             >
               <Save className="w-3.5 h-3.5" />
@@ -207,7 +207,7 @@ export const ExplorerPanel: React.FC<ExplorerPanelProps> = ({
           )}
           <button
             onClick={handleResetDefaults}
-            className="p-1 hover:bg-[#161718] text-[#8a8f98] hover:text-[#ffffff] rounded-[4px] transition-all"
+            className="p-1 pixel-btn text-xs text-[#8a8f98] hover:text-[#ffffff] transition-all"
             title="Restaurar apenas os Scripts Padrão (main.py)"
           >
             <RotateCcw className="w-3.5 h-3.5" />

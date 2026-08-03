@@ -129,46 +129,46 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ engine, initialSel
   const selectedUnlocked = selectedItem ? isUnlocked(selectedItem.techId) : false;
 
   return (
-    <div className="flex-1 bg-[#08090a] p-4 md:p-6 overflow-hidden font-sans text-[#d0d6e0] select-none flex flex-col h-full">
+    <div className="flex-1 bg-[#08090a] p-4 md:p-6 overflow-hidden font-pixel-body text-[#d0d6e0] select-none flex flex-col h-full">
       <div className="max-w-7xl w-full mx-auto flex flex-col h-full space-y-4">
         
         {/* Header Bar & Research Progress */}
-        <div className="bg-[#0f1011] border border-[#23252a] rounded-[12px] p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 shrink-0 shadow-sm">
+        <div className="bg-[#0f1011] pixel-box p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 shrink-0">
           <div>
-            <h1 className="text-lg font-bold text-[#ffffff] flex items-center gap-2">
-              <BookOpen className="w-5 h-5 text-[#27a644]" />
+            <h1 className="text-sm font-pixel-header text-[#ffffff] flex items-center gap-2">
+              <BookOpen className="w-5 h-5 text-[#22c55e]" />
               Wiki da API & Guia de Programação
             </h1>
-            <p className="text-xs text-[#8a8f98] mt-1">
+            <p className="text-xs text-[#8a8f98] mt-1 font-pixel-body">
               Documentação técnica oficial para automação agrícola. Inspecione a declaração de métodos, parâmetros, tipos de retorno e exemplos de algoritmos.
             </p>
           </div>
 
           {/* Research Progress Badge & Educational Errors Toggle */}
-          <div className="flex flex-wrap items-center gap-3 shrink-0">
+          <div className="flex flex-wrap items-center gap-3 shrink-0 font-pixel-mono">
             {/* Beginner Educational Help Badge */}
             <button
               onClick={toggleEducationalErrors}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-[8px] border text-xs font-medium transition-all ${
+              className={`flex items-center gap-2 px-3 py-1.5 pixel-btn text-xs font-medium transition-all ${
                 educationalErrors
-                  ? 'bg-[#8b5cf6]/10 text-[#8b5cf6] border-[#8b5cf6]/30 hover:bg-[#8b5cf6]/20'
-                  : 'bg-[#161718] text-[#8a8f98] border-[#23252a] hover:text-[#d0d6e0]'
+                  ? 'pixel-btn-purple'
+                  : 'text-[#8a8f98]'
               }`}
               title="Clique para ativar/desativar dicas amigáveis de erros de código no console"
             >
-              <GraduationCap className="w-4 h-4 text-[#8b5cf6]" />
-              <span>Dicas de Erro: <strong className="font-mono">{educationalErrors ? 'ATIVADO' : 'DESATIVADO'}</strong></span>
+              <GraduationCap className="w-4 h-4 text-[#a855f7]" />
+              <span>Dicas de Erro: <strong className="font-pixel-mono">{educationalErrors ? 'ATIVADO' : 'DESATIVADO'}</strong></span>
             </button>
 
-            <div className="flex items-center gap-4 bg-[#08090a] border border-[#23252a] px-3.5 py-2 rounded-[8px]">
+            <div className="flex items-center gap-4 bg-[#08090a] pixel-box px-3.5 py-2">
               <div className="space-y-1">
-                <div className="flex items-center justify-between text-[11px] font-mono">
-                  <span className="text-[#8a8f98]">Progresso de Pesquisas:</span>
-                  <span className="text-[#27a644] font-bold ml-2">{unlockedTechCount} / {totalTech} ({unlockPercentage}%)</span>
+                <div className="flex items-center justify-between text-[11px] font-pixel-mono">
+                  <span className="text-[#8a8f98]">Progresso:</span>
+                  <span className="text-[#22c55e] font-bold ml-2">{unlockedTechCount} / {totalTech} ({unlockPercentage}%)</span>
                 </div>
-                <div className="w-40 h-1.5 bg-[#161718] rounded-full overflow-hidden border border-[#23252a]">
+                <div className="w-40 h-2 bg-[#161718] border border-[#23252a] overflow-hidden">
                   <div 
-                    className="h-full bg-[#27a644] transition-all duration-500 rounded-full" 
+                    className="h-full bg-[#22c55e] transition-all duration-500" 
                     style={{ width: `${unlockPercentage}%` }}
                   />
                 </div>
@@ -177,7 +177,7 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ engine, initialSel
               {onNavigateToTab && (
                 <button
                   onClick={() => onNavigateToTab('research')}
-                  className="px-2.5 py-1.5 bg-[#238636] hover:bg-[#2ea043] text-white rounded text-xs font-semibold transition-all flex items-center gap-1 shadow-sm active:scale-95 shrink-0 border border-[#3fb950]/30"
+                  className="px-2.5 py-1.5 pixel-btn pixel-btn-green text-xs font-pixel-header transition-all flex items-center gap-1 shrink-0"
                 >
                   <FlaskConical className="w-3.5 h-3.5" />
                   <span>Pesquisas</span>
@@ -191,48 +191,48 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ engine, initialSel
         <div className="flex-1 min-h-0 grid grid-cols-1 md:grid-cols-12 gap-4">
           
           {/* SIDEBAR NAVIGATION (4 Cols) */}
-          <div className="md:col-span-4 lg:col-span-3 bg-[#0f1011] border border-[#23252a] rounded-[12px] p-3 flex flex-col min-h-0 overflow-hidden shadow-sm">
+          <div className="md:col-span-4 lg:col-span-3 bg-[#0f1011] pixel-box p-3 flex flex-col min-h-0 overflow-hidden">
             
             {/* Search Input Box */}
             <div className="relative mb-2.5 shrink-0">
               <Search className="w-3.5 h-3.5 text-[#8a8f98] absolute left-3 top-2.5" />
               <input 
                 type="text"
-                placeholder="Pesquisar API ou conceito..."
+                placeholder="Pesquisar API..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-8 pr-3 py-1.5 bg-[#08090a] border border-[#23252a] rounded-[6px] text-xs text-[#ffffff] placeholder-[#8a8f98] focus:outline-none focus:border-[#27a644] font-mono transition-colors"
+                className="w-full pl-8 pr-3 py-1.5 bg-[#08090a] pixel-box text-xs text-[#ffffff] placeholder-[#8a8f98] focus:outline-none focus:border-[#22c55e] font-pixel-mono transition-colors"
               />
             </div>
 
             {/* Filter Pills */}
-            <div className="flex items-center gap-1 mb-3 pb-2 border-b border-[#23252a] shrink-0">
+            <div className="flex items-center gap-1 mb-3 pb-2 border-b-2 border-[#23252a] shrink-0 font-pixel-mono">
               <button
                 onClick={() => setFilterMode('all')}
-                className={`px-2 py-0.5 rounded text-[11px] font-medium transition-all ${
+                className={`px-2 py-0.5 pixel-badge transition-all ${
                   filterMode === 'all' 
-                    ? 'bg-[#27a644]/20 text-[#27a644] border border-[#27a644]/40 font-semibold' 
-                    : 'text-[#8a8f98] hover:text-[#ffffff]'
+                    ? 'bg-[#22c55e] text-[#052e16] font-bold' 
+                    : 'text-[#8a8f98] bg-[#161718]'
                 }`}
               >
                 Todos
               </button>
               <button
                 onClick={() => setFilterMode('unlocked')}
-                className={`px-2 py-0.5 rounded text-[11px] font-medium transition-all ${
+                className={`px-2 py-0.5 pixel-badge transition-all ${
                   filterMode === 'unlocked' 
-                    ? 'bg-[#27a644]/20 text-[#27a644] border border-[#27a644]/40 font-semibold' 
-                    : 'text-[#8a8f98] hover:text-[#ffffff]'
+                    ? 'bg-[#22c55e] text-[#052e16] font-bold' 
+                    : 'text-[#8a8f98] bg-[#161718]'
                 }`}
               >
-                Desbloqueados
+                Ativos
               </button>
               <button
                 onClick={() => setFilterMode('locked')}
-                className={`px-2 py-0.5 rounded text-[11px] font-medium transition-all ${
+                className={`px-2 py-0.5 pixel-badge transition-all ${
                   filterMode === 'locked' 
-                    ? 'bg-[#27a644]/20 text-[#27a644] border border-[#27a644]/40 font-semibold' 
-                    : 'text-[#8a8f98] hover:text-[#ffffff]'
+                    ? 'bg-[#facc15] text-[#0f172a] font-bold' 
+                    : 'text-[#8a8f98] bg-[#161718]'
                 }`}
               >
                 Bloqueados
@@ -240,7 +240,7 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ engine, initialSel
             </div>
 
             {/* Navigation Tree by Namespace */}
-            <div className="flex-1 overflow-y-auto space-y-3 pr-1">
+            <div className="flex-1 overflow-y-auto space-y-3 pr-1 font-pixel-body">
               {namespaces.map(ns => {
                 const nsItems = filteredCatalog.filter(i => i.namespace === ns.key);
                 if (nsItems.length === 0) return null;
@@ -249,15 +249,15 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ engine, initialSel
 
                 return (
                   <div key={ns.key} className="space-y-1">
-                    <div className="flex items-center justify-between px-2 py-1 text-[11px] font-bold text-[#ffffff] tracking-wide uppercase font-mono border-b border-[#23252a]/50">
+                    <div className="flex items-center justify-between px-2 py-1 text-[11px] font-bold text-[#ffffff] uppercase font-pixel-mono border-b-2 border-[#23252a]/50">
                       <span className="flex items-center gap-1.5">
                         <NsIcon className={`w-3.5 h-3.5 ${ns.color}`} />
                         <span>{ns.label}</span>
                       </span>
-                      <span className="text-[10px] text-[#8a8f98] font-mono">({nsItems.length})</span>
+                      <span className="text-[10px] text-[#8a8f98] font-pixel-mono">({nsItems.length})</span>
                     </div>
 
-                    <div className="space-y-0.5 pt-0.5">
+                    <div className="space-y-1 pt-0.5">
                       {nsItems.map(item => {
                         const unlocked = isUnlocked(item.techId);
                         const isSelected = item.id === selectedItemId;
@@ -266,22 +266,22 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ engine, initialSel
                           <button
                             key={item.id}
                             onClick={() => setSelectedItemId(item.id)}
-                            className={`w-full text-left px-2.5 py-1.5 rounded-[6px] text-xs font-mono transition-all flex items-center justify-between group ${
+                            className={`w-full text-left px-2.5 py-1.5 pixel-btn text-xs font-pixel-mono transition-all flex items-center justify-between group ${
                               isSelected 
-                                ? 'bg-[#161718] text-[#ffffff] border border-[#27a644]/50 shadow-sm' 
-                                : 'text-[#a0a6b0] hover:text-[#ffffff] hover:bg-[#161718]/60 border border-transparent'
+                                ? 'pixel-btn-green text-[#ffffff]' 
+                                : 'text-[#a0a6b0] hover:text-[#ffffff] bg-[#161718]'
                             }`}
                           >
                             <span className="truncate flex items-center gap-1.5">
-                              <ChevronRight className={`w-3 h-3 transition-transform ${isSelected ? 'rotate-90 text-[#27a644]' : 'text-[#8a8f98] group-hover:text-[#ffffff]'}`} />
+                              <ChevronRight className={`w-3 h-3 transition-transform ${isSelected ? 'rotate-90 text-[#22c55e]' : 'text-[#8a8f98]'}`} />
                               <span className="truncate">{item.displayText}</span>
                             </span>
 
                             <span className="shrink-0 ml-1">
                               {unlocked ? (
-                                <CheckCircle2 className="w-3.5 h-3.5 text-[#27a644]" />
+                                <CheckCircle2 className="w-3.5 h-3.5 text-[#22c55e]" />
                               ) : (
-                                <Lock className="w-3.5 h-3.5 text-[#d29922]" />
+                                <Lock className="w-3.5 h-3.5 text-[#facc15]" />
                               )}
                             </span>
                           </button>
@@ -293,7 +293,7 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ engine, initialSel
               })}
 
               {filteredCatalog.length === 0 && (
-                <div className="p-6 text-center text-xs text-[#8a8f98] space-y-2">
+                <div className="p-6 text-center text-xs text-[#8a8f98] space-y-2 font-pixel-body">
                   <HelpCircle className="w-8 h-8 mx-auto text-[#8a8f98]/50" />
                   <p>Nenhum método ou conceito encontrado para a busca atual.</p>
                 </div>
@@ -302,7 +302,7 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ engine, initialSel
           </div>
 
           {/* MAIN ARTICLE VIEW - FOCUSED WIKI TOPIC (8-9 Cols) */}
-          <div className="md:col-span-8 lg:col-span-9 bg-[#0f1011] border border-[#23252a] rounded-[12px] p-5 flex flex-col min-h-0 overflow-y-auto space-y-5 shadow-sm">
+          <div className="md:col-span-8 lg:col-span-9 bg-[#0f1011] pixel-box p-5 flex flex-col min-h-0 overflow-y-auto space-y-5">
             
             {/* Header Title Card */}
             <div className="p-4 bg-[#08090a] border border-[#23252a] rounded-[10px] space-y-3">

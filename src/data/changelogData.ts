@@ -8,10 +8,23 @@ export interface ChangelogRelease {
 
 export const CHANGELOG_HISTORY: ChangelogRelease[] = [
   {
+    version: 'v2.6.0',
+    date: '2026-08-03',
+    title: 'Transformação Visual Pixel Art Retro UI & Estética Arcade 8-Bit',
+    isCurrent: true,
+    changes: [
+      'Redesign Geral de Interface Pixel Art 8-Bit: Toda a interface do jogo (cabeçalho, modais, painéis laterais e barra inferior) foi adaptada para o estilo Pixel Art com bordas biseladas dithered/stepped, cantos retos sem arredondamento e sombras projetadas em pixels.',
+      'Tipografia Arcade e Fontes Pixeladas: Integração das fontes de estilo arcade "Press Start 2P" para títulos e badges, "Pixelify Sans" para botões/cabeçalhos e "VT323" para contadores e status.',
+      'Botões e Modais Retro Reativos: Todos os botões e painéis foram remodelados com efeitos táteis 3D de relevo estilo botão de fliperama e cores vibrantes (Ouro, Verde Cibernético, Ciano e Violeta).',
+      'Insignia e Selo de Versão v2.6.0: Atualização dos marcadores de versão no cabeçalho e modais para a versão v2.6.0 (Pixel Art UI).',
+      'Ponto de Restauração (Git Checkpoint): Criação de checkpoint completo da versão v2.5.0 no repositório do projeto antes do lançamento da v2.6.0.'
+    ]
+  },
+  {
     version: 'v2.5.1',
     date: '2026-08-03',
     title: 'Rebalanceamento de Colheitas, Exigências de Solo e Reestruturação da Árvore de Pesquisas',
-    isCurrent: true,
+    isCurrent: false,
     changes: [
       'Transições Mutuamente Exclusivas de Solo: farm.water() converte solo Arado (TILLED) em IRRIGATED (elevação da umidade a 100%), enquanto farm.till() cancela a irrigação convertendo solo Irrigado (IRRIGATED) em TILLED.',
       'Crescimento Restrito a Solo Arado (TILLED): Raízes Cultivadas (CULTIVATED_ROOT) e Árvores Nobres (TREE) agora exigem EXCLUSIVAMENTE Solo Arado para crescer (taxa de crescimento zerada em solos NATURAL ou IRRIGATED). Estratégia recomendada: irrigue primeiro para elevar a umidade e are em seguida.',
