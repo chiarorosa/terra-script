@@ -43,6 +43,18 @@ class ThreeAssetCache {
   public static voxelBlockGeo = new THREE.BoxGeometry(0.1, 0.1, 0.1);
   public static stalkStemGeo = new THREE.BoxGeometry(0.04, 0.45, 0.04);
   public static wheatHeadGeo = new THREE.BoxGeometry(0.12, 0.25, 0.12);
+  public static leafBladeGeo = new THREE.BoxGeometry(0.06, 0.22, 0.02);
+  public static wheatAwnGeo = new THREE.BoxGeometry(0.02, 0.12, 0.02);
+  public static fruitAppleGeo = new THREE.SphereGeometry(0.08, 6, 6);
+  public static fruitTomatoGeo = new THREE.SphereGeometry(0.09, 8, 8);
+  public static fruitCalyxGeo = new THREE.BoxGeometry(0.08, 0.02, 0.08);
+  public static woodPostGeo = new THREE.BoxGeometry(0.06, 0.6, 0.06);
+  public static woodBarGeo = new THREE.BoxGeometry(0.5, 0.04, 0.04);
+  public static rootMoundGeo = new THREE.CylinderGeometry(0.28, 0.38, 0.08, 8);
+  public static beetRootGeo = new THREE.ConeGeometry(0.12, 0.3, 6);
+  public static sunflowerDiscGeo = new THREE.CylinderGeometry(0.18, 0.18, 0.05, 10);
+  public static sunflowerPetalGeo = new THREE.BoxGeometry(0.08, 0.03, 0.16);
+  public static sporeBallGeo = new THREE.SphereGeometry(0.06, 6, 6);
   
   public static bushLeafBaseGeo = new THREE.BoxGeometry(0.55, 0.35, 0.55);
   public static bushLeafTopGeo = new THREE.BoxGeometry(0.4, 0.25, 0.4);
@@ -332,13 +344,21 @@ class ThreeAssetCache {
     PRESTIGE: [ThreeAssetCache.matSidePrestige, ThreeAssetCache.matSidePrestige, ThreeAssetCache.matPrestigeTop, ThreeAssetCache.matSidePrestige, ThreeAssetCache.matSidePrestige, ThreeAssetCache.matSidePrestige],
   };
 
-  // Crop Materials (High Contrast)
+  // Crop Materials (High Contrast & Hyper-Realistic Voxel Art)
   public static matFoliage = new THREE.MeshStandardMaterial({ map: ThreeAssetCache.texFoliage, roughness: 0.4, emissive: 0x10b981, emissiveIntensity: 0.35 });
+  public static matDeepForest = new THREE.MeshStandardMaterial({ color: 0x052e16, roughness: 0.7 });
   public static matBrightLime = new THREE.MeshStandardMaterial({ color: 0xa3e635, emissive: 0x84cc16, emissiveIntensity: 0.5, roughness: 0.3 });
   public static matBark = new THREE.MeshStandardMaterial({ map: ThreeAssetCache.texBark, roughness: 0.8 });
   public static matWheatHead = new THREE.MeshStandardMaterial({ color: 0xfacc15, roughness: 0.5 });
   public static matStem = new THREE.MeshStandardMaterial({ color: 0xca8a04, roughness: 0.6 });
   public static matBerry = new THREE.MeshStandardMaterial({ color: 0xef4444, emissive: 0xd97706, emissiveIntensity: 0.4, roughness: 0.3 });
+  public static matTomatoRed = new THREE.MeshStandardMaterial({ color: 0xef4444, emissive: 0x991b1b, emissiveIntensity: 0.3, roughness: 0.2 });
+  public static matAppleRed = new THREE.MeshStandardMaterial({ color: 0xd97706, emissive: 0x991b1b, emissiveIntensity: 0.3, roughness: 0.2 });
+  public static matWoodTrellis = new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.9 });
+  public static matBlossomYellow = new THREE.MeshStandardMaterial({ color: 0xfde047, emissive: 0xeab308, emissiveIntensity: 0.6 });
+  public static matBeetroot = new THREE.MeshStandardMaterial({ color: 0xa21caf, emissive: 0x701a75, emissiveIntensity: 0.4, roughness: 0.4 });
+  public static matSporeTeal = new THREE.MeshStandardMaterial({ color: 0x22d3ee, emissive: 0x06b6d4, emissiveIntensity: 0.9, roughness: 0.1 });
+  public static matSunflowerDisc = new THREE.MeshStandardMaterial({ color: 0x451a03, roughness: 0.9 });
   public static matFruitCrystal = new THREE.MeshStandardMaterial({ color: 0xf43f5e, emissive: 0xe11d48, emissiveIntensity: 0.7, roughness: 0.2, metalness: 0.8 });
   public static matEnergyCore = new THREE.MeshStandardMaterial({ color: 0x06b6d4, emissive: 0x22d3ee, emissiveIntensity: 0.9, roughness: 0.1, metalness: 0.9 });
   public static matEnergyPetal = new THREE.MeshStandardMaterial({ color: 0x38bdf8, roughness: 0.3 });
@@ -596,6 +616,30 @@ export const World3DCanvas: React.FC<World3DCanvasProps> = ({ engine }) => {
         const ring = mesh.getObjectByName('energyRing');
         if (ring) {
           ring.rotation.z += 0.04;
+        }
+      });
+
+      // Ambient Farm Field Wind Sway & Dynamic Voxel Animations
+      tileMeshesRef.current.forEach((tileGroup) => {
+        const cropGroup = tileGroup.getObjectByName('cropGroup');
+        if (cropGroup) {
+          const tileX = tileGroup.userData.tileX || 0;
+          const tileY = tileGroup.userData.tileY || 0;
+          // Organic wind wave passing across the farm field
+          const windZ = Math.sin(elapsedTime * 2.2 + tileX * 0.4 + tileY * 0.4) * 0.035;
+          const windX = Math.cos(elapsedTime * 1.8 + tileX * 0.3) * 0.02;
+          cropGroup.rotation.z = windZ;
+          cropGroup.rotation.x = windX;
+
+          // Animate rotating components & floating spores inside crop
+          cropGroup.traverse((child) => {
+            if (child.userData && child.userData.animType === 'rotate') {
+              child.rotation.y += 0.02;
+            } else if (child.userData && child.userData.animType === 'float') {
+              const baseY = child.userData.baseY || 0.6;
+              child.position.y = baseY + Math.sin(elapsedTime * 3 + tileX) * 0.04;
+            }
+          });
         }
       });
 
@@ -869,129 +913,361 @@ export const World3DCanvas: React.FC<World3DCanvasProps> = ({ engine }) => {
     }
   };
 
-  // Helper 3D Crop Mesh Creator (Pixel-Art Voxel Assemblies)
+  // Helper 3D Crop Mesh Creator (Hyper-Realistic Pixel-Art Voxel Assemblies)
   const create3DCropMesh = (type: CropType, growth: number): THREE.Group => {
     const cropGroup = new THREE.Group();
-    const scale = 0.25 + (growth / 100) * 0.75;
+    cropGroup.userData.isCrop = true;
+
+    // Growth progression scale & stage
+    const growthStage = growth < 25 ? 'SPROUT' : growth < 60 ? 'YOUNG' : 'MATURE';
+    const scale = 0.3 + (growth / 100) * 0.7;
+
+    if (growthStage === 'SPROUT') {
+      // Small sprouting shoots pushing out of tilled soil mound
+      const mound = new THREE.Mesh(ThreeAssetCache.rootMoundGeo, ThreeAssetCache.matSoilTop);
+      mound.position.y = 0.04;
+      cropGroup.add(mound);
+
+      for (let i = 0; i < 3; i++) {
+        const shoot = new THREE.Mesh(ThreeAssetCache.leafBladeGeo, ThreeAssetCache.matBrightLime);
+        const angle = (i * Math.PI * 2) / 3;
+        shoot.position.set(Math.cos(angle) * 0.06, 0.12, Math.sin(angle) * 0.06);
+        shoot.rotation.y = angle;
+        shoot.rotation.z = 0.2;
+        cropGroup.add(shoot);
+      }
+      return cropGroup;
+    }
 
     if (type === 'WILD_FIBER') {
-      // 3 Stalks with textured wheat head cubes
-      for (let i = 0; i < 3; i++) {
-        const stalk = new THREE.Group();
-        const stem = new THREE.Mesh(ThreeAssetCache.stalkStemGeo, ThreeAssetCache.matStem);
-        stem.position.y = 0.22;
-        const head = new THREE.Mesh(ThreeAssetCache.wheatHeadGeo, ThreeAssetCache.matWheatHead);
-        head.position.y = 0.42;
-        stalk.add(stem, head);
+      // WILD_FIBER: Realistic Golden Wheat Field Tuft
+      const mound = new THREE.Mesh(ThreeAssetCache.rootMoundGeo, ThreeAssetCache.matSoilTop);
+      mound.position.y = 0.03;
+      cropGroup.add(mound);
 
-        stalk.position.set((i - 1) * 0.18, 0, (i % 2 === 0 ? 0.06 : -0.06));
-        stalk.scale.set(scale, scale, scale);
+      const stalkCount = growthStage === 'YOUNG' ? 4 : 7;
+      const offsets = [
+        { x: 0, z: 0, rotZ: 0, scaleY: 1.0 },
+        { x: 0.12, z: 0.08, rotZ: 0.08, scaleY: 0.9 },
+        { x: -0.12, z: -0.06, rotZ: -0.1, scaleY: 0.95 },
+        { x: 0.06, z: -0.12, rotZ: 0.05, scaleY: 0.85 },
+        { x: -0.08, z: 0.12, rotZ: -0.07, scaleY: 0.92 },
+        { x: 0.14, z: -0.08, rotZ: 0.12, scaleY: 0.88 },
+        { x: -0.14, z: 0.06, rotZ: -0.12, scaleY: 0.94 },
+      ];
+
+      for (let i = 0; i < stalkCount; i++) {
+        const off = offsets[i];
+        const stalk = new THREE.Group();
+
+        // Slender stem
+        const stem = new THREE.Mesh(ThreeAssetCache.stalkStemGeo, growthStage === 'MATURE' ? ThreeAssetCache.matStem : ThreeAssetCache.matBrightLime);
+        stem.position.y = 0.22 * off.scaleY * scale;
+        stalk.add(stem);
+
+        // Lower foliage leaf blades
+        const leaf1 = new THREE.Mesh(ThreeAssetCache.leafBladeGeo, ThreeAssetCache.matFoliage);
+        leaf1.position.set(0.04, 0.12 * scale, 0);
+        leaf1.rotation.z = -0.4;
+        stalk.add(leaf1);
+
+        if (growthStage === 'MATURE') {
+          // Detailed textured golden wheat head
+          const head = new THREE.Mesh(ThreeAssetCache.wheatHeadGeo, ThreeAssetCache.matWheatHead);
+          head.position.y = 0.42 * off.scaleY * scale;
+
+          // Whisker awns at top of wheat ear
+          for (let a = 0; a < 2; a++) {
+            const awn = new THREE.Mesh(ThreeAssetCache.wheatAwnGeo, ThreeAssetCache.matWheatHead);
+            awn.position.set(a === 0 ? 0.04 : -0.04, 0.54 * off.scaleY * scale, 0);
+            awn.rotation.z = a === 0 ? -0.3 : 0.3;
+            stalk.add(awn);
+          }
+          stalk.add(head);
+        } else {
+          // Green developing head
+          const head = new THREE.Mesh(ThreeAssetCache.wheatHeadGeo, ThreeAssetCache.matBrightLime);
+          head.position.y = 0.38 * off.scaleY * scale;
+          stalk.add(head);
+        }
+
+        stalk.position.set(off.x, 0, off.z);
+        stalk.rotation.z = off.rotZ;
         cropGroup.add(stalk);
       }
     } else if (type === 'WOODY_BUSH') {
-      // Multi-layer foliage block with berry specks
+      // WOODY_BUSH: Organic Multi-Tiered Berry Bush
       const trunk = new THREE.Mesh(ThreeAssetCache.bushTrunkGeo, ThreeAssetCache.matBark);
       trunk.position.y = 0.12;
       cropGroup.add(trunk);
 
-      const leafBase = new THREE.Mesh(ThreeAssetCache.bushLeafBaseGeo, ThreeAssetCache.matFoliage);
-      leafBase.position.y = 0.3 * scale;
+      // Deep forest base foliage
+      const leafBase = new THREE.Mesh(ThreeAssetCache.bushLeafBaseGeo, ThreeAssetCache.matDeepForest);
+      leafBase.position.y = 0.25 * scale;
       leafBase.scale.set(scale, scale, scale);
 
+      // Middle emerald canopy
+      const leafMid = new THREE.Mesh(ThreeAssetCache.bushLeafBaseGeo, ThreeAssetCache.matFoliage);
+      leafMid.position.set(0.04, 0.35 * scale, -0.03);
+      leafMid.scale.set(scale * 0.9, scale * 0.9, scale * 0.9);
+
+      // Bright lime sunlit top canopy
       const leafTop = new THREE.Mesh(ThreeAssetCache.bushLeafTopGeo, ThreeAssetCache.matBrightLime);
-      leafTop.position.y = 0.5 * scale;
-      leafTop.scale.set(scale, scale, scale);
+      leafTop.position.set(-0.02, 0.52 * scale, 0.02);
+      leafTop.scale.set(scale * 0.85, scale * 0.85, scale * 0.85);
 
-      // Berry specks
-      const berry1 = new THREE.Mesh(ThreeAssetCache.fruitBerryGeo, ThreeAssetCache.matBerry);
-      berry1.position.set(0.18, 0.35, 0.18);
-      const berry2 = new THREE.Mesh(ThreeAssetCache.fruitBerryGeo, ThreeAssetCache.matBerry);
-      berry2.position.set(-0.18, 0.4, -0.15);
+      cropGroup.add(leafBase, leafMid, leafTop);
 
-      cropGroup.add(leafBase, leafTop, berry1, berry2);
+      if (growthStage === 'MATURE') {
+        // 8 Glossy 3D Ruby Red Berries nested around outer branches
+        const berryPos = [
+          { x: 0.22, y: 0.38, z: 0.2 },
+          { x: -0.22, y: 0.42, z: -0.18 },
+          { x: 0.18, y: 0.48, z: -0.22 },
+          { x: -0.2, y: 0.34, z: 0.22 },
+          { x: 0.26, y: 0.3, z: -0.05 },
+          { x: -0.25, y: 0.46, z: 0.08 },
+          { x: 0, y: 0.58, z: 0.18 },
+          { x: 0.08, y: 0.55, z: -0.2 },
+        ];
+        berryPos.forEach((p) => {
+          const berry = new THREE.Mesh(ThreeAssetCache.fruitBerryGeo, ThreeAssetCache.matBerry);
+          berry.position.set(p.x * scale, p.y * scale, p.z * scale);
+          cropGroup.add(berry);
+        });
+      }
     } else if (type === 'TREE') {
-      // Robust timber trunk & 3-tiered pine/oak foliage pyramid
+      // TREE: Magnificent Orchard Apple Tree
+      // Heavy timber trunk with flared root feet
       const trunk = new THREE.Mesh(ThreeAssetCache.treeTrunkGeo, ThreeAssetCache.matBark);
-      trunk.position.y = 0.22;
+      trunk.position.y = 0.25;
       cropGroup.add(trunk);
 
-      const t1 = new THREE.Mesh(ThreeAssetCache.treeLeafTier1Geo, ThreeAssetCache.matFoliage);
-      t1.position.y = 0.45 * scale;
+      // Root flares at soil level
+      for (let i = 0; i < 4; i++) {
+        const root = new THREE.Mesh(ThreeAssetCache.bushTrunkGeo, ThreeAssetCache.matBark);
+        const angle = (i * Math.PI) / 2;
+        root.position.set(Math.cos(angle) * 0.12, 0.06, Math.sin(angle) * 0.12);
+        root.rotation.y = angle;
+        root.rotation.z = 0.3;
+        cropGroup.add(root);
+      }
+
+      // 3 Organic foliage cloud tiers
+      const t1 = new THREE.Mesh(ThreeAssetCache.treeLeafTier1Geo, ThreeAssetCache.matDeepForest);
+      t1.position.y = 0.48 * scale;
       t1.scale.set(scale, scale, scale);
 
       const t2 = new THREE.Mesh(ThreeAssetCache.treeLeafTier2Geo, ThreeAssetCache.matFoliage);
-      t2.position.y = 0.7 * scale;
+      t2.position.set(0.03, 0.72 * scale, -0.03);
       t2.scale.set(scale, scale, scale);
 
       const t3 = new THREE.Mesh(ThreeAssetCache.treeLeafTier3Geo, ThreeAssetCache.matBrightLime);
-      t3.position.y = 0.92 * scale;
+      t3.position.set(-0.02, 0.95 * scale, 0.02);
       t3.scale.set(scale, scale, scale);
 
       cropGroup.add(t1, t2, t3);
-    } else if (type === 'CULTIVATED_ROOT') {
-      // Green leafy top & protruding root crop
-      const canopy = new THREE.Mesh(ThreeAssetCache.rootCanopyGeo, ThreeAssetCache.matBrightLime);
-      canopy.position.y = 0.28 * scale;
-      canopy.scale.set(scale, scale, scale);
 
-      const root = new THREE.Mesh(ThreeAssetCache.rootCropGeo, ThreeAssetCache.matRootCrop);
-      root.rotation.x = Math.PI;
-      root.position.y = 0.12 * scale;
-      root.scale.set(scale, scale, scale);
-
-      cropGroup.add(canopy, root);
-    } else if (type === 'FRUIT_COLONY') {
-      // Lush bush with ruby fruit crystals
-      const bush = new THREE.Mesh(ThreeAssetCache.fruitBushGeo, ThreeAssetCache.matFoliage);
-      bush.position.y = 0.25 * scale;
-      bush.scale.set(scale, scale, scale);
-
-      for (let i = 0; i < 4; i++) {
-        const fruit = new THREE.Mesh(ThreeAssetCache.fruitBerryGeo, ThreeAssetCache.matFruitCrystal);
-        const angle = (i * Math.PI) / 2;
-        fruit.position.set(Math.cos(angle) * 0.22, 0.28 * scale, Math.sin(angle) * 0.22);
-        cropGroup.add(fruit);
+      if (growthStage === 'MATURE') {
+        // 6 Shiny Red Apples hanging under foliage canopy
+        const applePos = [
+          { x: 0.28, y: 0.42, z: 0.22 },
+          { x: -0.28, y: 0.45, z: -0.2 },
+          { x: 0.22, y: 0.4, z: -0.28 },
+          { x: -0.25, y: 0.38, z: 0.25 },
+          { x: 0.32, y: 0.52, z: -0.05 },
+          { x: -0.05, y: 0.36, z: 0.32 },
+        ];
+        applePos.forEach((p) => {
+          const appleGroup = new THREE.Group();
+          const apple = new THREE.Mesh(ThreeAssetCache.fruitAppleGeo, ThreeAssetCache.matAppleRed);
+          const calyx = new THREE.Mesh(ThreeAssetCache.fruitCalyxGeo, ThreeAssetCache.matFoliage);
+          calyx.position.y = 0.08;
+          appleGroup.add(apple, calyx);
+          appleGroup.position.set(p.x * scale, p.y * scale, p.z * scale);
+          cropGroup.add(appleGroup);
+        });
       }
+    } else if (type === 'CULTIVATED_ROOT') {
+      // CULTIVATED_ROOT: Real Root Crop (Carrot/Beetroot Cluster with Dirt Mound)
+      const mound = new THREE.Mesh(ThreeAssetCache.rootMoundGeo, ThreeAssetCache.matSoilTop);
+      mound.position.y = 0.04;
+      cropGroup.add(mound);
+
+      // 3 Root Crops Pushing Up Out of Ground
+      const roots = [
+        { x: 0, z: 0, scale: 1.0, isBeet: false },
+        { x: 0.14, z: 0.08, scale: 0.75, isBeet: true },
+        { x: -0.12, z: -0.1, scale: 0.8, isBeet: false },
+      ];
+
+      roots.forEach((r) => {
+        const rootGroup = new THREE.Group();
+
+        // Tapered root body
+        const rootMat = r.isBeet ? ThreeAssetCache.matBeetroot : ThreeAssetCache.matRootCrop;
+        const rootGeo = r.isBeet ? ThreeAssetCache.beetRootGeo : ThreeAssetCache.rootCropGeo;
+
+        const body = new THREE.Mesh(rootGeo, rootMat);
+        body.rotation.x = Math.PI;
+        body.position.y = 0.14 * r.scale * scale;
+        rootGroup.add(body);
+
+        // Feathery Leaf Tops
+        const canopyCount = 4;
+        for (let i = 0; i < canopyCount; i++) {
+          const leaf = new THREE.Mesh(ThreeAssetCache.leafBladeGeo, ThreeAssetCache.matBrightLime);
+          const angle = (i * Math.PI * 2) / canopyCount;
+          leaf.position.set(Math.cos(angle) * 0.06 * r.scale, (0.28 + Math.sin(i) * 0.04) * r.scale * scale, Math.sin(angle) * 0.06 * r.scale);
+          leaf.rotation.y = angle;
+          leaf.rotation.z = 0.35;
+          rootGroup.add(leaf);
+        }
+
+        rootGroup.position.set(r.x, 0, r.z);
+        cropGroup.add(rootGroup);
+      });
+    } else if (type === 'FRUIT_COLONY') {
+      // FRUIT_COLONY: Trellised Tomato / Vine Crop
+      // Wooden Trellis Frame
+      const post1 = new THREE.Mesh(ThreeAssetCache.woodPostGeo, ThreeAssetCache.matWoodTrellis);
+      post1.position.set(-0.2, 0.3 * scale, 0);
+      const post2 = new THREE.Mesh(ThreeAssetCache.woodPostGeo, ThreeAssetCache.matWoodTrellis);
+      post2.position.set(0.2, 0.3 * scale, 0);
+
+      const bar1 = new THREE.Mesh(ThreeAssetCache.woodBarGeo, ThreeAssetCache.matWoodTrellis);
+      bar1.position.set(0, 0.25 * scale, 0);
+      const bar2 = new THREE.Mesh(ThreeAssetCache.woodBarGeo, ThreeAssetCache.matWoodTrellis);
+      bar2.position.set(0, 0.48 * scale, 0);
+
+      cropGroup.add(post1, post2, bar1, bar2);
+
+      // Climbing Vine Foliage
+      const bush = new THREE.Mesh(ThreeAssetCache.fruitBushGeo, ThreeAssetCache.matFoliage);
+      bush.position.y = 0.3 * scale;
+      bush.scale.set(scale * 0.9, scale * 0.9, scale * 0.9);
       cropGroup.add(bush);
+
+      // Yellow Flower Blossoms
+      for (let i = 0; i < 3; i++) {
+        const blossom = new THREE.Mesh(ThreeAssetCache.fruitCalyxGeo, ThreeAssetCache.matBlossomYellow);
+        blossom.position.set((i - 1) * 0.18 * scale, 0.45 * scale, 0.2 * scale);
+        cropGroup.add(blossom);
+      }
+
+      if (growthStage === 'MATURE') {
+        // 6 Shiny Red Tomatoes with Leaf Caps
+        const tomatoPos = [
+          { x: -0.22, y: 0.22, z: 0.18 },
+          { x: 0.22, y: 0.28, z: 0.18 },
+          { x: 0, y: 0.38, z: -0.18 },
+          { x: -0.18, y: 0.44, z: 0.16 },
+          { x: 0.18, y: 0.48, z: -0.15 },
+          { x: 0, y: 0.18, z: 0.22 },
+        ];
+        tomatoPos.forEach((p) => {
+          const tomGroup = new THREE.Group();
+          const tom = new THREE.Mesh(ThreeAssetCache.fruitTomatoGeo, ThreeAssetCache.matTomatoRed);
+          const calyx = new THREE.Mesh(ThreeAssetCache.fruitCalyxGeo, ThreeAssetCache.matBrightLime);
+          calyx.position.y = 0.08;
+          tomGroup.add(tom, calyx);
+          tomGroup.position.set(p.x * scale, p.y * scale, p.z * scale);
+          cropGroup.add(tomGroup);
+        });
+      }
     } else if (type === 'ENERGY_FLOWER') {
-      // Cybernetic flower with floating core
-      const stem = new THREE.Mesh(ThreeAssetCache.energyStemGeo, ThreeAssetCache.matEnergyPetal);
-      stem.position.y = 0.18;
+      // ENERGY_FLOWER: Giant Cyber Sunflower / Solar Blossom
+      const stem = new THREE.Mesh(ThreeAssetCache.energyStemGeo, ThreeAssetCache.matStem);
+      stem.position.y = 0.22 * scale;
+      stem.scale.set(scale, scale, scale);
       cropGroup.add(stem);
 
-      const core = new THREE.Mesh(ThreeAssetCache.energyCoreGeo, ThreeAssetCache.matEnergyCore);
-      core.position.y = 0.42 * scale;
-      core.userData = { isAnimatable: true, animType: 'rotate' };
-      cropGroup.add(core);
+      // Broad lower leaves
+      for (let i = 0; i < 2; i++) {
+        const leaf = new THREE.Mesh(ThreeAssetCache.leafBladeGeo, ThreeAssetCache.matFoliage);
+        leaf.position.set(i === 0 ? 0.12 : -0.12, 0.18 * scale, 0);
+        leaf.rotation.z = i === 0 ? -0.5 : 0.5;
+        cropGroup.add(leaf);
+      }
 
-      // 4 Petals
-      for (let i = 0; i < 4; i++) {
-        const petal = new THREE.Mesh(ThreeAssetCache.energyPetalGeo, ThreeAssetCache.matEnergyPetal);
-        const angle = (i * Math.PI) / 2;
-        petal.position.set(Math.cos(angle) * 0.18, 0.38 * scale, Math.sin(angle) * 0.18);
+      // Sunflower Center Disc
+      const disc = new THREE.Mesh(ThreeAssetCache.sunflowerDiscGeo, ThreeAssetCache.matSunflowerDisc);
+      disc.position.y = 0.48 * scale;
+      disc.rotation.x = Math.PI / 4;
+      cropGroup.add(disc);
+
+      // 12 Golden Petals around Disc
+      for (let i = 0; i < 12; i++) {
+        const petal = new THREE.Mesh(ThreeAssetCache.sunflowerPetalGeo, ThreeAssetCache.matWheatHead);
+        const angle = (i * Math.PI * 2) / 12;
+        petal.position.set(
+          Math.cos(angle) * 0.22 * scale,
+          0.48 * scale + Math.sin(angle) * 0.1 * scale,
+          Math.sin(angle) * 0.22 * scale
+        );
         petal.rotation.y = angle;
+        petal.rotation.x = Math.PI / 4;
         cropGroup.add(petal);
       }
-    } else if (type === 'GRADED_PLANT') {
-      // Alien DNA Helix Plant
+
+      // 4 Floating Luminescent Spore Particles
       for (let i = 0; i < 4; i++) {
-        const block = new THREE.Mesh(ThreeAssetCache.gradedHelixGeo, ThreeAssetCache.matGradedHelix);
-        block.position.y = (0.12 + i * 0.12) * scale;
-        block.rotation.y = (i * Math.PI) / 4;
-        block.scale.set(scale, scale, scale);
-        cropGroup.add(block);
+        const spore = new THREE.Mesh(ThreeAssetCache.sporeBallGeo, ThreeAssetCache.matEnergyCore);
+        const angle = (i * Math.PI) / 2;
+        spore.position.set(Math.cos(angle) * 0.3 * scale, 0.62 * scale, Math.sin(angle) * 0.3 * scale);
+        spore.userData = { animType: 'float', baseY: 0.62 * scale };
+        cropGroup.add(spore);
       }
+    } else if (type === 'GRADED_PLANT') {
+      // GRADED_PLANT: Alien DNA Double-Helix Crop
+      const stem = new THREE.Mesh(ThreeAssetCache.energyStemGeo, ThreeAssetCache.matBark);
+      stem.position.y = 0.25 * scale;
+      stem.scale.set(scale, scale, scale);
+      cropGroup.add(stem);
+
+      const helixBlocks = 6;
+      for (let i = 0; i < helixBlocks; i++) {
+        const angle1 = (i * Math.PI) / 3;
+        const angle2 = angle1 + Math.PI;
+
+        const block1 = new THREE.Mesh(ThreeAssetCache.gradedHelixGeo, ThreeAssetCache.matGradedHelix);
+        block1.position.set(Math.cos(angle1) * 0.16 * scale, (0.12 + i * 0.08) * scale, Math.sin(angle1) * 0.16 * scale);
+        block1.rotation.y = angle1;
+
+        const block2 = new THREE.Mesh(ThreeAssetCache.gradedHelixGeo, ThreeAssetCache.matGradedHelix);
+        block2.position.set(Math.cos(angle2) * 0.16 * scale, (0.12 + i * 0.08) * scale, Math.sin(angle2) * 0.16 * scale);
+        block2.rotation.y = angle2;
+
+        cropGroup.add(block1, block2);
+      }
+
+      // Top Floating Spore Orb
+      const orb = new THREE.Mesh(ThreeAssetCache.sporeBallGeo, ThreeAssetCache.matSporeTeal);
+      orb.position.y = 0.65 * scale;
+      orb.scale.set(1.8, 1.8, 1.8);
+      orb.userData = { animType: 'float', baseY: 0.65 * scale };
+      cropGroup.add(orb);
     } else if (type === 'PRESTIGE') {
-      // Floating Golden Octahedron Trophy Crystal
+      // PRESTIGE: Golden Sun Crystal Trophy Crop
+      const pedestal = new THREE.Mesh(ThreeAssetCache.rootMoundGeo, ThreeAssetCache.matPrestigeTop);
+      pedestal.position.y = 0.04;
+      cropGroup.add(pedestal);
+
       const crystal = new THREE.Mesh(ThreeAssetCache.prestigeOctaGeo, ThreeAssetCache.matPrestigeCrystal);
-      crystal.position.y = 0.42;
-      crystal.userData = { isAnimatable: true, animType: 'rotate' };
+      crystal.position.y = 0.45;
+      crystal.userData = { animType: 'rotate' };
 
-      const ring = new THREE.Mesh(ThreeAssetCache.prestigeRingGeo, ThreeAssetCache.matPrestigeCrystal);
-      ring.position.y = 0.42;
-      ring.rotation.x = Math.PI / 3;
+      const ring1 = new THREE.Mesh(ThreeAssetCache.prestigeRingGeo, ThreeAssetCache.matPrestigeCrystal);
+      ring1.position.y = 0.45;
+      ring1.rotation.x = Math.PI / 3;
+      ring1.userData = { animType: 'rotate' };
 
-      cropGroup.add(crystal, ring);
+      const ring2 = new THREE.Mesh(ThreeAssetCache.prestigeRingGeo, ThreeAssetCache.matPrestigeCrystal);
+      ring2.position.y = 0.45;
+      ring2.rotation.x = -Math.PI / 3;
+      ring2.userData = { animType: 'rotate' };
+
+      cropGroup.add(pedestal, crystal, ring1, ring2);
     } else {
       const defaultCrop = new THREE.Mesh(ThreeAssetCache.bushLeafBaseGeo, ThreeAssetCache.matFoliage);
       defaultCrop.position.y = 0.2 * scale;
