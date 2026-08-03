@@ -5,7 +5,7 @@ import { RenderPixelatedPass } from 'three/examples/jsm/postprocessing/RenderPix
 import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
 import { GameEngine } from '../engine/GameEngine';
 import { CropType, GroundType, TileState } from '../types/game';
-import { RotateCw, RotateCcw, Info, Zap, Activity, Gauge, Eye, EyeOff, HardDrive, Target, Star, ZoomIn, ZoomOut, Trash2, Sparkles, Sliders } from 'lucide-react';
+import { Info, Activity, Gauge, Eye, EyeOff, HardDrive, Target, ZoomIn, ZoomOut, Trash2, Sparkles } from 'lucide-react';
 import { GameLogo } from './GameLogo';
 
 interface World3DCanvasProps {
@@ -410,16 +410,48 @@ export const World3DCanvas: React.FC<World3DCanvasProps> = ({ engine }) => {
       localStorage.setItem('terrascript_follow_agent', String(followAgent));
     }
   }, [followAgent]);
-  const [cameraAngle, setCameraAngle] = useState<number>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('terrascript_camera_angle');
-      if (saved) {
-        const parsed = parseFloat(saved);
-        if (!isNaN(parsed)) return parsed;
-      }
-    }
-    return 15; // 15° slight tilt angle by default
-  });
+  // Camera Offset from map center or followed agent
+  const [povOffset, setPovOffset] = useState<{ x: number; z: number }>({ x: 0, z: 0 });
+
+  const povOffsetRef = useRef({ x: 0, z: 0 });
+  const zoomLevelRef = useRef(1.0);
+  const followAgentRef = useRef(followAgent);
+
+  useEffect(() => {
+    povOffsetRef.current = povOffset;
+  }, [povOffset]);
+
+  useEffect(() => {
+    followAgentRef.current = followAgent;
+  }, [followAgent]);
+
+  // Simple Arrow Navigation Controls
+  const resetPOV = () => {
+    povOffsetRef.current = { x: 0, z: 0 };
+    setPovOffset({ x: 0, z: 0 });
+    setZoomLevel(1.0);
+    setFollowAgent(true);
+  };
+
+  const panPOV = (direction: 'up' | 'down' | 'left' | 'right', amount = 1.2) => {
+    const yawRad = (15 * Math.PI) / 180;
+    let dx = 0;
+    let dz = 0;
+    if (direction === 'up') dz = -amount;
+    if (direction === 'down') dz = amount;
+    if (direction === 'left') dx = -amount;
+    if (direction === 'right') dx = amount;
+
+    const worldDx = dx * Math.cos(yawRad) - dz * Math.sin(yawRad);
+    const worldDz = dx * Math.sin(yawRad) + dz * Math.cos(yawRad);
+
+    const next = {
+      x: povOffsetRef.current.x + worldDx,
+      z: povOffsetRef.current.z + worldDz,
+    };
+    povOffsetRef.current = next;
+    setPovOffset(next);
+  };
 
   const [pixelMode, setPixelMode] = useState<boolean>(() => {
     if (typeof window !== 'undefined') {
@@ -460,18 +492,12 @@ export const World3DCanvas: React.FC<World3DCanvasProps> = ({ engine }) => {
     return 1.0;
   });
 
-  // Persist zoomLevel and cameraAngle across tab switches & sessions
+  // Persist zoomLevel across tab switches & sessions
   useEffect(() => {
     if (typeof window !== 'undefined') {
       localStorage.setItem('terrascript_zoom_level', String(zoomLevel));
     }
   }, [zoomLevel]);
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('terrascript_camera_angle', String(cameraAngle));
-    }
-  }, [cameraAngle]);
 
   const sceneRef = useRef<THREE.Scene | null>(null);
   const cameraRef = useRef<THREE.OrthographicCamera | null>(null);
@@ -489,11 +515,76 @@ export const World3DCanvas: React.FC<World3DCanvasProps> = ({ engine }) => {
     pixelModeRef.current = pixelMode;
   }, [pixelMode]);
 
-  useEffect(() => {
-    if (pixelPassRef.current) {
-      pixelPassRef.current.setPixelSize(pixelSize);
+  // Central Camera Positioning Engine
+  const updateCameraPosition = () => {
+    if (!cameraRef.current || !containerRef.current) return;
+    const camera = cameraRef.current;
+    const w = containerRef.current.clientWidth;
+    const h = containerRef.current.clientHeight;
+    if (w === 0 || h === 0) return;
+
+    const aspect = w / h;
+    const width = engine.getGridWidth();
+    const height = engine.getGridHeight();
+    const maxDim = Math.max(width, height);
+    const frustumSize = Math.max(10, maxDim * 2.2);
+
+    camera.left = (-frustumSize * aspect) / 2;
+    camera.right = (frustumSize * aspect) / 2;
+    camera.top = frustumSize / 2;
+    camera.bottom = -frustumSize / 2;
+    camera.zoom = zoomLevelRef.current;
+    camera.updateProjectionMatrix();
+
+    // Base target center
+    let baseTargetX = (width - 1) * 0.6;
+    let baseTargetZ = (height - 1) * 0.6;
+
+    const primaryAgent = engine.getPrimaryAgent();
+    if (followAgentRef.current && primaryAgent) {
+      baseTargetX = primaryAgent.x * 1.2;
+      baseTargetZ = primaryAgent.y * 1.2;
     }
-  }, [pixelSize]);
+
+    const targetX = baseTargetX + povOffsetRef.current.x;
+    const targetZ = baseTargetZ + povOffsetRef.current.z;
+
+    const pitchRad = (45 * Math.PI) / 180;
+    const yawRad = (15 * Math.PI) / 180;
+    const radius = maxDim * 2.2;
+
+    const camX = targetX + radius * Math.cos(pitchRad) * Math.sin(yawRad);
+    const camY = radius * Math.sin(pitchRad);
+    const camZ = targetZ + radius * Math.cos(pitchRad) * Math.cos(yawRad);
+
+    camera.position.set(camX, camY, camZ);
+    camera.lookAt(targetX, 0, targetZ);
+  };
+
+  // Keyboard Arrow Navigation Listener (▲, ▼, ◄, ►)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+      if (e.code === 'ArrowUp') {
+        e.preventDefault();
+        panPOV('up', 1.0);
+      } else if (e.code === 'ArrowDown') {
+        e.preventDefault();
+        panPOV('down', 1.0);
+      } else if (e.code === 'ArrowLeft') {
+        e.preventDefault();
+        panPOV('left', 1.0);
+      } else if (e.code === 'ArrowRight') {
+        e.preventDefault();
+        panPOV('right', 1.0);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
 
   // Mouse wheel zoom listener
   useEffect(() => {
@@ -643,6 +734,8 @@ export const World3DCanvas: React.FC<World3DCanvasProps> = ({ engine }) => {
         }
       });
 
+      updateCameraPosition();
+
       if (pixelModeRef.current && composerRef.current) {
         composerRef.current.render();
       } else if (rendererRef.current && sceneRef.current && cameraRef.current) {
@@ -695,32 +788,8 @@ export const World3DCanvas: React.FC<World3DCanvasProps> = ({ engine }) => {
     const width = engine.getGridWidth();
     const height = engine.getGridHeight();
 
-    // Adjust camera frustum and position based on grid size & camera angle
-    if (cameraRef.current && containerRef.current) {
-      const w = containerRef.current.clientWidth;
-      const h = containerRef.current.clientHeight;
-      const aspect = w / h;
-      const maxDim = Math.max(width, height);
-      const frustumSize = Math.max(10, maxDim * 2.2);
-
-      cameraRef.current.left = (-frustumSize * aspect) / 2;
-      cameraRef.current.right = (frustumSize * aspect) / 2;
-      cameraRef.current.top = frustumSize / 2;
-      cameraRef.current.bottom = -frustumSize / 2;
-      cameraRef.current.zoom = zoomLevel;
-      cameraRef.current.updateProjectionMatrix();
-
-      const rad = (cameraAngle * Math.PI) / 180;
-      const centerX = (width - 1) * 0.6;
-      const centerZ = (height - 1) * 0.6;
-      const radius = maxDim * 2.0;
-
-      // Position camera facing the player directly at 0° with slight 3D elevation
-      cameraRef.current.position.x = centerX + radius * Math.sin(rad);
-      cameraRef.current.position.y = maxDim * 1.8;
-      cameraRef.current.position.z = centerZ + radius * Math.cos(rad);
-      cameraRef.current.lookAt(centerX, 0, centerZ);
-    }
+    // Position camera using central camera positioning engine
+    updateCameraPosition();
 
     // Safely remove tile meshes outside current bounds
     const existingKeys = new Set<string>();
@@ -771,7 +840,7 @@ export const World3DCanvas: React.FC<World3DCanvasProps> = ({ engine }) => {
       agentMesh.position.z = targetZ;
     });
 
-  }, [engine, engine.getCurrentTick(), engine.getGridWidth(), engine.getGridHeight(), cameraAngle, zoomLevel]);
+  }, [engine, engine.getCurrentTick(), engine.getGridWidth(), engine.getGridHeight(), zoomLevel]);
 
   // Selection box overlay for inspected tile
   useEffect(() => {
@@ -1314,12 +1383,6 @@ export const World3DCanvas: React.FC<World3DCanvasProps> = ({ engine }) => {
     return shipGroup;
   };
 
-  // Camera Orbit Controls
-  const rotateCamera = () => {
-    const nextAngle = (cameraAngle + 90) % 360;
-    setCameraAngle(nextAngle);
-  };
-
   // Click on Canvas to Inspect Tile via 3D Raycasting
   const handleCanvasClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!containerRef.current || !cameraRef.current || !sceneRef.current) return;
@@ -1357,16 +1420,16 @@ export const World3DCanvas: React.FC<World3DCanvasProps> = ({ engine }) => {
   return (
     <div className="flex-1 bg-[#08090a] flex flex-col h-full relative overflow-hidden font-sans select-none">
       {/* Canvas Controls Header Bar */}
-      <div className="h-9 bg-[#08090a] border-b border-[#23252a] flex items-center justify-between px-3 text-xs text-slate-300 font-mono z-10">
-        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
+      <div className="h-9 bg-[#08090a] border-b border-[#23252a] flex items-center justify-between px-3 text-xs text-slate-300 font-mono z-10 gap-2 overflow-x-auto no-scrollbar">
+        <div className="flex items-center gap-2 shrink-0">
           <GameLogo className="w-4 h-4" />
           <span className="font-semibold text-white">3D</span>
           <span className="text-[10px] bg-[#161718] border border-[#23252a] px-2 py-0.5 rounded text-slate-400">
-            Grade: {engine.getGridWidth()}x{engine.getGridHeight()} ({engine.getGridWidth() * engine.getGridHeight()} blocos)
+            {engine.getGridWidth()}x{engine.getGridHeight()}
           </span>
 
           {/* v2.5.0 Pixelated 3D Shader Controls (Fixed 2p) */}
-          <div className="flex items-center gap-1.5 bg-[#121316] border border-[#23252a] rounded px-2 py-0.5 ml-1">
+          <div className="flex items-center gap-1.5 bg-[#121316] border border-[#23252a] rounded px-1.5 py-0.5 ml-1">
             <button
               onClick={() => setPixelMode(!pixelMode)}
               className={`flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded transition-all ${
@@ -1434,6 +1497,14 @@ export const World3DCanvas: React.FC<World3DCanvasProps> = ({ engine }) => {
         onClick={handleCanvasClick}
         className="flex-1 w-full h-full cursor-crosshair relative" 
       />
+
+      {/* Navigation Instruction Badge */}
+      <div className="absolute bottom-4 left-3 z-20 font-mono text-[10px] select-none">
+        <div className="bg-[#0f1011]/85 backdrop-blur-md border border-[#23252a] px-2.5 py-1 rounded-md text-slate-300 shadow-md flex items-center gap-1.5">
+          <span className="text-cyan-400 font-bold">Navegação:</span>
+          <span>Setas (▲ ▼ ◄ ►)</span>
+        </div>
+      </div>
 
       {/* Floating Performance HUD (In-Canvas Overlay) */}
       <div className="absolute top-12 left-3 z-20 font-mono text-xs select-none">
