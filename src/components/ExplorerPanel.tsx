@@ -284,10 +284,7 @@ export const ExplorerPanel: React.FC<ExplorerPanelProps> = ({
             className="mx-1 my-2 p-2.5 bg-[#0f1011] border border-[#5e6ad2]/70 shadow-[0_0_15px_rgba(94,106,210,0.25)] rounded-[8px] text-[11px] font-sans text-[#d0d6e0] space-y-1.5 animate-pulse hover:animate-none transition-all"
           >
             <div className="flex items-center justify-between text-[#5e6ad2] font-semibold text-xs">
-              <span className="flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5 text-[#5e6ad2]" />
-                <span className="text-[#ffffff]">Primeiros Passos</span>
-              </span>
+              <span className="text-[#ffffff]">Primeiros Passos</span>
               <button 
                 onClick={(e) => {
                   e.stopPropagation();

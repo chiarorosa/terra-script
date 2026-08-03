@@ -24,18 +24,13 @@ export const QuickStartModal: React.FC<QuickStartModalProps> = ({ engine, onClos
   return (
     <div className="fixed inset-0 z-50 bg-[#08090a]/85 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200 select-none font-sans">
       <div className="max-w-md w-full bg-[#0f1011] border border-[#23252a] shadow-2xl rounded-[12px] p-5 text-white space-y-4 relative">
-        <div className="flex items-center gap-3">
-          <div className="p-2 bg-[#161718] border border-[#23252a] rounded-[8px] text-[#5e6ad2] shrink-0">
-            <Sparkles className="w-5 h-5 text-[#5e6ad2]" />
-          </div>
-          <div>
-            <span className="text-[10px] uppercase font-mono tracking-widest text-[#5e6ad2] font-semibold">
-              Boas-vindas
-            </span>
-            <h2 className="text-sm font-semibold text-white tracking-tight leading-tight">
-              Primeiros Passos no TerraScript
-            </h2>
-          </div>
+        <div>
+          <span className="text-[10px] uppercase font-mono tracking-widest text-[#5e6ad2] font-semibold">
+            Boas-vindas
+          </span>
+          <h2 className="text-sm font-semibold text-white tracking-tight leading-tight">
+            Primeiros Passos no TerraScript
+          </h2>
         </div>
 
         <p className="text-xs text-[#8a8f98] leading-relaxed">
