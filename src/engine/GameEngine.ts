@@ -681,10 +681,13 @@ export class GameEngine {
         } else if (tile.crop === 'WOODY_BUSH') {
           baseRate = 3;
         } else if (tile.crop === 'TREE') {
+          // v2.5.1: Árvores exigem EXCLUSIVAMENTE Solo Arado (TILLED) para crescer. Em IRRIGATED ou NATURAL, baseRate = 0.
           const hasAdjTree = this.hasAdjacentCrop(tile.x, tile.y, 'TREE');
-          baseRate = hasAdjTree ? 1 : 2;
+          const treeBase = hasAdjTree ? 1 : 2;
+          baseRate = tile.ground === 'TILLED' ? treeBase : 0;
         } else if (tile.crop === 'CULTIVATED_ROOT') {
-          baseRate = tile.ground === 'TILLED' ? 4 : 2;
+          // v2.5.1: Raízes Cultivadas crescem EXCLUSIVAMENTE em Solo Arado (TILLED). Em IRRIGATED ou NATURAL, baseRate = 0.
+          baseRate = tile.ground === 'TILLED' ? 4 : 0;
         } else if (tile.crop === 'FRUIT_COLONY' || tile.crop === 'ENERGY_FLOWER' || tile.crop === 'GRADED_PLANT') {
           baseRate = 2;
         }
@@ -896,9 +899,8 @@ export class GameEngine {
       }
       if (ag) ag.actionMessage = `Solo encharcado em (${x},${y})!`;
     } else {
-      if (t.ground !== 'TILLED') {
-        t.ground = 'IRRIGATED';
-      }
+      // v2.5.1: Se o solo for TILLED (ou NATURAL), a irrigação anula o estado TILLED e converte para IRRIGATED
+      t.ground = 'IRRIGATED';
       t.moisture = 1.0;
       if (ag) ag.actionMessage = `Watered tile at (${x},${y})`;
     }

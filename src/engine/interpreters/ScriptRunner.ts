@@ -166,6 +166,84 @@ function splitTopLevel(expr: string, op: string): [string, string] | null {
   return null;
 }
 
+function getUnmatchedBracketCount(str: string) {
+  let brackets = 0;
+  let parens = 0;
+  let braces = 0;
+  let inString: string | null = null;
+
+  for (let i = 0; i < str.length; i++) {
+    const char = str[i];
+    if (inString) {
+      if (char === inString && str[i - 1] !== '\\') {
+        inString = null;
+      }
+      continue;
+    }
+    if (char === '"' || char === "'" || char === '`') {
+      inString = char;
+      continue;
+    }
+    if (char === '[') brackets++;
+    else if (char === ']') brackets--;
+    else if (char === '(') parens++;
+    else if (char === ')') parens--;
+    else if (char === '{') braces++;
+    else if (char === '}') braces--;
+  }
+
+  return { brackets, parens, braces };
+}
+
+function parseTopLevelSubscript(expr: string): { target: string; index: string } | null {
+  expr = expr.trim();
+  if (!expr.endsWith(']')) return null;
+
+  let parenDepth = 0;
+  let bracketDepth = 0;
+  let braceDepth = 0;
+  let inString: string | null = null;
+  let openBracketIdx = -1;
+
+  for (let i = 0; i < expr.length; i++) {
+    const char = expr[i];
+
+    if (inString) {
+      if (char === inString && expr[i - 1] !== '\\') {
+        inString = null;
+      }
+      continue;
+    }
+
+    if (char === '"' || char === "'" || char === '`') {
+      inString = char;
+      continue;
+    }
+
+    if (char === '(') parenDepth++;
+    else if (char === ')') parenDepth--;
+    else if (char === '{') braceDepth++;
+    else if (char === '}') braceDepth--;
+    else if (char === '[') {
+      if (parenDepth === 0 && bracketDepth === 0 && braceDepth === 0) {
+        openBracketIdx = i;
+      }
+      bracketDepth++;
+    } else if (char === ']') {
+      bracketDepth--;
+      if (parenDepth === 0 && bracketDepth === 0 && braceDepth === 0) {
+        if (i === expr.length - 1 && openBracketIdx > 0) {
+          const target = expr.substring(0, openBracketIdx).trim();
+          const index = expr.substring(openBracketIdx + 1, expr.length - 1).trim();
+          return { target, index };
+        }
+      }
+    }
+  }
+
+  return null;
+}
+
 export class ScriptRunner {
   private engine: GameEngine;
 
@@ -315,7 +393,7 @@ export class ScriptRunner {
     }
 
     const rawLine = ctx.lines[ctx.currentLineIndex];
-    const line = rawLine.trim();
+    let line = rawLine.trim();
 
     // Skip empty lines & comments
     if (!line || line.startsWith('#') || line.startsWith('//') || line.startsWith('/*')) {
@@ -331,6 +409,20 @@ export class ScriptRunner {
         }
       }
       return { paused: false };
+    }
+
+    // Accumulate multi-line statements if brackets/parentheses are open or object literal is incomplete
+    let counts = getUnmatchedBracketCount(line);
+    const isObjectStart = counts.braces > 0 && line.includes('=') && !/^\s*(if|while|for|def|function|else)\b/.test(line);
+
+    while ((counts.brackets > 0 || counts.parens > 0 || isObjectStart) && ctx.currentLineIndex + 1 < ctx.lines.length) {
+      ctx.currentLineIndex++;
+      const nextRaw = ctx.lines[ctx.currentLineIndex];
+      const nextTrimmed = nextRaw.trim();
+      if (nextTrimmed && !nextTrimmed.startsWith('#') && !nextTrimmed.startsWith('//')) {
+        line += ' ' + nextTrimmed;
+      }
+      counts = getUnmatchedBracketCount(line);
     }
 
     // Validate Language Syntax strictly before executing
@@ -642,11 +734,12 @@ export class ScriptRunner {
       return;
     }
 
-    const listMatch = line.match(/for\s+([a-zA-Z0-9_]+)\s+in\s+\[(.*?)\]\s*:?/);
-    if (listMatch) {
-      const varName = listMatch[1];
-      const itemsStr = listMatch[2].trim();
-      const items = itemsStr ? itemsStr.split(',').map(s => this.evalExpression(s.trim(), ctx)) : [];
+    const inMatch = line.match(/for\s+([a-zA-Z0-9_]+)\s+in\s+(.*?)\s*:?$/);
+    if (inMatch) {
+      const varName = inMatch[1];
+      const containerStr = inMatch[2].trim().replace(/:\s*$/, '');
+      const containerVal = this.evalExpression(containerStr, ctx);
+      const items = Array.isArray(containerVal) ? containerVal : (typeof containerVal === 'string' ? containerVal.split('') : []);
 
       if (items.length > 0) {
         ctx.scope[varName] = items[0];
@@ -1045,7 +1138,9 @@ export class ScriptRunner {
         const args = splitCommaTopLevel(rawArgsStr);
         const evaluatedValues = args.map(arg => {
           const val = this.evalExpression(arg, ctx);
-          return val !== undefined && val !== null ? String(val) : '';
+          if (val === undefined || val === null) return '';
+          if (typeof val === 'object') return JSON.stringify(val);
+          return String(val);
         });
         const output = evaluatedValues.join(' ');
         this.engine.addLog(ctx.agentId, 'stdout', output, ctx.currentLineIndex + 1, ctx.filePath);
@@ -1104,6 +1199,37 @@ export class ScriptRunner {
       return;
     }
 
+    // Subscript Assignment (e.g., arr[0] = "VAL" or arr[i] += 1)
+    const subAssignMatch = trimmedLine.match(/^([a-zA-Z_][a-zA-Z0-9_]*)\s*\[(.*?)\]\s*(\+=|-=|\*=|\/=|=(?!=))\s*(.*)$/);
+    if (subAssignMatch) {
+      if (!this.engine.isTechUnlocked('AUTO_2')) {
+        throw new Error("Recurso 'Variáveis & Operadores' está bloqueado! Pesquise AUTO_2 na Árvore de Pesquisa.");
+      }
+      const varName = subAssignMatch[1].trim();
+      const indexExpr = subAssignMatch[2].trim();
+      const op = subAssignMatch[3];
+      const rhsStr = subAssignMatch[4].trim().replace(/;$/, '');
+
+      const targetObj = ctx.scope[varName];
+      let indexVal = this.evalExpression(indexExpr, ctx);
+      const rhsVal = this.evalExpression(rhsStr, ctx);
+
+      if (targetObj && (Array.isArray(targetObj) || typeof targetObj === 'object')) {
+        if (typeof indexVal === 'number' && indexVal < 0 && Array.isArray(targetObj)) {
+          indexVal = targetObj.length + indexVal;
+        }
+        if (op === '=') {
+          targetObj[indexVal] = rhsVal;
+        } else if (op === '+=') {
+          const cur = targetObj[indexVal] ?? 0;
+          targetObj[indexVal] = typeof cur === 'string' || typeof rhsVal === 'string' ? String(cur) + String(rhsVal) : Number(cur) + Number(rhsVal);
+        } else if (op === '-=') {
+          targetObj[indexVal] = Number(targetObj[indexVal] ?? 0) - Number(rhsVal);
+        }
+      }
+      return;
+    }
+
     // Pure API evaluation
     this.evalExpression(line.replace(/;$/, ''), ctx);
   }
@@ -1137,6 +1263,101 @@ export class ScriptRunner {
     if (!isNaN(Number(expr)) && expr.trim() !== '') return Number(expr);
     if ((expr.startsWith('"') && expr.endsWith('"')) || (expr.startsWith("'") && expr.endsWith("'"))) {
       return expr.slice(1, -1);
+    }
+
+    // 0.1 Subscript Indexing: target[index]
+    const subMatch = parseTopLevelSubscript(expr);
+    if (subMatch) {
+      const targetVal = this.evalExpression(subMatch.target, ctx);
+      let indexVal = this.evalExpression(subMatch.index, ctx);
+
+      if (targetVal !== undefined && targetVal !== null) {
+        if (typeof indexVal === 'number' && (Array.isArray(targetVal) || typeof targetVal === 'string')) {
+          if (indexVal < 0) {
+            indexVal = targetVal.length + indexVal;
+          }
+          return targetVal[indexVal];
+        }
+        if (typeof targetVal === 'object') {
+          return targetVal[indexVal];
+        }
+      }
+      return undefined;
+    }
+
+    // 0.2 Array Literals: [elem1, elem2, ...]
+    if (expr.startsWith('[') && expr.endsWith(']')) {
+      const inner = expr.slice(1, -1).trim();
+      if (!inner) return [];
+      const items = splitCommaTopLevel(inner);
+      return items.map(item => this.evalExpression(item, ctx));
+    }
+
+    // 0.3 Object / Dict Literals: { key: val, ... }
+    if (expr.startsWith('{') && expr.endsWith('}')) {
+      const inner = expr.slice(1, -1).trim();
+      if (!inner) return {};
+      const pairs = splitCommaTopLevel(inner);
+      const obj: Record<string, any> = {};
+      for (const p of pairs) {
+        const colonIdx = p.indexOf(':');
+        if (colonIdx !== -1) {
+          const k = p.substring(0, colonIdx).trim().replace(/^['"]|['"]$/g, '');
+          const v = p.substring(colonIdx + 1).trim();
+          obj[k] = this.evalExpression(v, ctx);
+        }
+      }
+      return obj;
+    }
+
+    // 0.4 Built-in len() function and .length property
+    if (expr.startsWith('len(') && expr.endsWith(')')) {
+      const inner = expr.slice(4, -1).trim();
+      const val = this.evalExpression(inner, ctx);
+      if (Array.isArray(val) || typeof val === 'string') return val.length;
+      if (val && typeof val === 'object') return Object.keys(val).length;
+      return 0;
+    }
+
+    if (expr.endsWith('.length')) {
+      const target = expr.slice(0, -7).trim();
+      const val = this.evalExpression(target, ctx);
+      if (Array.isArray(val) || typeof val === 'string') return val.length;
+      if (val && typeof val === 'object') return Object.keys(val).length;
+      return 0;
+    }
+
+    // 0.5 Methods on Arrays/Objects (e.g., list.append(val), list.push(val), list.indexOf(val))
+    const methodMatch = expr.match(/^([a-zA-Z_][a-zA-Z0-9_]*)\.([a-zA-Z_][a-zA-Z0-9_]*)\((.*)\)$/);
+    if (methodMatch) {
+      const varName = methodMatch[1];
+      const methodName = methodMatch[2];
+      const rawArgs = methodMatch[3].trim();
+      const args = rawArgs ? splitCommaTopLevel(rawArgs).map(a => this.evalExpression(a, ctx)) : [];
+      const targetObj = ctx.scope[varName];
+
+      if (Array.isArray(targetObj)) {
+        if (methodName === 'append' || methodName === 'push') {
+          targetObj.push(args[0]);
+          return targetObj.length;
+        }
+        if (methodName === 'pop') {
+          return targetObj.pop();
+        }
+        if (methodName === 'indexOf' || methodName === 'index') {
+          return targetObj.indexOf(args[0]);
+        }
+        if (methodName === 'includes' || methodName === 'contains') {
+          return targetObj.includes(args[0]);
+        }
+        if (methodName === 'count') {
+          return targetObj.filter(x => x === args[0]).length;
+        }
+        if (methodName === 'clear') {
+          targetObj.length = 0;
+          return null;
+        }
+      }
     }
 
     // 1. Logical OR (||, or)

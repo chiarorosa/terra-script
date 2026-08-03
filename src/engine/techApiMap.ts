@@ -169,10 +169,10 @@ export const API_CATALOG: ApiItem[] = [
     signature: 'farm.water(): boolean',
     pythonSnippet: 'farm.water()',
     jsSnippet: 'farm.water()',
-    description: 'Irriga o solo do bloco atual, elevando a umidade ao nível máximo (100%).',
+    description: 'Irriga o solo do bloco atual, elevando a umidade ao nível máximo (100%) e convertendo para IRRIGATED.',
     techId: 'AGRO_1',
     category: 'Comandos da Fazenda',
-    docDetail: 'Muda o estado do solo para IRRIGATED e restaura o nível de água. Solos irrigados aceleram o crescimento das plantas.',
+    docDetail: 'Muda o estado do solo para IRRIGATED e restaura o nível de umidade para 100%. Se o solo estiver Arado (TILLED), farm.water() anula o estado Arado e o converte em IRRIGATED.',
     exampleCode: 'if world.moisture() < 0.4:\n    farm.water()',
     parameters: [],
     returns: {
@@ -180,8 +180,9 @@ export const API_CATALOG: ApiItem[] = [
       description: 'Retorna true se o solo foi irrigado com sucesso.'
     },
     usabilityNotes: [
-      'Atenção: Irrigar repetidamente um solo com umidade acima de 95% faz o solo ficar encharcado (SOAKED), o que reduz drasticamente o crescimento!',
-      'Consulte world.moisture() antes de irrigar para manter o solo na faixa perfeita de 50% a 90%.'
+      'Atenção: Se o solo estiver Arado (TILLED), irrigar irá anular o estado Arado e transformá-lo em IRRIGATED!',
+      'Culturas que exigem Solo Arado (ex: Raízes Cultivadas / CULTIVATED_ROOT) congelam seu crescimento se o solo for alterado para IRRIGATED.',
+      'Irrigar repetidamente solo com umidade acima de 95% o deixa encharcado (SOAKED) e destrói a cultura!'
     ],
     expectedOutput: 'Solo atualizado para IRRIGATED e umidade definida em 1.0 (100%).'
   },
@@ -256,19 +257,19 @@ export const API_CATALOG: ApiItem[] = [
     signature: 'farm.till(): boolean',
     pythonSnippet: 'farm.till()',
     jsSnippet: 'farm.till()',
-    description: 'Ara o terreno Natural convertendo-o em Solo Arado Féritil (TILLED).',
+    description: 'Ara o terreno Natural ou Irrigado convertendo-o em Solo Arado (TILLED).',
     techId: 'AGRO_3',
     category: 'Comandos da Fazenda',
-    docDetail: 'Prepara a terra para plantios avançados. O solo arado triplica a velocidade de crescimento de raízes cultivadas e melhora a retenção de água.',
-    exampleCode: 'if world.ground() == "NATURAL":\n    farm.till()',
+    docDetail: 'Prepara a terra para plantios exigentes. Se o solo for Irrigado (IRRIGATED), farm.till() anula a irrigação e o converte em TILLED. Solo Arado é indispensável para culturas como Raízes Cultivadas (CULTIVATED_ROOT).',
+    exampleCode: 'if world.ground() == "NATURAL" or world.ground() == "IRRIGATED":\n    farm.till()',
     parameters: [],
     returns: {
       type: 'boolean',
       description: 'Retorna true se o solo foi arado com sucesso.'
     },
     usabilityNotes: [
-      'Inspecione world.ground() antes de arar. Se o solo já estiver arado ou irrigado, farm.till() não causará efeito.',
-      'Raízes cultivadas requerem obrigatoriamente solo arado para rendimento máximo.'
+      'Se o solo estiver Irrigado (IRRIGATED), farm.till() anula a irrigação e o transforma em TILLED.',
+      'Raízes cultivadas (CULTIVATED_ROOT) exigem OBRIGATORIAMENTE solo arado (TILLED) para crescer.'
     ],
     expectedOutput: 'Textura do solo alterada para Solo Arado (TILLED).'
   },
@@ -280,10 +281,10 @@ export const API_CATALOG: ApiItem[] = [
     signature: 'farm.plant(cropName: string): boolean',
     pythonSnippet: 'farm.plant("CULTIVATED_ROOT")',
     jsSnippet: 'farm.plant("CULTIVATED_ROOT")',
-    description: 'Semeia Raízes Cultivadas que se desenvolvem aceleradamente em solo arado.',
+    description: 'Semeia Raízes Cultivadas que crescem EXCLUSIVAMENTE em Solo Arado (TILLED).',
     techId: 'AGRO_3',
     category: 'Comandos da Fazenda',
-    docDetail: 'Raízes cultivadas fornecem o recurso Raízes, usado em pesquisas avançadas de sistemas e expansão de agentes.',
+    docDetail: 'Raízes cultivadas fornecem o recurso Raízes, usado em pesquisas avançadas de sistemas e expansão de agentes. Esta cultura requer OBRIGATORIAMENTE Solo Arado (TILLED) para se desenvolver. Em solo Natural ou Irrigado, o crescimento permanece zerado (0%).',
     exampleCode: 'farm.till()\nfarm.plant("CULTIVATED_ROOT")',
     parameters: [
       {
@@ -299,7 +300,8 @@ export const API_CATALOG: ApiItem[] = [
       description: 'Retorna true se o plantio ocorreu sem erros.'
     },
     usabilityNotes: [
-      'Sempre are o solo com farm.till() antes de semear raízes.'
+      'Sempre are o solo com farm.till() para que as Raízes Cultivadas possam crescer.',
+      'Atenção: Não irrigue o solo (farm.water()) enquanto cultivar Raízes, pois farm.water() transforma o solo em IRRIGATED e congela o crescimento!'
     ],
     expectedOutput: 'Plantação de Raiz Cultivada visível no lote.'
   },
@@ -311,11 +313,11 @@ export const API_CATALOG: ApiItem[] = [
     signature: 'farm.plant(cropName: string): boolean',
     pythonSnippet: 'farm.plant("TREE")',
     jsSnippet: 'farm.plant("TREE")',
-    description: 'Planta árvores nobres para grande colheita de madeira.',
+    description: 'Planta árvores nobres que crescem EXCLUSIVAMENTE em Solo Arado (TILLED).',
     techId: 'AGRO_4',
     category: 'Comandos da Fazenda',
-    docDetail: 'Permite cultivar árvores de grande porte. Árvores possuem padrão de crescimento otimizado quando plantadas em xadrez sem vizinhos diretos.',
-    exampleCode: 'if (world.x() + world.y()) % 2 == 0:\n    farm.plant("TREE")',
+    docDetail: 'Permite cultivar árvores de grande porte. Requer OBRIGATORIAMENTE Solo Arado (TILLED) para crescer. Árvores possuem padrão de crescimento otimizado quando plantadas em xadrez sem vizinhos diretos.',
+    exampleCode: 'farm.water()  # Eleva umidade a 100%\nfarm.till()   # Converte em TILLED\nif (world.x() + world.y()) % 2 == 0:\n    farm.plant("TREE")',
     parameters: [
       {
         name: 'cropName',
@@ -330,6 +332,8 @@ export const API_CATALOG: ApiItem[] = [
       description: 'Retorna true se a árvore foi plantada.'
     },
     usabilityNotes: [
+      'Árvores requerem Solo Arado (TILLED) para crescer. Em solo Natural ou Irrigado, o crescimento permanece congelado (0%).',
+      'Estratégia ideal: Irrigue o solo primeiro (farm.water()) e depois are (farm.till()). Isso garante Solo Arado com umidade máxima!',
       'Use a fórmula matemática (x + y) % 2 == 0 para garantir padrão xadrez e evitar desaceleração por vizinhança.'
     ],
     expectedOutput: 'Muda de árvore plantada na coordenada.'
@@ -990,27 +994,28 @@ export const API_CATALOG: ApiItem[] = [
   {
     id: 'mech_soil_water',
     namespace: 'mechanics',
-    methodName: 'Solo, Umidade e Evaporação',
-    displayText: 'Mecânicas de Solo, Umidade e Evaporação',
-    signature: 'Regras Físicas do Terreno Agrícola',
-    pythonSnippet: '# Dica: Inspecione o solo e umidade antes de agir\nif world.ground() == "NATURAL":\n    farm.till()\nif world.moisture() < 0.5:\n    farm.water()',
-    jsSnippet: '// Dica: Inspecione o solo e umidade antes de agir\nif (world.ground() === "NATURAL") {\n  farm.till();\n}\nif (world.moisture() < 0.5) {\n  farm.water();\n}',
-    description: 'Guia completo de física do solo: estados do terreno, taxa de evaporação e reversão de irrigação.',
+    methodName: 'Solo, Umidade e Transições',
+    displayText: 'Mecânicas de Solo, Umidade e Transições v2.5.1',
+    signature: 'Regras Físicas e Estados do Terreno Agrícola',
+    pythonSnippet: '# Dica: Inspecione e prepare o solo conforme a cultura\nif world.ground() == "IRRIGATED":\n    farm.till()  # Converte IRRIGATED para TILLED\nelif world.ground() == "TILLED":\n    farm.water() # Converte TILLED para IRRIGATED',
+    jsSnippet: '// Dica: Inspecione e prepare o solo conforme a cultura\nif (world.ground() === "IRRIGATED") {\n  farm.till();  // Converte IRRIGATED para TILLED\n} else if (world.ground() === "TILLED") {\n  farm.water(); // Converte TILLED para IRRIGATED\n}',
+    description: 'Guia completo do solo: transições mutuamente exclusivas entre TILLED e IRRIGATED e exigências das plantas.',
     techId: 'AGRO_1',
     category: 'Mecânicas de Jogo',
-    docDetail: 'O solo na fazenda possui 4 estados principais: NATURAL (terreno virgem), TILLED (arado com enxada), IRRIGATED (irrigado) e SOAKED (encharcado por excesso de água). A água evapora a cada tick do motor do jogo. Se a umidade de um bloco irrigado cair para 25% ou menos, o solo reverte automaticamente para terreno NATURAL!',
-    exampleCode: 'moisture = world.moisture()\nif moisture <= 0.25:\n    print("Aviso: Solo seco prestes a reverter!")\n    farm.water()',
+    docDetail: 'O solo na fazenda possui 4 estados principais: NATURAL (terreno virgem), TILLED (arado), IRRIGATED (irrigado) e SOAKED (encharcado). As ações farm.till() e farm.water() alteram o estado do solo: se um solo estiver IRRIGATED, executar farm.till() anula a irrigação e o transforma em TILLED. Se o solo estiver TILLED, executar farm.water() anula o estado arado e o transforma em IRRIGATED. Culturas como Raízes Cultivadas (CULTIVATED_ROOT) exigem exclusivamente Solo Arado (TILLED) para crescer.',
+    exampleCode: 'if world.ground() != "TILLED":\n    farm.till()\nfarm.plant("CULTIVATED_ROOT")',
     parameters: [],
     returns: {
       type: 'conceito',
       description: 'Compreensão das regras de solo do ambiente.'
     },
     usabilityNotes: [
-      'Solo Arado (TILLED) triplica a velocidade de crescimento de Raízes Cultivadas.',
-      'Solo Irrigado acelera a germinação de todas as culturas.',
-      'Mantenha a umidade entre 50% e 90% para rendimento máximo sem risco de encharcar.'
+      'Solo Arado (TILLED): Necessário exclusivamente para Raízes Cultivadas (CULTIVATED_ROOT). Irrigar o solo arado (farm.water()) cancela o estado TILLED e o transforma em IRRIGATED.',
+      'Solo Irrigado (IRRIGATED): Eleva a umidade a 100% e acelera o crescimento de fibras e arbustos. Arar o solo irrigado (farm.till()) cancela o estado IRRIGATED e o transforma em TILLED.',
+      'Se a umidade de um bloco IRRIGATED cair para <= 25%, ele reverte para NATURAL.',
+      'Irrigar solo com umidade > 95% faz o solo ficar encharcado (SOAKED) e destrói a cultura atual.'
     ],
-    expectedOutput: 'Otimização de rotinas de irrigação no código.'
+    expectedOutput: 'Otimização de preparação de solo e irrigação no código.'
   },
   {
     id: 'mech_crop_growth',
