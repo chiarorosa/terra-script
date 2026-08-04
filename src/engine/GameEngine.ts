@@ -159,7 +159,7 @@ export class GameEngine {
         x: 0,
         y: 0,
         color: '#3b82f6',
-        assignedFile: 'main.py',
+        assignedFile: 'guia/main.py',
         status: 'IDLE',
         currentLine: 1,
         actionMessage: 'Ready',

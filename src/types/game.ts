@@ -134,6 +134,8 @@ export interface VirtualFile {
   language: 'python' | 'javascript';
   isEntrypoint?: boolean;
   modified?: boolean;
+  folder?: 'guia' | 'fazenda' | string;
+  readOnly?: boolean;
 }
 
 export interface VirtualFolder {

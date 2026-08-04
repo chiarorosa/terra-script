@@ -8,10 +8,24 @@ export interface ChangelogRelease {
 
 export const CHANGELOG_HISTORY: ChangelogRelease[] = [
   {
+    version: 'v2.6.1',
+    date: '2026-08-04',
+    title: 'Mecanismo de Pastas no Explorador (/guia e /fazenda), Filtro Discreto de Extensões & Guardrails de DevTools',
+    isCurrent: true,
+    changes: [
+      'Estrutura de Pastas no Explorador de Arquivos (/guia e /fazenda): Organização do workspace em duas pastas principais com suporte a clique para maximizar e minimizar o conteúdo. Sugestão enviada por @jeronimofeijo.',
+      'Diretório /guia (Somente Leitura): Contém todos os scripts padrão e guias de início do jogo protegidos contra exclusão e renomeação para preservar os exemplos.',
+      'Diretório /fazenda (Espaço do Jogador): Todos os novos arquivos criados ou importados são salvos automaticamente em /fazenda, com suporte completo a criação, renomeação, exclusão e alteração de arquivo principal.',
+      'Escopo do Botão Restaurar Arquivos: O botão de restauração do explorador agora restaura exclusivamente os arquivos da pasta /guia, preservando todos os scripts criados pelo jogador na pasta /fazenda.',
+      'Barra de Filtro Discreto de Extensões: Localizada no pé do Explorador de Arquivos, permite alternar a exibição de linguagens (.PY, .JS, etc.) sem a necessidade de excluir scripts do jogo.',
+      'Sistema de Guardrails de DevTools & Integridade: Proteção contra automação sintética não autorizada via console ou DevTools do navegador, garantindo a integridade dos testes do jogo.'
+    ]
+  },
+  {
     version: 'v2.6.0',
     date: '2026-08-03',
     title: 'Trilha Sonora Original 16-Bit Zero-Click & Redesign Visual Pixel Art Retro UI',
-    isCurrent: true,
+    isCurrent: false,
     changes: [
       'Trilha Sonora Original "TerraScript: Vale da Automação": Composição e síntese procedural 100% autoral em 4 compassos cativantes (~107 BPM), combinando melodia flautada 16-bit (Sine/Triangle blend), linha de baixo aveludada NES/SNES e percussão chiptune leve.',
       'Sistema de Áudio Zero-Click (Fim dos Estalos): Implementação de rampas de envelope de amplitude ultra-suaves (attack de 15ms e release de 35ms), buffer de ruído rosa pré-gerado e canal de saída com filtro Lowpass Global (2200Hz, Q=0.7) eliminando qualquer ruído ou estalo de frequências e cortes de DC Offset.',

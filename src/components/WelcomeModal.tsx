@@ -157,7 +157,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({ engine, onClose }) =
           ) : (
             /* STEP 2: Progressive UI Notice, Auxílio Educativo & Interface Style */
             <form onSubmit={handleSubmit} className="space-y-4 animate-in fade-in slide-in-from-right-3 duration-200">
-              
+
               {/* Highlight Notice: Game Interface Evolution */}
               <div className="p-3.5 pixel-box-amber bg-[#0f1011] space-y-1.5 relative overflow-hidden">
                 <div className="flex items-center gap-2 text-[#facc15] font-pixel-header text-xs">
@@ -210,8 +210,8 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({ engine, onClose }) =
                 </button>
               </div>
 
-              {/* UI Style Selector */}
-              <div>
+              {/* UI Style Selector (Escondido de momento para ser reaproveitado no futuro) */}
+              <div className="hidden">
                 <label className="block text-xs font-pixel-body text-[#ffffff] mb-1.5 flex items-center justify-between">
                   <span className="flex items-center gap-1.5">
                     <Palette className="w-3.5 h-3.5 text-[#d0d6e0]" />

@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Sparkles, Terminal, Play, Cpu, Check } from 'lucide-react';
+import { Sparkles, Terminal, Play, Cpu, Check, GraduationCap } from 'lucide-react';
 import { GameEngine } from '../engine/GameEngine';
 import { audioManager } from '../utils/audioManager';
 
@@ -76,9 +76,19 @@ export const QuickStartModal: React.FC<QuickStartModalProps> = ({ engine, onClos
           </div>
         </div>
 
-        <div className="p-2.5 bg-[#08090a] pixel-box text-[11px] text-[#8a8f98] flex items-center gap-2 font-pixel-body">
-          <Sparkles className="w-3.5 h-3.5 text-[#facc15] shrink-0" />
-          <span>O <strong className="text-[#d0d6e0]">Guia Rápido</strong> permanecerá acessível no topo do Explorador de Arquivos à esquerda.</span>
+        {/* Highlighted Notice: Read GUIA tab first */}
+        <div className="p-3.5 pixel-box-amber bg-[#0f1011] space-y-1.5 relative overflow-hidden">
+          <div className="flex items-center gap-2 text-[#facc15] font-pixel-header text-xs">
+            <div className="p-1.5 bg-[#facc15]/20 shrink-0">
+              <GraduationCap className="w-4 h-4 text-[#facc15]" />
+            </div>
+            <span className="text-white text-xs font-pixel-header">
+              Dica Importante ao Jogador
+            </span>
+          </div>
+          <p className="text-[11px] text-[#d0d6e0] leading-relaxed font-pixel-body">
+            <strong>Recomendamos ler ANTES a aba GUIA no menu superior!</strong> Ela contém todas as mecânicas do terreno, comandos da API (<code className="text-[#facc15] font-pixel-mono">farm.*</code> e <code className="text-[#facc15] font-pixel-mono">world.*</code>) e tutoriais para programar com sucesso.
+          </p>
         </div>
 
         {/* Action Button */}

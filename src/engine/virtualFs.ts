@@ -1,11 +1,13 @@
 import { VirtualFile } from '../types/game';
 
-const VFS_STORAGE_KEY = 'terrascript_vfs_v8';
+const VFS_STORAGE_KEY = 'terrascript_vfs_v9';
 
 export const DEFAULT_FILES: VirtualFile[] = [
   {
-    path: 'main.py',
+    path: 'guia/main.py',
     name: 'main.py',
+    folder: 'guia',
+    readOnly: true,
     language: 'python',
     isEntrypoint: true,
     content: `# ============================================================
@@ -23,8 +25,10 @@ world.move("FORWARD")
 `
   },
   {
-    path: 'main.js',
+    path: 'guia/main.js',
     name: 'main.js',
+    folder: 'guia',
+    readOnly: true,
     language: 'javascript',
     isEntrypoint: false,
     content: `// ============================================================
@@ -42,8 +46,10 @@ world.move("FORWARD");
 `
   },
   {
-    path: 'regar.py',
+    path: 'guia/regar.py',
     name: 'regar.py',
+    folder: 'guia',
+    readOnly: true,
     language: 'python',
     isEntrypoint: false,
     content: `# Irrigação
@@ -52,8 +58,10 @@ farm.water()
 `
   },
   {
-    path: 'regar.js',
+    path: 'guia/regar.js',
     name: 'regar.js',
+    folder: 'guia',
+    readOnly: true,
     language: 'javascript',
     isEntrypoint: false,
     content: `// Irrigação
@@ -62,8 +70,10 @@ farm.water();
 `
   },
   {
-    path: 'plantar.py',
+    path: 'guia/plantar.py',
     name: 'plantar.py',
+    folder: 'guia',
+    readOnly: true,
     language: 'python',
     isEntrypoint: false,
     content: `# Plantação
@@ -74,8 +84,10 @@ farm.plant("WILD_FIBER")
 `
   },
   {
-    path: 'plantar.js',
+    path: 'guia/plantar.js',
     name: 'plantar.js',
+    folder: 'guia',
+    readOnly: true,
     language: 'javascript',
     isEntrypoint: false,
     content: `// Plantação
@@ -96,17 +108,65 @@ export class VirtualFS {
 
   private loadFromStorage() {
     try {
-      const stored = localStorage.getItem(VFS_STORAGE_KEY);
+      const stored = localStorage.getItem(VFS_STORAGE_KEY) || localStorage.getItem('terrascript_vfs_v8');
       if (stored) {
         const parsed: VirtualFile[] = JSON.parse(stored);
-        parsed.forEach(f => this.files.set(f.path, f));
-        if (this.files.size > 0) return;
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          parsed.forEach(f => {
+            let path = f.path;
+            let name = f.name;
+            let folder = f.folder;
+            let readOnly = f.readOnly;
+
+            // Migrate legacy flat paths
+            if (!path.startsWith('guia/') && !path.startsWith('fazenda/')) {
+              const isDefault = ['main.py', 'main.js', 'regar.py', 'regar.js', 'plantar.py', 'plantar.js'].includes(path);
+              if (isDefault) {
+                folder = 'guia';
+                readOnly = true;
+                path = `guia/${path}`;
+                name = path.split('/').pop() || name;
+              } else {
+                folder = 'fazenda';
+                readOnly = false;
+                path = `fazenda/${path}`;
+                name = path.split('/').pop() || name;
+              }
+            } else if (path.startsWith('guia/')) {
+              folder = 'guia';
+              readOnly = true;
+              name = path.split('/').pop() || name;
+            } else if (path.startsWith('fazenda/')) {
+              folder = 'fazenda';
+              readOnly = false;
+              name = path.split('/').pop() || name;
+            }
+
+            this.files.set(path, {
+              ...f,
+              path,
+              name: name || path,
+              folder: folder || (path.startsWith('guia/') ? 'guia' : 'fazenda'),
+              readOnly: readOnly ?? path.startsWith('guia/')
+            });
+          });
+
+          // Ensure default guia files are present
+          DEFAULT_FILES.forEach(df => {
+            if (!this.files.has(df.path)) {
+              this.files.set(df.path, { ...df });
+            }
+          });
+
+          this.saveToStorage();
+          return;
+        }
       }
     } catch (e) {
       console.warn('Failed to parse VFS from storage, loading defaults:', e);
     }
 
-    DEFAULT_FILES.forEach(f => this.files.set(f.path, f));
+    DEFAULT_FILES.forEach(f => this.files.set(f.path, { ...f }));
     this.saveToStorage();
   }
 
@@ -124,11 +184,15 @@ export class VirtualFS {
   }
 
   public getFile(path: string): VirtualFile | undefined {
-    return this.files.get(path);
+    // Try exact path first
+    if (this.files.has(path)) return this.files.get(path);
+    // If passed flat filename e.g. "main.py", try matching ending or folder
+    const all = Array.from(this.files.values());
+    return all.find(f => f.path === path || f.name === path || f.path === `guia/${path}` || f.path === `fazenda/${path}`);
   }
 
   public setFileContent(path: string, content: string): void {
-    const file = this.files.get(path);
+    const file = this.getFile(path);
     if (file) {
       file.content = content;
       file.modified = false;
@@ -137,16 +201,28 @@ export class VirtualFS {
   }
 
   public createFile(name: string, language: 'python' | 'javascript'): VirtualFile {
-    let path = name.trim();
-    if (!path.endsWith('.py') && !path.endsWith('.js')) {
-      path += language === 'python' ? '.py' : '.js';
+    let clean = name.trim().replace(/^\/+/, '');
+    if (clean.startsWith('fazenda/')) {
+      clean = clean.substring('fazenda/'.length);
+    } else if (clean.startsWith('guia/')) {
+      clean = clean.substring('guia/'.length);
     }
+
+    if (!clean.endsWith('.py') && !clean.endsWith('.js')) {
+      clean += language === 'python' ? '.py' : '.js';
+    }
+
+    const path = `fazenda/${clean}`;
     const newFile: VirtualFile = {
       path,
-      name: path,
+      name: clean,
+      folder: 'fazenda',
+      readOnly: false,
       language,
-      content: language === 'python' ? `# ${path}\n# Comandos de fazenda:\nfarm.harvest()\nworld.move("RIGHT")\n` : `// ${path}\n// Comandos de fazenda:\nfarm.harvest();\nworld.move("RIGHT");\n`,
-      isEntrypoint: this.files.size === 0
+      content: language === 'python' 
+        ? `# ${clean}\n# Comandos de fazenda:\nfarm.harvest()\nworld.move("RIGHT")\n` 
+        : `// ${clean}\n// Comandos de fazenda:\nfarm.harvest();\nworld.move("RIGHT");\n`,
+      isEntrypoint: false
     };
     this.files.set(path, newFile);
     this.saveToStorage();
@@ -154,26 +230,38 @@ export class VirtualFS {
   }
 
   public deleteFile(path: string): void {
-    this.files.delete(path);
-    this.saveToStorage();
+    const file = this.getFile(path);
+    if (file) {
+      if (file.readOnly || file.folder === 'guia' || file.path.startsWith('guia/')) {
+        return; // Protection rule: /guia files cannot be deleted
+      }
+      this.files.delete(file.path);
+      this.saveToStorage();
+    }
   }
 
   public renameFile(oldPath: string, newName: string): VirtualFile | false {
-    const file = this.files.get(oldPath);
+    const file = this.getFile(oldPath);
     if (!file) return false;
+    if (file.readOnly || file.folder === 'guia' || file.path.startsWith('guia/')) {
+      return false; // Protection rule: /guia files cannot be renamed
+    }
 
-    let cleanName = newName.trim();
+    let cleanName = newName.trim().replace(/^\/+/, '');
+    if (cleanName.startsWith('fazenda/')) {
+      cleanName = cleanName.substring('fazenda/'.length);
+    }
+
     if (!cleanName) return false;
 
-    // Infer extension if missing
     if (!cleanName.endsWith('.py') && !cleanName.endsWith('.js')) {
       const ext = file.path.endsWith('.js') ? '.js' : '.py';
       cleanName += ext;
     }
 
-    const newPath = cleanName;
+    const newPath = `fazenda/${cleanName}`;
 
-    if (newPath === oldPath) return file;
+    if (newPath === file.path) return file;
 
     if (this.files.has(newPath)) {
       return false;
@@ -184,45 +272,57 @@ export class VirtualFS {
     const renamedFile: VirtualFile = {
       ...file,
       path: newPath,
-      name: newPath,
+      name: cleanName,
+      folder: 'fazenda',
       language
     };
 
-    this.files.delete(oldPath);
-    this.files.set(newPath, renamedFile);
+    this.files.delete(file.path);
     this.saveToStorage();
 
     return renamedFile;
   }
 
   public setEntrypoint(path: string): void {
+    const targetFile = this.getFile(path);
+    const targetPath = targetFile ? targetFile.path : path;
+
     this.files.forEach(f => {
-      f.isEntrypoint = (f.path === path);
+      f.isEntrypoint = (f.path === targetPath);
     });
     this.saveToStorage();
   }
 
   public getEntrypoint(): VirtualFile | undefined {
-    return Array.from(this.files.values()).find(f => f.isEntrypoint) || Array.from(this.files.values())[0];
+    return Array.from(this.files.values()).find(f => f.isEntrypoint) || 
+           this.files.get('guia/main.py') || 
+           Array.from(this.files.values())[0];
   }
 
   public importScriptFromDisk(filename: string, content: string): VirtualFile {
-    let cleanName = filename.trim();
+    let cleanName = filename.trim().replace(/^\/+/, '');
+    if (cleanName.startsWith('fazenda/')) cleanName = cleanName.substring('fazenda/'.length);
+    if (cleanName.startsWith('guia/')) cleanName = cleanName.substring('guia/'.length);
+
     let lang: 'python' | 'javascript' = 'python';
     if (cleanName.endsWith('.js')) lang = 'javascript';
     else if (!cleanName.endsWith('.py')) {
       cleanName += '.py';
     }
 
-    const existing = this.files.get(cleanName);
+    const path = `fazenda/${cleanName}`;
+    const existing = this.files.get(path);
+
     const newFile: VirtualFile = {
-      path: cleanName,
+      path,
       name: cleanName,
+      folder: 'fazenda',
+      readOnly: false,
       language: lang,
       content: content,
-      isEntrypoint: existing ? existing.isEntrypoint : (this.files.size === 0)
+      isEntrypoint: existing ? existing.isEntrypoint : false
     };
-    this.files.set(cleanName, newFile);
+    this.files.set(path, newFile);
     this.saveToStorage();
     return newFile;
   }
@@ -232,15 +332,31 @@ export class VirtualFS {
     this.files.clear();
     filesArray.forEach(f => {
       if (f && f.path && typeof f.content === 'string') {
-        this.files.set(f.path, {
-          path: f.path,
-          name: f.name || f.path,
-          language: f.language || (f.path.endsWith('.js') ? 'javascript' : 'python'),
+        let path = f.path;
+        let name = f.name || path;
+        let folder = f.folder;
+        let readOnly = f.readOnly;
+
+        if (!path.startsWith('guia/') && !path.startsWith('fazenda/')) {
+          const isDefault = ['main.py', 'main.js', 'regar.py', 'regar.js', 'plantar.py', 'plantar.js'].includes(path);
+          folder = isDefault ? 'guia' : 'fazenda';
+          readOnly = isDefault;
+          path = `${folder}/${path}`;
+          name = path.split('/').pop() || name;
+        }
+
+        this.files.set(path, {
+          path,
+          name: name || path,
+          folder: folder || (path.startsWith('guia/') ? 'guia' : 'fazenda'),
+          readOnly: readOnly ?? path.startsWith('guia/'),
+          language: f.language || (path.endsWith('.js') ? 'javascript' : 'python'),
           content: f.content,
           isEntrypoint: !!f.isEntrypoint
         });
       }
     });
+
     if (!this.getEntrypoint() && this.files.size > 0) {
       const first = Array.from(this.files.values())[0];
       first.isEntrypoint = true;
@@ -248,9 +364,17 @@ export class VirtualFS {
     this.saveToStorage();
   }
 
+  public resetGuiaFiles(): void {
+    DEFAULT_FILES.forEach(df => {
+      this.files.set(df.path, { ...df });
+    });
+    this.saveToStorage();
+  }
+
   public resetToDefaults(): void {
     this.files.clear();
-    DEFAULT_FILES.forEach(f => this.files.set(f.path, f));
+    DEFAULT_FILES.forEach(f => this.files.set(f.path, { ...f }));
     this.saveToStorage();
   }
 }
+

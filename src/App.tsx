@@ -22,7 +22,7 @@ export default function App() {
   const engine = useMemo(() => new GameEngine(vfs), [vfs]);
 
   const [, setRenderTick] = useState(0);
-  const [activeFilePath, setActiveFilePath] = useState<string>('main.py');
+  const [activeFilePath, setActiveFilePath] = useState<string>('guia/main.py');
   const [activeTab, setActiveTab] = useState<'workspace' | 'research' | 'agents' | 'tutorial'>('workspace');
   const [isSaveModalOpen, setIsSaveModalOpen] = useState<boolean>(false);
   const [isWelcomeModalOpen, setIsWelcomeModalOpen] = useState<boolean>(() => {
