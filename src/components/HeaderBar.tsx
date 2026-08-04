@@ -17,7 +17,8 @@ import {
   Volume2,
   VolumeX,
   Music,
-  User
+  User,
+  Database
 } from 'lucide-react';
 import { GameLogo } from './GameLogo';
 import { GameEngine } from '../engine/GameEngine';
@@ -37,9 +38,10 @@ interface HeaderBarProps {
   setActiveTab: (tab: 'workspace' | 'research' | 'agents' | 'tutorial') => void;
   onOpenSaveManager?: () => void;
   onOpenWelcome?: () => void;
+  onOpenSupabase?: () => void;
 }
 
-export const HeaderBar: React.FC<HeaderBarProps> = ({ engine, activeTab, setActiveTab, onOpenSaveManager, onOpenWelcome }) => {
+export const HeaderBar: React.FC<HeaderBarProps> = ({ engine, activeTab, setActiveTab, onOpenSaveManager, onOpenWelcome, onOpenSupabase }) => {
   const resources = engine.getResources();
   const mode = engine.getMode();
   const speed = engine.getSpeed();
@@ -81,6 +83,16 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({ engine, activeTab, setActi
               >
                 <User className="w-3.5 h-3.5 text-[#22c55e]" />
                 <span className="font-normal truncate max-w-[120px]">{programmerName}</span>
+              </button>
+            )}
+            {onOpenSupabase && (
+              <button
+                onClick={onOpenSupabase}
+                title="Abrir Integração com Banco de Dados Supabase (Saves na Nuvem, Leaderboard & Scripts)"
+                className="hidden md:flex items-center gap-1.5 px-2.5 py-1 bg-[#10b981]/15 hover:bg-[#10b981]/25 text-[#10b981] border border-[#10b981]/40 rounded-md text-xs font-pixel-mono transition-all cursor-pointer"
+              >
+                <Database className="w-3.5 h-3.5 text-[#10b981]" />
+                <span className="font-bold">Supabase</span>
               </button>
             )}
           </div>

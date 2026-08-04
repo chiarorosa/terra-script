@@ -11,7 +11,9 @@ import {
   FileText, 
   Bot,
   Trash2,
-  RotateCcw
+  RotateCcw,
+  Database,
+  CloudUpload
 } from 'lucide-react';
 import { GameEngine } from '../engine/GameEngine';
 import { VirtualFS } from '../engine/virtualFs';
@@ -31,6 +33,7 @@ interface SaveManagerModalProps {
   onClose: () => void;
   onFileImported?: (path: string) => void;
   onResetGame?: () => void;
+  onOpenSupabase?: () => void;
 }
 
 export const SaveManagerModal: React.FC<SaveManagerModalProps> = ({
@@ -39,7 +42,8 @@ export const SaveManagerModal: React.FC<SaveManagerModalProps> = ({
   activeFilePath,
   onClose,
   onFileImported,
-  onResetGame
+  onResetGame,
+  onOpenSupabase
 }) => {
   const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [showResetModal, setShowResetModal] = useState<boolean>(false);
@@ -200,6 +204,40 @@ export const SaveManagerModal: React.FC<SaveManagerModalProps> = ({
 
         {/* Content Body */}
         <div className="p-5 space-y-6 overflow-y-auto">
+
+          {/* SECTION 0: Supabase Cloud Saves & Integration */}
+          {onOpenSupabase && (
+            <div className="bg-[#10b981]/10 border border-[#10b981]/30 rounded-[12px] p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Database className="w-4 h-4 text-[#10b981]" />
+                  <h3 className="text-xs font-bold text-[#10b981] uppercase tracking-wider">
+                    Sincronização em Nuvem Supabase
+                  </h3>
+                </div>
+                <span className="text-[10px] font-mono text-[#10b981] bg-[#10b981]/15 px-2 py-0.5 rounded border border-[#10b981]/30">
+                  PostgreSQL Supabase Connected
+                </span>
+              </div>
+
+              <p className="text-xs text-[#d0d6e0] leading-relaxed font-sans">
+                Sincronize seu progresso, publique seu recorde no Leaderboard Global ou compartilhe e baixe scripts da comunidade diretamente do banco de dados Supabase!
+              </p>
+
+              <div className="pt-1">
+                <button
+                  onClick={() => {
+                    onClose();
+                    onOpenSupabase();
+                  }}
+                  className="flex items-center justify-center gap-2 px-4 py-2.5 bg-[#10b981] hover:bg-[#059669] text-white rounded-[6px] text-xs font-bold transition-all active:scale-98 shadow-md cursor-pointer w-full sm:w-auto"
+                >
+                  <CloudUpload className="w-4 h-4" />
+                  Abrir Painel de Saves & Banco Supabase
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* SECTION 1: Full Game Save State */}
           <div className="bg-[#161718] border border-[#23252a] rounded-[12px] p-4 space-y-3">

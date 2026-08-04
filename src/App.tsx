@@ -15,6 +15,7 @@ import { SaveManagerModal } from './components/SaveManagerModal';
 import { WelcomeModal } from './components/WelcomeModal';
 import { QuickStartModal } from './components/QuickStartModal';
 import { PrestigeBar } from './components/PrestigeBar';
+import { SupabaseModal } from './components/SupabaseModal';
 import { audioManager } from './utils/audioManager';
 
 export default function App() {
@@ -25,6 +26,7 @@ export default function App() {
   const [activeFilePath, setActiveFilePath] = useState<string>('guia/main.py');
   const [activeTab, setActiveTab] = useState<'workspace' | 'research' | 'agents' | 'tutorial'>('workspace');
   const [isSaveModalOpen, setIsSaveModalOpen] = useState<boolean>(false);
+  const [isSupabaseModalOpen, setIsSupabaseModalOpen] = useState<boolean>(false);
   const [isWelcomeModalOpen, setIsWelcomeModalOpen] = useState<boolean>(() => {
     if (typeof window !== 'undefined') {
       return localStorage.getItem('terrascript_welcome_seen') !== 'true';
@@ -168,6 +170,7 @@ export default function App() {
         setActiveTab={setActiveTab}
         onOpenSaveManager={() => setIsSaveModalOpen(true)}
         onOpenWelcome={() => setIsWelcomeModalOpen(true)}
+        onOpenSupabase={() => setIsSupabaseModalOpen(true)}
       />
 
       {/* Prestige Progress Bar (v2.1.0 - Progressive Disclosure) */}
@@ -249,6 +252,21 @@ export default function App() {
           onResetGame={() => {
             setIsWelcomeModalOpen(true);
             setIsQuickStartModalOpen(false);
+            setRenderTick(t => t + 1);
+          }}
+          onOpenSupabase={() => setIsSupabaseModalOpen(true)}
+        />
+      )}
+
+      {/* Supabase Database Modal */}
+      {isSupabaseModalOpen && (
+        <SupabaseModal
+          engine={engine}
+          vfs={vfs}
+          activeFilePath={activeFile ? activeFile.path : 'main.py'}
+          onClose={() => setIsSupabaseModalOpen(false)}
+          onFileImported={(newPath) => {
+            setActiveFilePath(newPath);
             setRenderTick(t => t + 1);
           }}
         />
