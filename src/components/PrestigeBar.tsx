@@ -28,7 +28,7 @@ export const PrestigeBar: React.FC<PrestigeBarProps> = ({ engine }) => {
   }, []);
 
   return (
-    <div className="w-full bg-[#0f1011] border-y-2 border-[#23252a] px-3.5 py-2 flex items-center gap-3.5 text-sm select-none shrink-0 z-10 font-pixel-body relative">
+    <div className="w-full bg-[#0f1011] border-y-2 border-[#23252a] px-3.5 py-2 flex items-center gap-3.5 text-sm select-none shrink-0 z-40 font-pixel-body relative">
       {/* Prestige Level Badge */}
       <div className="flex items-center gap-2 px-3 py-1 pixel-box-amber text-[#ffffff] font-medium text-xs sm:text-sm shrink-0">
         <Trophy className="w-4 h-4 text-[#facc15]" />
@@ -78,7 +78,7 @@ export const PrestigeBar: React.FC<PrestigeBarProps> = ({ engine }) => {
 
         {/* Dropdown Menu */}
         {isDropdownOpen && (
-          <div className="absolute right-0 top-full mt-1.5 w-80 bg-[#0f1011] pixel-box-amber p-3 z-50 text-xs space-y-2.5 font-pixel-body">
+          <div className="absolute right-0 top-full mt-1.5 w-80 bg-[#0f1011] pixel-box-amber p-3 z-50 text-xs space-y-2.5 font-pixel-body shadow-[0_12px_36px_rgba(0,0,0,0.95)]">
             <div className="flex items-center justify-between pb-2 border-b border-[#23252a]">
               <span className="font-pixel-header text-[10px] text-[#facc15] flex items-center gap-1.5">
                 <Globe className="w-4 h-4 text-[#06b6d4]" />

@@ -79,7 +79,7 @@ export class GameEngine {
   private tiles: Map<string, TileState> = new Map();
   private agents: Agent[] = [];
   private resources: ResourceMap = {
-    fiber: 10,
+    fiber: 20,
     wood: 0,
     roots: 0,
     fruits: 0,
@@ -282,7 +282,7 @@ export class GameEngine {
             }
           }
           if (this.resources.fiber === 0 && (!parsed.techTree || !parsed.techTree.some((t: any) => t.unlocked))) {
-            this.resources.fiber = 10;
+            this.resources.fiber = 20;
           }
         }
 
@@ -540,7 +540,7 @@ export class GameEngine {
 
     // Reset resources
     this.resources = {
-      fiber: 10,
+      fiber: 20,
       wood: 0,
       roots: 0,
       fruits: 0,

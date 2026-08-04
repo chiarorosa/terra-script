@@ -1,6 +1,6 @@
 import { VirtualFile } from '../types/game';
 
-const VFS_STORAGE_KEY = 'terrascript_vfs_v7';
+const VFS_STORAGE_KEY = 'terrascript_vfs_v8';
 
 export const DEFAULT_FILES: VirtualFile[] = [
   {
@@ -9,12 +9,10 @@ export const DEFAULT_FILES: VirtualFile[] = [
     language: 'python',
     isEntrypoint: true,
     content: `# ============================================================
-# TERRA SCRIPT 3D - SCRIPT PRINCIPAL (PYTHON)
-# ============================================================
 # SUA PRIMEIRA TAREFA:
-# 1. Colha a Fibra Selvagem no terreno chamando farm.harvest().
+# 1. Colha a Fibras no terreno chamando farm.harvest().
 # 2. Clique no botão de Play (►) na barra superior para executar.
-# 3. Junte 20 Fibras para desbloquear sua 1ª Tecnologia
+# 3. Junte Fibras para desbloquear sua 1ª Tecnologia
 #    na aba 'Pesquisa' (ex: Expansão de Terreno 1x3).
 #
 # A cada ciclo, o script é executado do início ao fim do arquivo!
@@ -30,12 +28,10 @@ world.move("FORWARD")
     language: 'javascript',
     isEntrypoint: false,
     content: `// ============================================================
-// TERRA SCRIPT 3D - SCRIPT PRINCIPAL (JAVASCRIPT)
-// ============================================================
 // SUA PRIMEIRA TAREFA:
-// 1. Colha a Fibra Selvagem no terreno chamando farm.harvest().
+// 1. Colha a Fibras no terreno chamando farm.harvest().
 // 2. Clique no botão de Play (►) na barra superior para executar.
-// 3. Junte 20 Fibras para desbloquear sua 1ª Tecnologia
+// 3. Junte Fibras para desbloquear sua 1ª Tecnologia
 //    na aba 'Pesquisa' (ex: Expansão de Terreno 1x3).
 //
 // A cada ciclo, o script é executado do início ao fim do arquivo!
