@@ -290,7 +290,7 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ engine, initialSel
   const namespaces = [
     { key: 'mechanics', label: 'Conceitos & Regras', namespaceCode: 'regras', icon: BookOpen, color: 'text-[#ec4899]', bgColor: 'bg-[#ec4899]/10', borderColor: 'border-[#ec4899]/30' },
     { key: 'farm', label: 'Comandos da Fazenda', namespaceCode: 'farm.*', icon: Sprout, color: 'text-[#27a644]', bgColor: 'bg-[#27a644]/10', borderColor: 'border-[#27a644]/30' },
-    { key: 'world', label: 'Sensores do Mundo', namespaceCode: 'world.*', icon: Terminal, color: 'text-[#8b5cf6]', bgColor: 'bg-[#8b5cf6]/10', borderColor: 'border-[#8b5cf6]/30' },
+    { key: 'world', label: 'Sensores do Mundo', namespaceCode: 'world.*', icon: Terminal, color: 'text-[#06b6d4]', bgColor: 'bg-[#06b6d4]/10', borderColor: 'border-[#06b6d4]/30' },
     { key: 'inventory', label: 'Consulta de Inventário', namespaceCode: 'inventory.*', icon: Boxes, color: 'text-[#eab308]', bgColor: 'bg-[#eab308]/10', borderColor: 'border-[#eab308]/30' },
     { key: 'syntax', label: 'Recursos da Linguagem', namespaceCode: 'sintaxe', icon: Cpu, color: 'text-[#02b8cc]', bgColor: 'bg-[#02b8cc]/10', borderColor: 'border-[#02b8cc]/30' },
   ] as const;
@@ -684,14 +684,14 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ engine, initialSel
             {/* PILAR: USABILIDADE E CASOS DE USO (Somente se houver notas) */}
             {selectedItem.usabilityNotes && selectedItem.usabilityNotes.length > 0 && (
               <div className="space-y-2.5">
-                <h3 className="text-sm font-bold font-pixel-mono text-[#8b5cf6] uppercase tracking-wider flex items-center gap-2">
-                  <Sparkles className="w-4.5 h-4.5 text-[#8b5cf6]" />
+                <h3 className="text-sm font-bold font-pixel-mono text-[#06b6d4] uppercase tracking-wider flex items-center gap-2">
+                  <Sparkles className="w-4.5 h-4.5 text-[#06b6d4]" />
                   Dicas de Usabilidade & Boas Práticas no Código
                 </h3>
                 <div className="grid grid-cols-1 gap-2.5">
                   {selectedItem.usabilityNotes.map((note, i) => (
-                    <div key={i} className="p-3.5 bg-[#0a0b0c] pixel-box border border-[#23252a] flex items-start gap-3 text-sm text-[#d0d6e0] font-sans leading-relaxed transition-all hover:border-[#8b5cf6]/40">
-                      <span className="px-2 py-0.5 bg-[#8b5cf6]/15 text-[#a78bfa] border border-[#8b5cf6]/30 font-pixel-mono text-xs font-bold shrink-0 rounded">
+                    <div key={i} className="p-3.5 bg-[#0a0b0c] pixel-box border border-[#23252a] flex items-start gap-3 text-sm text-[#d0d6e0] font-sans leading-relaxed transition-all hover:border-[#06b6d4]/40">
+                      <span className="px-2 py-0.5 bg-[#06b6d4]/15 text-[#67e8f9] border border-[#06b6d4]/30 font-pixel-mono text-xs font-bold shrink-0 rounded">
                         #{i + 1}
                       </span>
                       <div className="flex-1">

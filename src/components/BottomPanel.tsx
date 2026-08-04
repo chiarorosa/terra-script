@@ -184,10 +184,10 @@ export const BottomPanel: React.FC<BottomPanelProps> = ({ engine }) => {
                     </div>
 
                     {log.type === 'stderr' && educationalErrors && (
-                      <div className="ml-16 my-1 p-2 bg-[#8b5cf6]/10 border border-[#8b5cf6]/30 rounded-[6px] text-[11px] font-sans text-[#d0d6e0] flex items-start justify-between gap-2">
+                      <div className="ml-16 my-1 p-2 bg-[#06b6d4]/10 border border-[#06b6d4]/40 pixel-box text-[11px] font-sans text-[#d0d6e0] flex items-start justify-between gap-2">
                         <div className="flex items-start gap-1.5">
-                          <GraduationCap className="w-3.5 h-3.5 text-[#8b5cf6] shrink-0 mt-0.5" />
-                          <span><strong className="text-[#8b5cf6]">Dica de Erro:</strong> {getEducationalAdvice(log.message)}</span>
+                          <GraduationCap className="w-3.5 h-3.5 text-[#06b6d4] shrink-0 mt-0.5" />
+                          <span><strong className="text-[#06b6d4] font-pixel-mono">Dica de Erro:</strong> {getEducationalAdvice(log.message)}</span>
                         </div>
                         <button
                           onClick={disableEducationalErrors}
@@ -223,11 +223,11 @@ export const BottomPanel: React.FC<BottomPanelProps> = ({ engine }) => {
 
                     {/* Beginner Educational Advice Card */}
                     {educationalErrors && (
-                      <div className="p-2.5 bg-[#8b5cf6]/10 border border-[#8b5cf6]/30 rounded-[6px] text-xs font-sans text-[#d0d6e0] flex items-start justify-between gap-3 animate-in fade-in duration-200">
+                      <div className="p-2.5 bg-[#06b6d4]/10 border border-[#06b6d4]/40 pixel-box text-xs font-sans text-[#d0d6e0] flex items-start justify-between gap-3 animate-in fade-in duration-200">
                         <div className="flex items-start gap-2">
-                          <GraduationCap className="w-4 h-4 text-[#8b5cf6] shrink-0 mt-0.5" />
+                          <GraduationCap className="w-4 h-4 text-[#06b6d4] shrink-0 mt-0.5" />
                           <div>
-                            <div className="font-semibold text-[#8b5cf6] text-[11px] uppercase tracking-wider mb-0.5">
+                            <div className="font-semibold text-[#06b6d4] text-[11px] uppercase tracking-wider mb-0.5 font-pixel-mono font-bold">
                               Dica Educativa para Iniciantes
                             </div>
                             <div className="text-xs text-[#d0d6e0] leading-relaxed">

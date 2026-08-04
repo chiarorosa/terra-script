@@ -268,13 +268,13 @@ export default function App() {
 
       {/* Unlock / Milestone Toast Notification */}
       {toastNotification && (
-        <div className="fixed bottom-14 right-6 z-50 max-w-sm bg-[#08090a] border border-[#5e6ad2]/60 shadow-[0_0_20px_rgba(94,106,210,0.3)] rounded-[12px] p-4 text-white animate-in slide-in-from-bottom-5 duration-300 flex items-start gap-3">
-          <div className="p-2 bg-[#5e6ad2]/20 text-[#5e6ad2] rounded-[8px] shrink-0">
-            <Sparkles className="w-5 h-5 text-[#5e6ad2]" />
+        <div className="fixed bottom-14 right-6 z-50 max-w-sm bg-[#08090a] pixel-box-amber border-2 border-[#facc15] shadow-[0_0_25px_rgba(250,204,21,0.25)] p-4 text-white animate-in slide-in-from-bottom-5 duration-300 flex items-start gap-3 font-pixel-body">
+          <div className="p-2 bg-[#facc15]/20 text-[#facc15] rounded shrink-0">
+            <Sparkles className="w-5 h-5 text-[#facc15]" />
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between gap-2">
-              <span className="text-[10px] uppercase font-mono tracking-wider text-[#5e6ad2] font-bold">
+              <span className="text-xs uppercase font-pixel-mono tracking-wider text-[#facc15] font-bold">
                 {toastNotification.title}
               </span>
               <button 
@@ -282,11 +282,11 @@ export default function App() {
                 className="text-[#8a8f98] hover:text-white p-0.5 rounded hover:bg-[#161718] transition-all"
                 title="Fechar notificação"
               >
-                <X className="w-3.5 h-3.5" />
+                <X className="w-4 h-4" />
               </button>
             </div>
-            <div className="font-semibold text-sm text-white mt-0.5">{toastNotification.subtitle}</div>
-            <p className="text-xs text-[#8a8f98] mt-1 leading-snug">{toastNotification.description}</p>
+            <div className="font-semibold text-sm text-white mt-0.5 font-pixel-mono">{toastNotification.subtitle}</div>
+            <p className="text-xs text-[#d0d6e0] mt-1 leading-snug font-sans">{toastNotification.description}</p>
             {toastNotification.type === 'tech' && (
               <button
                 onClick={() => {
@@ -296,7 +296,7 @@ export default function App() {
                   setActiveTab('tutorial');
                   setToastNotification(null);
                 }}
-                className="mt-2.5 px-3 py-1.5 bg-[#5e6ad2] hover:bg-[#4f52b2] text-white rounded-[6px] text-xs font-medium transition-all flex items-center gap-1.5 shadow-sm active:scale-95 cursor-pointer"
+                className="mt-2.5 px-3 py-1.5 pixel-btn-amber text-[#0f172a] text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm active:scale-95 cursor-pointer font-pixel-mono"
               >
                 <BookOpen className="w-3.5 h-3.5" />
                 <span>Ver no Guia de API ➔</span>

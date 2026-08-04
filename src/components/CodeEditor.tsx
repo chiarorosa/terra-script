@@ -13,14 +13,14 @@ import { API_CATALOG, isTechUnlocked, getTechForApiItem } from '../engine/techAp
 import { createGameEngineCompletionExtension } from './editorAutocompletion';
 import { activeLineExtension } from './editorActiveLine';
 
-// High-contrast text selection theme using Theme Palette Violet (#8b5cf6)
+// High-contrast text selection theme using Pixel Cyan (#06b6d4)
 const customSelectionTheme = EditorView.theme({
   '.cm-selectionBackground': {
-    backgroundColor: 'rgba(139, 92, 246, 0.5) !important',
+    backgroundColor: 'rgba(6, 182, 212, 0.45) !important',
     borderRadius: '2px',
   },
   '&.cm-focused .cm-selectionBackground': {
-    backgroundColor: 'rgba(139, 92, 246, 0.65) !important',
+    backgroundColor: 'rgba(6, 182, 212, 0.60) !important',
     borderRadius: '2px',
   },
   // Hide full-width block native selection on cm-line to ensure character-by-character precision
@@ -132,8 +132,8 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
             <span>Executar</span>
           </span>
           {activeLine && (
-            <span className="text-[#5e6ad2] font-bold animate-pulse flex items-center gap-1">
-              <Play className="w-3 h-3 fill-current" />
+            <span className="text-[#06b6d4] font-bold animate-pulse flex items-center gap-1 font-pixel-mono">
+              <Play className="w-3 h-3 fill-current text-[#06b6d4]" />
               Executando Linha {activeLine}
             </span>
           )}

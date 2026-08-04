@@ -270,20 +270,20 @@ export const ExplorerPanel: React.FC<ExplorerPanelProps> = ({
                 localStorage.setItem('terrascript_onboarding_tip_dismissed', next ? 'false' : 'true');
               }
             }}
-            className="text-[10px] text-[#5e6ad2] hover:text-[#707ee6] flex items-center gap-1 cursor-pointer font-sans normal-case lowercase hover:underline"
+            className="text-[10px] text-[#facc15] hover:text-[#fef08a] flex items-center gap-1 cursor-pointer font-sans normal-case lowercase hover:underline font-bold"
             title="Exibir/Ocultar Dicas de Início"
           >
-            <Sparkles className="w-3 h-3 text-[#5e6ad2]" />
+            <Sparkles className="w-3 h-3 text-[#facc15]" />
             <span>Guia Rápido</span>
           </button>
         </div>
 
-        {/* Beginner Onboarding Quick Start Banner in Linear Theme */}
+        {/* Beginner Onboarding Quick Start Banner in Pixel Amber Theme */}
         {showOnboardingTip && (
           <div 
-            className="mx-1 my-2 p-2.5 bg-[#0f1011] border border-[#5e6ad2]/70 shadow-[0_0_15px_rgba(94,106,210,0.25)] rounded-[8px] text-[11px] font-sans text-[#d0d6e0] space-y-1.5 animate-pulse hover:animate-none transition-all"
+            className="mx-1 my-2 p-2.5 bg-[#0f1011] pixel-box-amber border border-[#facc15]/80 shadow-[0_0_15px_rgba(250,204,21,0.2)] text-[11px] font-sans text-[#d0d6e0] space-y-1.5 animate-pulse hover:animate-none transition-all"
           >
-            <div className="flex items-center justify-between text-[#5e6ad2] font-semibold text-xs">
+            <div className="flex items-center justify-between text-[#facc15] font-bold text-xs font-pixel-mono">
               <span className="text-[#ffffff]">Primeiros Passos</span>
               <button 
                 onClick={(e) => {
@@ -296,10 +296,10 @@ export const ExplorerPanel: React.FC<ExplorerPanelProps> = ({
                 <X className="w-3.5 h-3.5" />
               </button>
             </div>
-            <ol className="list-decimal pl-4 space-y-1 text-[#8a8f98] text-[11px] leading-tight font-sans">
+            <ol className="list-decimal pl-4 space-y-1 text-[#d0d6e0] text-[11px] leading-tight font-sans">
               <li>Edite o código em <strong className="text-[#ffffff]">main.py</strong></li>
-              <li>Clique no botão <strong className="text-[#27a644]">▶ Executar (F5)</strong></li>
-              <li>Acompanhe seu agente colher e libere novas <strong className="text-[#e4f222]">Pesquisas</strong>!</li>
+              <li>Clique no botão <strong className="text-[#22c55e]">▶ Executar (F5)</strong></li>
+              <li>Acompanhe seu agente colher e libere novas <strong className="text-[#facc15]">Pesquisas</strong>!</li>
             </ol>
           </div>
         )}
@@ -369,10 +369,10 @@ export const ExplorerPanel: React.FC<ExplorerPanelProps> = ({
                 <div className="flex items-center gap-1 opacity-80 group-hover:opacity-100">
                   {assignedAgents.length > 0 && (
                     <span 
-                      className="text-[10px] px-1 bg-[#8b5cf6]/10 text-[#8b5cf6] border border-[#8b5cf6]/30 rounded-[4px] font-sans flex items-center gap-0.5"
+                      className="text-[10px] px-1.5 py-0.5 bg-[#06b6d4]/15 text-[#06b6d4] border border-[#06b6d4]/40 font-pixel-mono font-bold flex items-center gap-0.5 rounded-sm"
                       title={`Atribuído ao Agente ${assignedAgents.map(a => a.name).join(', ')}`}
                     >
-                      <Bot className="w-2.5 h-2.5" />
+                      <Bot className="w-3 h-3 text-[#06b6d4]" />
                       {assignedAgents.length}
                     </span>
                   )}
@@ -393,10 +393,10 @@ export const ExplorerPanel: React.FC<ExplorerPanelProps> = ({
                       onSelectFile(file.path);
                       engine.runScriptOnPrimaryAgent(file.path);
                     }}
-                    className="p-1 text-[#5e6ad2] hover:text-[#707eff] transition-all rounded-[4px]"
+                    className="p-1 text-[#22c55e] hover:text-[#4ade80] hover:scale-110 transition-all rounded"
                     title={`Executar Script no Agente Principal (${primaryAgent.name}) [Ctrl/Cmd + Enter]`}
                   >
-                    <Play className="w-3 h-3 fill-current" />
+                    <Play className="w-3.5 h-3.5 fill-current" />
                   </button>
 
                   <button
@@ -417,7 +417,7 @@ export const ExplorerPanel: React.FC<ExplorerPanelProps> = ({
       <div className="p-2 border-t border-[#23252a] bg-[#08090a] text-xs">
         <div className="text-[11px] font-medium text-[#8a8f98] mb-1 flex items-center justify-between">
           <span className="flex items-center gap-1">
-            <Bot className="w-3.5 h-3.5 text-[#8b5cf6]" />
+            <Bot className="w-3.5 h-3.5 text-[#06b6d4]" />
             Atribuir ao Agente:
           </span>
           <span className="text-[10px] text-[#d0d6e0] font-mono flex items-center gap-1" title="Agente Principal para o botão PLAY do Explorador">

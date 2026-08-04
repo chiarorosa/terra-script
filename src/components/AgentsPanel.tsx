@@ -41,11 +41,11 @@ export const AgentsPanel: React.FC<AgentsPanelProps> = ({ engine, vfs }) => {
         </div>
 
         {!isSys4Unlocked && (
-          <div className="bg-[#161718] border border-[#23252a] rounded-[10px] p-3 text-xs text-[#8a8f98] flex items-start gap-2.5">
-            <Info className="w-4 h-4 text-[#8b5cf6] shrink-0 mt-0.5" />
+          <div className="bg-[#161718] border border-[#23252a] pixel-box p-3 text-xs text-[#8a8f98] flex items-start gap-2.5">
+            <Info className="w-4 h-4 text-[#06b6d4] shrink-0 mt-0.5" />
             <div>
-              <span className="text-[#ffffff] font-medium block mb-0.5">💡 Desbloqueio de Telemetria no Código (SYS_4):</span>
-              Para ler esse dicionário de estatísticas chave-valor diretamente no seu código Python ou JavaScript usando <code className="text-[#8b5cf6] bg-[#0a0b0c] px-1 py-0.5 rounded border border-[#23252a]">sys.get_agent_stats()</code> ou <code className="text-[#8b5cf6] bg-[#0a0b0c] px-1 py-0.5 rounded border border-[#23252a]">agent.get_stats()</code>, pesquise o nó <strong className="text-[#ffffff]">Nível 4 de Sistemas e Depuração (SYS_4)</strong> na Árvore de Pesquisa.
+              <span className="text-[#ffffff] font-medium block mb-0.5 font-pixel-mono">💡 Desbloqueio de Telemetria no Código (SYS_4):</span>
+              Para ler esse dicionário de estatísticas chave-valor diretamente no seu código Python ou JavaScript usando <code className="text-[#06b6d4] bg-[#0a0b0c] px-1 py-0.5 rounded border border-[#23252a] font-mono">sys.get_agent_stats()</code> ou <code className="text-[#06b6d4] bg-[#0a0b0c] px-1 py-0.5 rounded border border-[#23252a] font-mono">agent.get_stats()</code>, pesquise o nó <strong className="text-[#ffffff]">Nível 4 de Sistemas e Depuração (SYS_4)</strong> na Árvore de Pesquisa.
             </div>
           </div>
         )}
@@ -57,12 +57,12 @@ export const AgentsPanel: React.FC<AgentsPanelProps> = ({ engine, vfs }) => {
             const harvested = stats.harvestedResources || createDefaultAgentStats().harvestedResources;
 
             const resourceList = [
-              { label: 'Fibra', key: 'fiber', value: harvested.fiber || 0, color: '#10b981' },
-              { label: 'Madeira', key: 'wood', value: harvested.wood || 0, color: '#f59e0b' },
-              { label: 'Raízes', key: 'roots', value: harvested.roots || 0, color: '#8b5cf6' },
-              { label: 'Frutas', key: 'fruits', value: harvested.fruits || 0, color: '#ec4899' },
-              { label: 'Energia', key: 'energy', value: harvested.energy || 0, color: '#eab308' },
-              { label: 'Biomassa', key: 'biomass', value: harvested.biomass || 0, color: '#06b6d4' },
+              { label: 'Fibra', key: 'fiber', value: harvested.fiber || 0, color: '#facc15' },
+              { label: 'Madeira', key: 'wood', value: harvested.wood || 0, color: '#22c55e' },
+              { label: 'Raízes', key: 'roots', value: harvested.roots || 0, color: '#f97316' },
+              { label: 'Frutas', key: 'fruits', value: harvested.fruits || 0, color: '#ef4444' },
+              { label: 'Energia', key: 'energy', value: harvested.energy || 0, color: '#06b6d4' },
+              { label: 'Biomassa', key: 'biomass', value: harvested.biomass || 0, color: '#a855f7' },
               { label: 'Cristais', key: 'crystals', value: harvested.crystals || 0, color: '#3b82f6' },
             ];
 
@@ -126,8 +126,8 @@ export const AgentsPanel: React.FC<AgentsPanelProps> = ({ engine, vfs }) => {
 
                   {/* Individual Statistics */}
                   <div className="space-y-2">
-                    <h3 className="text-[11px] font-medium text-[#ffffff] uppercase tracking-wider font-mono flex items-center gap-1.5 border-b border-[#1f2125] pb-1">
-                      <BarChart2 className="w-3.5 h-3.5 text-[#8b5cf6]" /> Estatísticas do Agente
+                    <h3 className="text-[11px] font-medium text-[#ffffff] uppercase tracking-wider font-pixel-mono flex items-center gap-1.5 border-b border-[#1f2125] pb-1">
+                      <BarChart2 className="w-3.5 h-3.5 text-[#06b6d4]" /> Estatísticas do Agente
                     </h3>
                     
                     <div className="grid grid-cols-2 gap-2 text-xs font-mono">

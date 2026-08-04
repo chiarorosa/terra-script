@@ -185,7 +185,7 @@ export const TechTreeModal: React.FC<TechTreeModalProps> = ({ engine, onOpenGuid
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {renderBranch('AUTOMATION', 'Automação e Linguagem', <Cpu className="w-4 h-4" />, 'text-[#02b8cc]')}
           {renderBranch('AGRONOMY', 'Agronomia e Culturas', <Sprout className="w-4 h-4" />, 'text-[#27a644]')}
-          {renderBranch('SYSTEMS', 'Sistemas e Depuração', <Terminal className="w-4 h-4" />, 'text-[#8b5cf6]')}
+          {renderBranch('SYSTEMS', 'Sistemas e Depuração', <Terminal className="w-4 h-4" />, 'text-[#06b6d4]')}
           {renderBranch('SCALE', 'Escala e Expansão de Terreno', <Maximize2 className="w-4 h-4" />, 'text-[#d0d6e0]')}
         </div>
       </div>

@@ -1697,7 +1697,7 @@ export const World3DCanvas: React.FC<World3DCanvasProps> = ({ engine }) => {
                 inspectedTile.crop === 'TREE' ? 'text-[#a16207]' :
                 inspectedTile.crop === 'FRUIT_COLONY' ? 'text-[#eb5757]' :
                 inspectedTile.crop === 'ENERGY_FLOWER' ? 'text-[#02b8cc]' :
-                inspectedTile.crop === 'GRADED_PLANT' ? 'text-[#8b5cf6]' :
+                inspectedTile.crop === 'GRADED_PLANT' ? 'text-[#a855f7]' :
                 'text-slate-300'
               }`}>{inspectedTile.crop}</span>
             </div>
