@@ -909,7 +909,7 @@ export class GameEngine {
       this.resources.wood += yieldAmt;
       if (ag) ag.stats.harvestedResources.wood += yieldAmt;
     } else if (t.crop === 'TREE') {
-      const bonus = this.hasAdjacentCrop(x, y, 'TREE') ? 2 : 5;
+      const bonus = this.hasAdjacentCrop(x, y, 'TREE') ? 1 : 5;
       this.resources.wood += bonus;
       if (ag) ag.stats.harvestedResources.wood += bonus;
     } else if (t.crop === 'CULTIVATED_ROOT') {
