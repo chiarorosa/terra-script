@@ -76,6 +76,12 @@ export interface ApiItem {
  *    - Regra essencial: NENHUMA funcionalidade da API ou recurso de linguagem (if/else, loops, funções, variáveis) pode ser
  *      executado sem que a respectiva tecnologia esteja desbloqueada (`engine.isTechUnlocked(techId)`).
  * 
+ * 6. REGRAS OBRIGATÓRIAS DE FORMATAÇÃO DIDÁTICA E UI/UX NO GUIA (ESTRUTURA & LEGIBILIDADE):
+ *    - Todo conteúdo detalhado em `docDetail` DEVE ser obrigatoriamente estruturado em seções numeradas (ex: "1. NOME_DO_PASSO:\n• Ponto 1..."), com subtítulos em maiúsculas, marcadores ("•") e destaques de aviso ("ATENÇÃO:", "IMPORTANTE:", "Dica Tática/Estratégica:").
+ *    - NUNCA utilize blocos de texto corrido sem quebra de linhas e formatação visual ("muralhas de texto").
+ *    - NUNCA utilize emojis ou figuras genéricas (ex: 🌾, 🪵, ⚡) no texto do Guia. O jogo possui componentes visuais e badges dedicados para representar recursos e conceitos.
+ *    - LEGIBILIDADE E TIPOGRAFIA: A interface do Guia (`TutorialModal.tsx`) DEVE utilizar tamanhos de fonte confortáveis (`text-sm` para corpo, `text-xs` para pequenos rótulos/badges, e `text-base` para cabeçalhos/passos) para garantir leitura agradável ao jogador sem forçar a vista.
+ * 
  * =========================================================================
  */
 export const API_ITEM_TEMPLATE_SAMPLE: ApiItem = {
@@ -997,52 +1003,52 @@ export const API_CATALOG: ApiItem[] = [
     id: 'mech_soil_water',
     namespace: 'mechanics',
     methodName: 'Solo, Umidade e Transições',
-    displayText: 'Mecânicas de Solo, Umidade e Transições v2.5.1',
+    displayText: 'Mecânicas do Solo, Umidade e Transições Agrícolas',
     signature: 'Regras Físicas e Estados do Terreno Agrícola',
-    pythonSnippet: '# Dica: Inspecione e prepare o solo conforme a cultura\nif world.ground() == "IRRIGATED":\n    farm.till()  # Converte IRRIGATED para TILLED\nelif world.ground() == "TILLED":\n    farm.water() # Converte TILLED para IRRIGATED',
-    jsSnippet: '// Dica: Inspecione e prepare o solo conforme a cultura\nif (world.ground() === "IRRIGATED") {\n  farm.till();  // Converte IRRIGATED para TILLED\n} else if (world.ground() === "TILLED") {\n  farm.water(); // Converte TILLED para IRRIGATED\n}',
-    description: 'Guia completo do solo: transições mutuamente exclusivas entre TILLED e IRRIGATED e exigências das plantas.',
+    pythonSnippet: '# Inspecione e prepare o solo antes de semear\nif world.ground() == "NATURAL":\n    farm.water()  # Eleva umidade a 100%\n    farm.till()   # Converte para Solo Arado (TILLED) mantendo umidade alta!',
+    jsSnippet: '// Inspecione e prepare o solo antes de semear\nif (world.ground() === "NATURAL") {\n  farm.water(); // Eleva umidade a 100%\n  farm.till();  // Converte para Solo Arado (TILLED) mantendo umidade alta!\n}',
+    description: 'Guia didático do solo: os 4 tipos de terreno, regras físicas de umidade/evaporação, transições mutuamente exclusivas e métodos de inspeção.',
     techId: 'AGRO_1',
     category: 'Mecânicas de Jogo',
-    docDetail: 'O solo na fazenda possui 4 estados principais: NATURAL (terreno virgem), TILLED (arado), IRRIGATED (irrigado) e SOAKED (encharcado). As ações farm.till() e farm.water() alteram o estado do solo: se um solo estiver IRRIGATED, executar farm.till() anula a irrigação e o transforma em TILLED. Se o solo estiver TILLED, executar farm.water() anula o estado arado e o transforma em IRRIGATED. Culturas como Raízes Cultivadas (CULTIVATED_ROOT) exigem exclusivamente Solo Arado (TILLED) para crescer.',
-    exampleCode: 'if world.ground() != "TILLED":\n    farm.till()\nfarm.plant("CULTIVATED_ROOT")',
+    docDetail: 'Passo a Passo das Regras Físicas e Estados do Solo:\n\n1. OS 4 TIPOS DE TERRENO:\n• NATURAL (Solo Virgem): Estado inicial padrão da terra. Aceita apenas cultivos básicos (Fibra Selvagem WILD_FIBER e Arbusto WOODY_BUSH).\n• TILLED (Solo Arado): Criado executando farm.till(). Requisito OBRIGATÓRIO para cultivar Raízes Cultivadas (CULTIVATED_ROOT) e Árvores Nobres (TREE). Em solo Natural ou Irrigado, o crescimento dessas plantas fica congelado em 0%.\n• IRRIGATED (Solo Irrigado): Criado executando farm.water(). Eleva instantaneamente a umidade para 100% (1.0). Acelera a velocidade de crescimento de todas as culturas em até +60%. Se a umidade cair para 25% (0.25) ou menos devido à evaporação, reverte automaticamente para terreno NATURAL.\n• SOAKED (Solo Encharcado): Ocorre ao irrigar (farm.water()) solo que já tem umidade > 95% (0.95). Destrói a cultura no bloco e evapora o excesso de água até voltar a IRRIGATED.\n\n2. TRANSIÇÕES MUTUAMENTE EXCLUSIVAS (TILLED vs IRRIGATED):\n• Executar farm.till() em solo IRRIGATED cancela a irrigação e o converte em TILLED (Solo Arado).\n• Executar farm.water() em solo TILLED cancela o estado arado e o converte em IRRIGATED.\n• Dica Tática/Estratégica: Para obter solo arado com máxima hidratação, irrigue primeiro (farm.water()) e are em seguida (farm.till()). O solo ficará em estado TILLED com umidade 1.0 (100%)!\n\n3. MÉTODOS DE PROGRAMAÇÃO PARA VERIFICAR O SOLO (PESQUISA SYS_2):\nPara tomar decisões inteligentes no seu script e não gastar ações em vão, pesquise "Sensores Básicos" (SYS_2) na Árvore de Pesquisas. Isso libera:\n• world.ground(): Retorna o tipo de solo ("NATURAL", "TILLED", "IRRIGATED", "SOAKED", "PRESTIGE").\n• world.moisture(): Retorna o nível numérico decimal da umidade (0.0 a 1.0).\n• world.entity(): Retorna a espécie vegetal no bloco ("NONE", "WILD_FIBER", etc.). [ATENÇÃO: Nunca use world.crop(), pois esse método não existe na API do jogo!]',
+    exampleCode: 'if world.ground() == "NATURAL":\n    farm.water()\n    farm.till()\nfarm.plant("CULTIVATED_ROOT")',
     parameters: [],
     returns: {
       type: 'conceito',
-      description: 'Compreensão das regras de solo do ambiente.'
+      description: 'Compreensão completa das regras e estados físicos do solo.'
     },
     usabilityNotes: [
-      'Solo Arado (TILLED): Necessário exclusivamente para Raízes Cultivadas (CULTIVATED_ROOT). Irrigar o solo arado (farm.water()) cancela o estado TILLED e o transforma em IRRIGATED.',
-      'Solo Irrigado (IRRIGATED): Eleva a umidade a 100% e acelera o crescimento de fibras e arbustos. Arar o solo irrigado (farm.till()) cancela o estado IRRIGATED e o transforma em TILLED.',
-      'Se a umidade de um bloco IRRIGATED cair para <= 25%, ele reverte para NATURAL.',
-      'Irrigar solo com umidade > 95% faz o solo ficar encharcado (SOAKED) e destrói a cultura atual.'
+      '1. Pesquise Sensores Básicos (SYS_2) na Árvore de Pesquisas para desbloquear world.ground(), world.moisture() e world.entity(). Sem eles, seu robô executa ações às cegas.',
+      '2. Ordem Ideal de Preparação de Solo Arado: A sequência recomendada para Raízes e Árvores é farm.water() -> farm.till() -> farm.plant("CULTIVATED_ROOT").',
+      '3. Evite Encharcar: Não irrigue solo com umidade acima de 95% para não destruir sua lavoura.',
+      '4. Quer saber os detalhes e parâmetros de cada função de solo? Consulte os tópicos dedicados farm.till(), farm.water() e world.ground() na categoria de Comandos da Fazenda e Sensores.'
     ],
-    expectedOutput: 'Otimização de preparação de solo e irrigação no código.'
+    expectedOutput: 'Decisões otimizadas no código para preparação de solo e manejo hidráulico.'
   },
   {
     id: 'mech_crop_growth',
     namespace: 'mechanics',
     methodName: 'Crescimento e Colheita das Culturas',
-    displayText: 'Sinergia e Regras de Crescimento das Plantas v2.5.1',
+    displayText: 'Crescimento, Taxas de Maturação e Rendimentos Agrícolas',
     signature: 'Mecânicas de Maturação e Rendimento',
-    pythonSnippet: '# Padrão de verificação de maturação e medição antes de colher\nif farm.can_harvest():\n    if world.crop() == "ENERGY_FLOWER" and world.measure() < 70:\n        pass # Aguarda o pico de energia!\n    else:\n        farm.harvest()',
-    jsSnippet: '// Padrão de verificação de maturação e medição antes de colher\nif (farm.can_harvest()) {\n  if (world.crop() === "ENERGY_FLOWER" && world.measure() < 70) {\n    // Aguarda o pico de energia!\n  } else {\n    farm.harvest();\n  }\n}',
-    description: 'Guia detalhado de solo, maturação e rendimentos para as 6 culturas principais.',
+    pythonSnippet: '# Verificação didática de maturação com world.entity() e world.measure()\nif farm.can_harvest():\n    if world.entity() == "ENERGY_FLOWER" and world.measure() < 70:\n        pass  # Aguarda a flor atingir o pico de energia!\n    else:\n        farm.harvest()',
+    jsSnippet: '// Verificação didática de maturação com world.entity() e world.measure()\nif (farm.can_harvest()) {\n  if (world.entity() === "ENERGY_FLOWER" && world.measure() < 70) {\n    // Aguarda a flor atingir o pico de energia!\n  } else {\n    farm.harvest();\n  }\n}',
+    description: 'Guia completo de maturação (0% a 100%), taxas base por tick, multiplicadores de umidade, exigências de solo e rendimentos das culturas.',
     techId: 'AGRO_1',
     category: 'Mecânicas de Jogo',
-    docDetail: 'Regras e rendimentos das culturas no v2.5.1:\n1. Grama Selvagem (WILD_FIBER): +1 Fibra. Cresce em qualquer solo e surge espontaneamente em terrenos desocupados.\n2. Arbusto de Madeira (WOODY_BUSH): +1 Madeira. Crescimento rápido em qualquer solo.\n3. Raízes Cultivadas (CULTIVATED_ROOT): +2 Raízes. Exige EXCLUSIVAMENTE Solo Arado (TILLED). Em solo NATURAL ou IRRIGATED, o crescimento fica zerado (0%).\n4. Árvore Nobre (TREE): +5 Madeira em xadrez sem vizinhos / +2 Madeira com vizinho. Exige EXCLUSIVAMENTE Solo Arado (TILLED).\n5. Colônia de Frutas (FRUIT_COLONY): +4 Frutas base +2 por vizinho maduro (até 12 Frutas por lote em bloco 3x3). Requer umidade >= 75%.\n6. Flor de Energia (ENERGY_FLOWER): +1 a +9 Energia conforme o pico de oscilação medido com world.measure(). Requer umidade >= 75%.',
-    exampleCode: 'if farm.can_harvest():\n    farm.harvest()',
+    docDetail: 'Passo a Passo do Sistema Agrícola e Maturação:\n\n1. CICLO DE CRESCIMENTO (% DE MATURAÇÃO):\n• Toda semente inicia com 0% de crescimento (ou 30% em brotos selvagens espontâneos).\n• A cada tick da simulação, a planta acumula uma % de crescimento até atingir exatamente 100% (Maturação Completa).\n• Apenas quando a planta atinge 100%, o sensor farm.can_harvest() retorna true e farm.harvest() colhe o recurso. Tentativas de colheita antes dos 100% falham sem conceder itens.\n\n2. TAXAS BASE E EXIGÊNCIAS POR ESPÉCIE (% POR TICK):\n• Fibra Selvagem (WILD_FIBER): +5% por tick. Cresce em qualquer solo. Rende +1 Fibra.\n• Arbusto de Madeira (WOODY_BUSH): +3% por tick. Cresce em qualquer solo. Rende +1 Madeira.\n• Raízes Cultivadas (CULTIVATED_ROOT): +4% por tick EXCLUSIVAMENTE em Solo Arado (TILLED). Em solo Natural ou Irrigado, taxa = 0% (crescimento congelado!). Rende +2 Raízes.\n• Árvores Nobres (TREE): +2% por tick sem vizinho / +1% com vizinho. Exige EXCLUSIVAMENTE Solo Arado (TILLED). Rende +5 Madeiras sem vizinhos ou +2 com vizinho (Padrão Xadrez recomendado).\n• Colônia de Frutas (FRUIT_COLONY): +2% por tick. Exige Umidade >= 75% (0.75). Rende +4 Frutas base +2 por colônia vizinha madura (até 12 Frutas por bloco em grade 3x3!).\n• Flor de Energia (ENERGY_FLOWER): +2% por tick. Exige Umidade >= 75% (0.75). Oscila energia entre 10 e 90. Rende de +1 a +9 Energias ao colher no pico lido com world.measure().\n• Planta Graduada (GRADED_PLANT): +2% por tick. Exige Umidade >= 75%. Possui notas de 1 a 9 lidas com world.measure(). Ordene com farm.swap() para bônus de Biomassa.\n\n3. MULTIPLICADOR DE UMIDADE NO CRESCIMENTO:\n• Umidade 0.5 (50%): Velocidade padrão 1.0x.\n• Umidade > 0.5: Acelera até +60% (em 100% de umidade, velocidade = 1.6x!).\n• Umidade < 0.5: Desacelera o crescimento.\n• Umidade <= 0.25: O crescimento para totalmente (0%).\n• Atenção: Frutas, Flores e Graduadas PARAM de crescer se a umidade for menor que 75% (0.75)!\n\n4. MÉTODOS DA API E CORREÇÃO OBRIGATÓRIA:\n• Use world.entity() para consultar qual planta está no bloco. IMPORTANTE: O método world.crop() NÃO EXISTE na API do jogo!\n• Use world.measure() (Pesquisa SYS_3) para ler valores de energia e notas graduadas.',
+    exampleCode: 'if farm.can_harvest():\n    if world.entity() == "ENERGY_FLOWER":\n        if world.measure() >= 70:\n            farm.harvest()\n    else:\n        farm.harvest()',
     parameters: [],
     returns: {
       type: 'conceito',
-      description: 'Regras de maximização de rendimentos agrícolas.'
+      description: 'Regras para maximização do rendimento das safras.'
     },
     usabilityNotes: [
-      'Grama Selvagem e Arbustos: Crescem em qualquer solo (NATURAL, TILLED, IRRIGATED).',
-      'Raízes e Árvores: Requerem OBRIGATORIAMENTE Solo Arado (TILLED). Dica: irrigue antes (water) e are depois (till) para manter umidade alta no Solo Arado.',
-      'Frutas e Flores: Exigem umidade >= 75%. Frutas rendem bônus quando plantadas juntas; Flores oscilam energia e devem ser colhidas no pico lido com world.measure().'
+      '1. Quer entender por que liberar novas plantas? Cada cultura produz matérias-primas exclusivas necessárias para avançar na Árvore de Pesquisas e desbloquear robôs mais poderosos.',
+      '2. Desbloqueie Medição de Lotes (SYS_3) para conseguir consultar picos de energia com world.measure() e maximizar a colheita de energia.',
+      '3. Para ver a assinatura completa de plantio e colheita, navegue até farm.plant() e farm.harvest() na barra lateral.'
     ],
-    expectedOutput: 'Aumento expressivo na taxa de colheita e acúmulo de recursos.'
+    expectedOutput: 'Aumento expressivo na eficiência de cultivo e acúmulo de matérias-primas.'
   },
   {
     id: 'mech_world_change',
@@ -1050,34 +1056,36 @@ export const API_CATALOG: ApiItem[] = [
     methodName: 'Mudança do Mundo (World Change)',
     displayText: 'Conceito: Mudança do Mundo (World Change)',
     signature: 'Mecânica Evolutiva de Transformação do Terreno',
-    pythonSnippet: '',
-    jsSnippet: '',
-    description: 'Entenda o conceito de Mudança do Mundo: transformações dinâmicas e reestruturações permanentes do ambiente acionadas por marcos tecnológicos.',
+    pythonSnippet: '# Exemplo de verificação da estrutura gerada pela Mudança do Mundo\nif world.ground() == "PRESTIGE":\n    print("Encontrado o Bloco de Prestígio gerado pela Mudança do Mundo!")',
+    jsSnippet: '// Exemplo de verificação da estrutura gerada pela Mudança do Mundo\nif (world.ground() === "PRESTIGE") {\n  console.log("Encontrado o Bloco de Prestígio gerado pela Mudança do Mundo!");\n}',
+    description: 'Entenda o conceito de Mudança do Mundo: transformações dinâmicas e reestruturações do ambiente acionadas por marcos tecnológicos.',
     techId: 'AUTO_2',
     category: 'Mecânicas de Jogo',
-    docDetail: 'A Mudança do Mundo (World Change) é um conceito central do ecossistema do jogo. Conforme o Programador conclui marcos de pesquisa (como finalizar todas as 4 pesquisas de Nível 1), o ambiente planetário passa por reestruturações físicas permanentes em tempo real. Cada Mudança do Mundo altera a matriz da fazenda, introduz novos edifícios, áreas de deposição, perigos ambientais ou oportunidades de automação. A primeira Mudança do Mundo gera o Bloco Dourado de Prestígio, e pesquisas futuras introduzirão novas expansões e transformações inéditas no ecossistema do jogo.',
-    exampleCode: '',
+    docDetail: 'Passo a Passo da Mudança do Mundo no TerraScript:\n\n1. O QUE É A MUDANÇA DO MUNDO?\n• É um marco de transformação física e climática do planeta. Conforme você conclui fases da Árvore de Pesquisa (por exemplo, ao finalizar todas as 4 pesquisas essenciais de Nível 1: AUTO_2, AGRO_2, SYS_2, SCALE_2), o motor de simulação dispara um evento de reestruturação do terreno.\n\n2. O QUE ACONTECE QUANDO O MUNDO MUDA?\n• O mapa se reconfigura e novas estruturas aparecem no ambiente 3D.\n• A 1ª Mudança do Mundo gera o Bloco Dourado de Prestígio no centro da fazenda, um terminal central onde você troca suas safras agrícolas por Pontos de Prestígio.\n• Futuras Mudanças do Mundo introduzirão novas expansões de bioma e recursos inéditos.\n\n3. SEUS CÓDIGOS E RECURSOS ESTÃO SEGUROS!\n• Fique tranquilo! A Mudança do Mundo NÃO apaga nenhum arquivo de código do seu editor, não altera seu inventário de recursos, nem reseta suas pesquisas conquistadas. É uma evolução puramente cumulativa!\n\n4. COMO IDENTIFICAR E TIRAR PROVEITO:\n• Acompanhe as notificações no topo da tela e a barra de progresso do Guia ao concluir pesquisas.\n• O evento abre novos objetivos e desbloqueia o sistema de Prestígio no painel inferior e na API (farm.prestige()).',
+    exampleCode: 'if world.ground() == "PRESTIGE":\n    farm.prestige("fiber", 50)',
     parameters: [],
-    returns: undefined,
+    returns: {
+      type: 'conceito',
+      description: 'Compreensão dos marcos de evolução do planeta.'
+    },
     usabilityNotes: [
-      'As Mudanças do Mundo são eventos cumulativos e permanentes no progresso da sua frota.',
-      'Nenhum arquivo de código no editor, inventário ou agente autônomo é perdido quando o mundo se transforma.',
-      'Acompanhe os alertas em tela para identificar as novas áreas ou recursos introduzidos por cada transformação.'
+      '1. Acompanhe a barra de progresso no cabeçalho do Guia de API e na Árvore de Pesquisas para saber quais tecnologias faltam para disparar a próxima Mudança do Mundo.',
+      '2. Após a 1ª Mudança do Mundo, navegue até a célula metálica dourada do mapa para começar a depositar recursos com o comando farm.prestige().'
     ],
-    expectedOutput: 'Transformação do mapa e surgimento de novas estruturas.'
+    expectedOutput: 'Transformação do mapa e surgimento de novas estruturas industriais.'
   },
   {
     id: 'mech_prestige_block',
     namespace: 'mechanics',
     methodName: 'Bloco de Prestígio (Prestige Block)',
-    displayText: 'Bloco de Prestígio (Prestige Block)',
+    displayText: 'Bloco de Prestígio e Sistema de Ascensão',
     signature: 'farm.prestige(recurso, quantidade)',
     pythonSnippet: 'if world.ground() == "PRESTIGE":\n    farm.prestige("fiber", 50)',
     jsSnippet: 'if (world.ground() === "PRESTIGE") {\n  farm.prestige("fiber", 50);\n}',
-    description: 'Estrutura metálica dourada gerada na fazenda após a 1ª Mudança do Mundo para entrega de colheitas e ganho de Pontos de Prestígio.',
+    description: 'Terminal de oferenda dourado gerado na fazenda após a 1ª Mudança do Mundo para conversão de colheitas em Pontos e Níveis de Prestígio.',
     techId: 'AUTO_2',
     category: 'Mecânicas de Jogo',
-    docDetail: 'O Bloco de Prestígio é a primeira estrutura manifestada através do evento de Mudança do Mundo. Trata-se de um lote metálico dourado que atua como terminal de reciclagem e oferenda. Ao mover seu Agente até esta célula e executar farm.prestige(), os recursos colhidos são convertidos em Pontos de Prestígio. Elevar o Nível de Prestígio desbloqueia multiplicadores passivos permanentes de velocidade de cultivo e rendimento de colheita.',
+    docDetail: 'Passo a Passo do Funcionamento do Bloco de Prestígio:\n\n1. LOCALIZANDO O BLOCO DE PRESTÍGIO:\n• Após a 1ª Mudança do Mundo, surge um lote metálico dourado reluzente na fazenda.\n• Esse bloco é indestrutível: não é afetado por world.clear(), não seca, não encharca e não aceita sementes.\n• No seu código, você pode detectar a célula exata testando: if world.ground() == "PRESTIGE":.\n\n2. COMO FAZER ENTREGAS COM farm.prestige():\n• Posicione qualquer nave agente sobre o Bloco de Prestígio.\n• Execute o comando farm.prestige(recurso, quantidade) — por exemplo: farm.prestige("fiber", 100) ou farm.prestige("wood", 50).\n• Os recursos informados são removidos do seu inventário e convertidos em Pontos de Prestígio.\n\n3. SUBINDO NÍVEIS E GANHANDO BÔNUS PASSIVOS:\n• Ao acumular Pontos de Prestígio suficientes para preencher a barra de experiência, o Nível de Prestígio do jogador sobe.\n• Cada Nível de Prestígio concede bônus passivos permanentes de velocidade de cultivo e eficiência em toda a fazenda!\n\n4. COMO AUTOMATIZAR A LOGÍSTICA DE PRESTÍGIO:\n• Quando você desbloquear múltiplos agentes (pesquisas SCALE_5 e SCALE_8), você pode dedicar um robô especialista em logística: ele coleta safras pela fazenda, desloca-se até a célula "PRESTIGE" e executa farm.prestige() de forma 100% automatizada e contínua.',
     exampleCode: 'if world.ground() == "PRESTIGE":\n    farm.prestige("wood", 100)',
     parameters: [
       {
@@ -1099,31 +1107,36 @@ export const API_CATALOG: ApiItem[] = [
       description: 'Retorna true se a entrega foi aceita e convertida em pontos de prestígio.'
     },
     usabilityNotes: [
-      'Programe robôs autônomos dedicados à logística para transportar materiais até o Bloco de Prestígio continuamente.',
-      'Consulte world.ground() == "PRESTIGE" para detectar a célula de prestígio dinamicamente no seu código.'
+      '1. Requisitos: O comando farm.prestige() só funciona quando o agente está exatamente posicionado sobre a célula com world.ground() == "PRESTIGE".',
+      '2. Recursos Aceitos: "fiber", "wood", "roots", "fruits", "energy", "biomass", "crystals".',
+      '3. Para ver a assinatura completa do método e seus tipos de parâmetros, consulte a página dedicada farm.prestige() na categoria Comandos da Fazenda.'
     ],
-    expectedOutput: 'Recursos consumidos e Pontos de Prestígio concedidos.'
+    expectedOutput: 'Recursos consumidos e Pontos e Níveis de Prestígio concedidos.'
   },
   {
     id: 'mech_scale_expansion',
     namespace: 'mechanics',
     methodName: 'Expansão de Terreno & Frotas (Scale)',
-    displayText: 'Expansão de Terreno & Naves Agentes',
+    displayText: 'Expansão de Terreno e Frotas de Agentes Autônomos',
     signature: 'Aumento da Matriz Agrícola e Desbloqueio de Múltiplas Naves',
-    pythonSnippet: '',
-    jsSnippet: '',
-    description: 'Expanda o tamanho da matriz agrícola da fazenda e libere novas naves robóticas autônomas para executar scripts em paralelo.',
+    pythonSnippet: '# Código adaptativo usando dimensões dinâmicas do mapa\nlargura = world.width()\naltura = world.height()\nprint("Grade atual:", largura, "x", altura)',
+    jsSnippet: '// Código adaptativo usando dimensões dinâmicas do mapa\nconst largura = world.width();\nconst altura = world.height();\nconsole.log("Grade atual:", largura, "x", altura);',
+    description: 'Como expandir as dimensões da matriz agrícola (de 1x1 até 12x12) e liberar naves agentes robóticas para execução paralela de scripts.',
     techId: 'SCALE_1',
     category: 'Mecânicas de Jogo',
-    docDetail: 'Conforme novas tecnologias do ramo de Escala (SCALE) são pesquisadas na Árvore de Pesquisa, a dimensão da matriz da fazenda é ampliada dinamicamente (variando de 1x1 até 12x12). Além disso, pesquisas como "Segundo Agente" e "Terceiro Agente" liberam novas naves autônomas na frota (Gepeto, Gemilson), permitindo execução concorrente de múltiplos arquivos Python/JavaScript em paralelo.',
-    exampleCode: '',
+    docDetail: 'Passo a Passo de Expansão e Frotas de Agentes:\n\n1. NÍVEIS DE EXPANSÃO DE TERRENO (RAMO ESCALA / SCALE):\n• O jogo começa com uma Micro Fazenda 1x1 (SCALE_1).\n• Pesquisando o ramo Escala (SCALE) na Árvore de Pesquisas, você expande o terreno em tempo real:\n  - SCALE_1: 1x1 (1 bloco)\n  - SCALE_2: 1x3 (Corredor horizontal de 3 blocos)\n  - SCALE_3: 3x3 (Matriz quadrada de 9 blocos)\n  - SCALE_4: 5x5 (Fazenda Expandida com 25 blocos)\n  - SCALE_6: 7x7 (Grade Industrial com 49 blocos)\n  - SCALE_7: 9x9 (Matriz Complexa com 81 blocos)\n  - SCALE_9: 12x12 (Mega Zona Agrícola com 144 blocos)\n\n2. ESCREVENDO CÓDIGOS GENÉRICOS PARA QUALQUER TAMANHO DE TERRENO:\n• Em vez de fixar números no código como for i in range(3):, use os sensores dinâmicos do mundo (Pesquisa SYS_2):\n  - world.width(): Retorna a largura total da grade.\n  - world.height(): Retorna a altura total da grade.\n  - world.x() e world.y(): Retornam a posição atual do seu robô.\n• Dessa forma, quando você pesquisar uma expansão de terreno, seu código continuará cobrindo 100% do mapa sem que você precise reescrevê-lo!\n\n3. DESBLOQUEANDO A FROTA DE NAVES AGENTES:\n• SCALE_5 (Segundo Agente): Desbloqueia a Nave Agente #2 (Gepeto), associada ao arquivo checkerboard.py.\n• SCALE_8 (Terceiro Agente): Desbloqueia a Nave Agente #3 (Gemilson), associada ao seu arquivo no editor.\n• Cada nave agente possui seu próprio contexto de execução e roda seu arquivo de código em paralelo!\n\n4. ORQUESTRAÇÃO E COMUNICAÇÃO INTER-AGENTES (IPC - AUTO_6):\n• Com múltiplos agentes, você pode desbloquear a pesquisa Comunicação Inter-Agentes (AUTO_6).\n• Use sys.send(agentId, mensagem) e sys.receive() para sincronizar tarefas complexas em equipe (ex: Agente #1 prepara o solo e avisa o Agente #2 para plantar).',
+    exampleCode: 'largura = world.width()\naltura = world.height()\nfor y in range(altura):\n    for x in range(largura):\n        if farm.can_harvest():\n            farm.harvest()\n        world.move("RIGHT")\n    world.move("FORWARD")',
     parameters: [],
-    returns: undefined,
+    returns: {
+      type: 'conceito',
+      description: 'Estratégia de escala de terreno e concorrência de agentes.'
+    },
     usabilityNotes: [
-      'Naves adicionais possuem arquivos de código próprios atrelados no editor de código.',
-      'Utilize IPC (Comunicação Inter-Agentes) para coordenar o envio de mensagens e sincronizar tarefas entre as naves.'
+      '1. Por que focar em Escala?: Expandir o terreno e adicionar mais agentes multiplica dramaticamente a taxa de colheita e acúmulo de recursos por segundo.',
+      '2. Evite Erros de Borda: Sempre combine world.move(direcao) com world.can_move(direcao) ou checagens de world.x() < world.width() - 1 para não gastar chamadas contra as paredes do mapa.',
+      '3. Consulte os métodos individuais world.width(), world.height(), world.move() e sys.send() na barra lateral.'
     ],
-    expectedOutput: 'Matriz expandida e novas naves operacionais.'
+    expectedOutput: 'Aumento de dimensão da matriz e execução paralela com múltiplos agentes.'
   }
 ];
 

@@ -20,12 +20,191 @@ import {
   Sparkles,
   HelpCircle,
   FileText,
-  GraduationCap
+  GraduationCap,
+  AlertTriangle,
+  Lightbulb
 } from 'lucide-react';
 import { GameEngine } from '../engine/GameEngine';
 import { VirtualFS } from '../engine/virtualFs';
 import { API_CATALOG, isTechUnlocked, getTechForApiItem, ApiItem, getPrimaryApiItemForTech } from '../engine/techApiMap';
 import { TechNode } from '../types/game';
+
+// Helper component to render formatted inline text with code highlights and badges
+const RenderFormattedInlineText: React.FC<{ text: string }> = ({ text }) => {
+  if (!text) return null;
+
+  const regex = /(`[^`]+`|\b(?:farm|world|sys)\.[a-zA-Z0-9_]+\(\)|"[A-Z_0-9]{2,}"|\[ATENÇÃO:[^\]]+\]|ATENÇÃO:|IMPORTANTE:|Dica Tática\/Estratégica:)/g;
+
+  const parts = text.split(regex);
+  return (
+    <span>
+      {parts.map((part, idx) => {
+        if (!part) return null;
+
+        if (part.startsWith('`') && part.endsWith('`')) {
+          return (
+            <code key={idx} className="px-2 py-0.5 mx-0.5 bg-[#08090a] border border-[#23252a] text-[#facc15] font-pixel-mono text-xs rounded">
+              {part.slice(1, -1)}
+            </code>
+          );
+        }
+
+        if (/(?:farm|world|sys)\.[a-zA-Z0-9_]+\(\)/.test(part)) {
+          return (
+            <code key={idx} className="px-2 py-0.5 mx-0.5 bg-[#08090a] border border-[#22c55e]/50 text-[#22c55e] font-pixel-mono text-xs font-bold rounded shadow-sm">
+              {part}
+            </code>
+          );
+        }
+
+        if (/^"[A-Z_0-9]{2,}"$/.test(part)) {
+          return (
+            <code key={idx} className="px-2 py-0.5 mx-0.5 bg-[#08090a] border border-[#3b82f6]/50 text-[#60a5fa] font-pixel-mono text-xs font-bold rounded">
+              {part}
+            </code>
+          );
+        }
+
+        if (part.startsWith('[ATENÇÃO:') || part === 'ATENÇÃO:' || part === 'IMPORTANTE:' || part === 'Dica Tática/Estratégica:') {
+          return (
+            <span key={idx} className="px-2 py-0.5 mx-0.5 bg-[#facc15]/15 border border-[#facc15]/40 text-[#facc15] font-bold font-pixel-mono text-xs rounded inline-flex items-center gap-1">
+              <AlertTriangle className="w-3.5 h-3.5 text-[#facc15] shrink-0" />
+              {part}
+            </span>
+          );
+        }
+
+        return <span key={idx}>{part}</span>;
+      })}
+    </span>
+  );
+};
+
+// Component to render docDetail into structured step cards, lists, and callout boxes
+const DidacticDocDetailRenderer: React.FC<{ docDetail: string }> = ({ docDetail }) => {
+  if (!docDetail) return null;
+
+  const sections = docDetail.split('\n\n').filter(s => s.trim().length > 0);
+
+  return (
+    <div className="space-y-3.5 font-pixel-body">
+      {sections.map((sectionText, sIdx) => {
+        const lines = sectionText.split('\n').filter(l => l.trim().length > 0);
+        if (lines.length === 0) return null;
+
+        const firstLine = lines[0].trim();
+        const numberedHeaderMatch = firstLine.match(/^(\d+)\.\s*(.*)/);
+
+        if (numberedHeaderMatch) {
+          const stepNum = numberedHeaderMatch[1];
+          const stepTitle = numberedHeaderMatch[2];
+          const bodyLines = lines.slice(1);
+
+          return (
+            <div key={sIdx} className="bg-[#0a0b0c] pixel-box p-4 border border-[#23252a] space-y-3">
+              <div className="flex items-center gap-2.5 pb-2.5 border-b border-[#23252a]">
+                <span className="px-2.5 py-1 bg-[#22c55e] text-[#052e16] font-pixel-header text-xs font-bold shrink-0 rounded-sm">
+                  PASSO {stepNum}
+                </span>
+                <h4 className="text-sm font-pixel-mono font-bold text-[#ffffff] uppercase tracking-wide">
+                  <RenderFormattedInlineText text={stepTitle} />
+                </h4>
+              </div>
+
+              <div className="space-y-2.5 pt-0.5 font-sans text-sm">
+                {bodyLines.map((line, lIdx) => {
+                  const trimmed = line.trim();
+
+                  if (trimmed.includes('ATENÇÃO:') || trimmed.includes('IMPORTANTE:') || trimmed.includes('Dica Tática/Estratégica:') || trimmed.includes('Fique tranquilo!')) {
+                    return (
+                      <div key={lIdx} className="p-3 bg-[#facc15]/10 border-l-4 border-[#facc15] rounded-r text-[#fef08a] space-y-1 my-2">
+                        <div className="flex items-center gap-1.5 font-pixel-mono font-bold text-xs text-[#facc15]">
+                          <AlertTriangle className="w-4 h-4 shrink-0 text-[#facc15]" />
+                          <span>RECOMENDAÇÃO TÁTICA</span>
+                        </div>
+                        <p className="leading-relaxed text-sm text-[#fef08a]">
+                          <RenderFormattedInlineText text={trimmed.replace(/^[•\s\d\.-]+/, '')} />
+                        </p>
+                      </div>
+                    );
+                  }
+
+                  if (trimmed.startsWith('•') || trimmed.startsWith('-')) {
+                    const cleanText = trimmed.replace(/^[•\-]\s*/, '');
+                    const titleMatch = cleanText.match(/^([^:]+):\s*(.*)/);
+
+                    return (
+                      <div key={lIdx} className="flex items-start gap-2.5 p-2.5 bg-[#141517] border border-[#23252a] rounded transition-all hover:border-[#22c55e]/30">
+                        <span className="w-2 h-2 rounded-full bg-[#22c55e] mt-2 shrink-0" />
+                        <div className="flex-1 leading-relaxed text-[#d0d6e0] text-sm">
+                          {titleMatch ? (
+                            <>
+                              <strong className="font-pixel-mono text-[#ffffff] mr-1 text-sm">
+                                <RenderFormattedInlineText text={titleMatch[1]} />:
+                              </strong>
+                              <RenderFormattedInlineText text={titleMatch[2]} />
+                            </>
+                          ) : (
+                            <RenderFormattedInlineText text={cleanText} />
+                          )}
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  if (line.startsWith('  ') || line.startsWith('\t')) {
+                    return (
+                      <div key={lIdx} className="ml-4 pl-2.5 border-l-2 border-[#3b82f6]/40 text-[#a0a6b0] font-pixel-mono text-xs py-0.5">
+                        <RenderFormattedInlineText text={trimmed} />
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <p key={lIdx} className="text-[#c0c6d0] text-sm leading-relaxed py-0.5">
+                      <RenderFormattedInlineText text={trimmed} />
+                    </p>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        }
+
+        return (
+          <div key={sIdx} className="p-3.5 bg-[#0a0b0c] pixel-box border border-[#23252a] space-y-2">
+            {lines.map((line, lIdx) => {
+              const trimmed = line.trim();
+              if (lIdx === 0 && lines.length > 1 && !trimmed.startsWith('•') && !trimmed.startsWith('-')) {
+                return (
+                  <h4 key={lIdx} className="text-sm font-pixel-mono font-bold text-[#22c55e] uppercase tracking-wider pb-1.5 border-b border-[#23252a]">
+                    <RenderFormattedInlineText text={trimmed} />
+                  </h4>
+                );
+              }
+
+              if (trimmed.startsWith('•') || trimmed.startsWith('-')) {
+                const cleanText = trimmed.replace(/^[•\-]\s*/, '');
+                return (
+                  <div key={lIdx} className="flex items-start gap-2 text-sm text-[#d0d6e0] leading-relaxed py-0.5">
+                    <span className="text-[#22c55e] font-bold shrink-0 mt-0.5">›</span>
+                    <div><RenderFormattedInlineText text={cleanText} /></div>
+                  </div>
+                );
+              }
+
+              return (
+                <p key={lIdx} className="text-sm text-[#d0d6e0] leading-relaxed font-sans">
+                  <RenderFormattedInlineText text={trimmed} />
+                </p>
+              );
+            })}
+          </div>
+        );
+      })}
+    </div>
+  );
+};
 
 interface TutorialModalProps {
   engine: GameEngine;
@@ -365,35 +544,54 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ engine, initialSel
             </div>
 
             {/* PILAR: DESCRIÇÃO DIDÁTICA */}
-            <div className="space-y-2">
-              <h3 className="text-xs font-bold font-mono text-[#27a644] uppercase tracking-wider flex items-center gap-1.5">
-                <FileText className="w-4 h-4 text-[#27a644]" />
-                Descrição Didática
-              </h3>
-              <div className="p-3.5 bg-[#161718] border border-[#23252a] rounded-[8px] text-xs text-[#d0d6e0] leading-relaxed">
-                <p className="mb-2 font-sans">{selectedItem.description}</p>
-                <p className="font-sans text-[#a0a6b0]">{selectedItem.docDetail}</p>
+            <div className="space-y-3.5">
+              <div className="flex items-center justify-between pb-2 border-b border-[#23252a]">
+                <h3 className="text-sm font-bold font-pixel-mono text-[#22c55e] uppercase tracking-wider flex items-center gap-2">
+                  <FileText className="w-4.5 h-4.5 text-[#22c55e]" />
+                  Descrição Didática, Conceitos e Regras
+                </h3>
+                <span className="text-xs font-pixel-mono text-[#8a8f98] uppercase tracking-wider">
+                  Guia Estruturado de Aprendizado
+                </span>
               </div>
+
+              {/* Visão Geral Curta */}
+              {selectedItem.description && (
+                <div className="p-3.5 bg-[#111214] border-l-4 border-[#22c55e] pixel-box space-y-1.5">
+                  <div className="flex items-center gap-2 text-xs font-pixel-mono text-[#22c55e] uppercase font-bold">
+                    <Info className="w-4 h-4 shrink-0" />
+                    <span>Visão Geral do Conceito</span>
+                  </div>
+                  <p className="text-sm text-[#e2e8f0] font-sans leading-relaxed">
+                    <RenderFormattedInlineText text={selectedItem.description} />
+                  </p>
+                </div>
+              )}
+
+              {/* Passo a Passo e Mecânicas Didáticas */}
+              {selectedItem.docDetail && (
+                <DidacticDocDetailRenderer docDetail={selectedItem.docDetail} />
+              )}
             </div>
 
             {/* PILAR: DECLARAÇÃO DA FUNÇÃO / SINTAXE (Somente se houver sintaxe válida) */}
             {((selectedItem.pythonSnippet && selectedItem.pythonSnippet.trim().length > 0) || 
               (selectedItem.jsSnippet && selectedItem.jsSnippet.trim().length > 0)) && (
-              <div className="space-y-2">
-                <h3 className="text-xs font-bold font-mono text-[#02b8cc] uppercase tracking-wider flex items-center gap-1.5">
-                  <Code className="w-4 h-4 text-[#02b8cc]" />
+              <div className="space-y-2.5">
+                <h3 className="text-sm font-bold font-pixel-mono text-[#02b8cc] uppercase tracking-wider flex items-center gap-2">
+                  <Code className="w-4.5 h-4.5 text-[#02b8cc]" />
                   Declaração e Assinatura do Método
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   
                   {/* Python Signature */}
                   {selectedItem.pythonSnippet && (
-                    <div className="p-3 bg-[#08090a] border border-[#23252a] rounded-[8px] space-y-1.5">
-                      <div className="flex items-center justify-between text-[11px] font-mono font-bold text-[#02b8cc]">
+                    <div className="p-3.5 bg-[#08090a] border border-[#23252a] rounded-[8px] space-y-2">
+                      <div className="flex items-center justify-between text-xs font-mono font-bold text-[#02b8cc]">
                         <span>Sintaxe Python</span>
-                        <span className="text-[10px] text-[#8a8f98]">.py</span>
+                        <span className="text-xs text-[#8a8f98]">.py</span>
                       </div>
-                      <pre className="p-2 bg-[#161718] rounded border border-[#23252a] text-xs font-mono text-[#ffffff] overflow-x-auto">
+                      <pre className="p-2.5 bg-[#161718] rounded border border-[#23252a] text-sm font-mono text-[#ffffff] overflow-x-auto">
                         <code>{selectedItem.pythonSnippet}</code>
                       </pre>
                     </div>
@@ -401,12 +599,12 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ engine, initialSel
 
                   {/* JS Signature */}
                   {selectedItem.jsSnippet && (
-                    <div className="p-3 bg-[#08090a] border border-[#23252a] rounded-[8px] space-y-1.5">
-                      <div className="flex items-center justify-between text-[11px] font-mono font-bold text-[#eab308]">
+                    <div className="p-3.5 bg-[#08090a] border border-[#23252a] rounded-[8px] space-y-2">
+                      <div className="flex items-center justify-between text-xs font-mono font-bold text-[#eab308]">
                         <span>Sintaxe JavaScript</span>
-                        <span className="text-[10px] text-[#8a8f98]">.js</span>
+                        <span className="text-xs text-[#8a8f98]">.js</span>
                       </div>
-                      <pre className="p-2 bg-[#161718] rounded border border-[#23252a] text-xs font-mono text-[#ffffff] overflow-x-auto">
+                      <pre className="p-2.5 bg-[#161718] rounded border border-[#23252a] text-sm font-mono text-[#ffffff] overflow-x-auto">
                         <code>{selectedItem.jsSnippet}</code>
                       </pre>
                     </div>
@@ -418,37 +616,37 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ engine, initialSel
 
             {/* PILAR: PARÂMETROS E TIPOS (Somente se houver parâmetros definidos) */}
             {selectedItem.parameters && selectedItem.parameters.length > 0 && (
-              <div className="space-y-2">
-                <h3 className="text-xs font-bold font-mono text-[#eab308] uppercase tracking-wider flex items-center gap-1.5">
-                  <Layers className="w-4 h-4 text-[#eab308]" />
+              <div className="space-y-2.5">
+                <h3 className="text-sm font-bold font-pixel-mono text-[#eab308] uppercase tracking-wider flex items-center gap-2">
+                  <Layers className="w-4.5 h-4.5 text-[#eab308]" />
                   Parâmetros e Tipos de Entrada
                 </h3>
 
                 <div className="overflow-x-auto border border-[#23252a] rounded-[8px] bg-[#161718]">
-                  <table className="w-full text-left border-collapse text-xs">
+                  <table className="w-full text-left border-collapse text-sm">
                     <thead>
-                      <tr className="bg-[#08090a] border-b border-[#23252a] text-[#8a8f98] font-mono text-[11px]">
-                        <th className="p-2.5 font-bold">Parâmetro</th>
-                        <th className="p-2.5 font-bold">Tipo</th>
-                        <th className="p-2.5 font-bold">Obrigatório</th>
-                        <th className="p-2.5 font-bold">Valores Aceitos</th>
-                        <th className="p-2.5 font-bold">Descrição</th>
+                      <tr className="bg-[#08090a] border-b border-[#23252a] text-[#8a8f98] font-mono text-xs">
+                        <th className="p-3 font-bold">Parâmetro</th>
+                        <th className="p-3 font-bold">Tipo</th>
+                        <th className="p-3 font-bold">Obrigatório</th>
+                        <th className="p-3 font-bold">Valores Aceitos</th>
+                        <th className="p-3 font-bold">Descrição</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-[#23252a] text-[#d0d6e0] font-sans">
                       {selectedItem.parameters.map((param, i) => (
                         <tr key={i} className="hover:bg-[#08090a]/50">
-                          <td className="p-2.5 font-mono font-bold text-[#ffffff]">{param.name}</td>
-                          <td className="p-2.5 font-mono text-[#02b8cc]">{param.type}</td>
-                          <td className="p-2.5 font-mono">
-                            <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${param.required ? 'bg-[#eb5757]/15 text-[#eb5757]' : 'bg-[#8a8f98]/15 text-[#8a8f98]'}`}>
+                          <td className="p-3 font-mono font-bold text-[#ffffff]">{param.name}</td>
+                          <td className="p-3 font-mono text-[#02b8cc]">{param.type}</td>
+                          <td className="p-3 font-mono">
+                            <span className={`px-2 py-0.5 rounded text-xs font-bold ${param.required ? 'bg-[#eb5757]/15 text-[#eb5757]' : 'bg-[#8a8f98]/15 text-[#8a8f98]'}`}>
                               {param.required ? 'SIM' : 'OPCIONAL'}
                             </span>
                           </td>
-                          <td className="p-2.5 font-mono text-[11px] text-[#eab308]">
+                          <td className="p-3 font-mono text-xs text-[#eab308]">
                             {param.allowedValues ? param.allowedValues.join(', ') : 'Qualquer valor válido'}
                           </td>
-                          <td className="p-2.5 text-[#a0a6b0]">{param.description}</td>
+                          <td className="p-3 text-[#a0a6b0]">{param.description}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -459,23 +657,23 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ engine, initialSel
 
             {/* PILAR: RETORNO E SAÍDA ESPERADA (Somente se houver retorno definido) */}
             {selectedItem.returns && selectedItem.returns.type !== 'conceito' && (
-              <div className="space-y-2">
-                <h3 className="text-xs font-bold font-mono text-[#ec4899] uppercase tracking-wider flex items-center gap-1.5">
-                  <Zap className="w-4 h-4 text-[#ec4899]" />
+              <div className="space-y-2.5">
+                <h3 className="text-sm font-bold font-pixel-mono text-[#ec4899] uppercase tracking-wider flex items-center gap-2">
+                  <Zap className="w-4.5 h-4.5 text-[#ec4899]" />
                   Retorno e Saída Esperada
                 </h3>
-                <div className="p-3.5 bg-[#161718] border border-[#23252a] rounded-[8px] space-y-2">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-mono font-bold text-[#ffffff]">Tipo do Retorno:</span>
-                    <span className="px-2 py-0.5 bg-[#ec4899]/15 text-[#ec4899] border border-[#ec4899]/30 rounded font-mono text-xs font-bold">
+                <div className="p-4 bg-[#161718] border border-[#23252a] rounded-[8px] space-y-2.5">
+                  <div className="flex items-center gap-2.5">
+                    <span className="text-sm font-mono font-bold text-[#ffffff]">Tipo do Retorno:</span>
+                    <span className="px-2.5 py-0.5 bg-[#ec4899]/15 text-[#ec4899] border border-[#ec4899]/30 rounded font-mono text-xs font-bold">
                       {selectedItem.returns.type}
                     </span>
                   </div>
-                  <p className="text-xs text-[#d0d6e0] font-sans leading-relaxed">
+                  <p className="text-sm text-[#d0d6e0] font-sans leading-relaxed">
                     <strong>Efeito no Mundo:</strong> {selectedItem.returns.description}
                   </p>
                   {selectedItem.expectedOutput && (
-                    <div className="p-2 bg-[#08090a] rounded border border-[#23252a] text-[11px] font-mono text-[#27a644]">
+                    <div className="p-2.5 bg-[#08090a] rounded border border-[#23252a] text-xs font-mono text-[#22c55e]">
                       Resultado em tela: {selectedItem.expectedOutput}
                     </div>
                   )}
@@ -485,43 +683,48 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ engine, initialSel
 
             {/* PILAR: USABILIDADE E CASOS DE USO (Somente se houver notas) */}
             {selectedItem.usabilityNotes && selectedItem.usabilityNotes.length > 0 && (
-              <div className="space-y-2">
-                <h3 className="text-xs font-bold font-mono text-[#8b5cf6] uppercase tracking-wider flex items-center gap-1.5">
-                  <Sparkles className="w-4 h-4 text-[#8b5cf6]" />
-                  Usabilidade & Casos de Uso Práticos
+              <div className="space-y-2.5">
+                <h3 className="text-sm font-bold font-pixel-mono text-[#8b5cf6] uppercase tracking-wider flex items-center gap-2">
+                  <Sparkles className="w-4.5 h-4.5 text-[#8b5cf6]" />
+                  Dicas de Usabilidade & Boas Práticas no Código
                 </h3>
-                <div className="p-3.5 bg-[#161718] border border-[#23252a] rounded-[8px] space-y-1.5">
-                  <ul className="list-disc list-inside text-xs text-[#d0d6e0] space-y-1.5 font-sans leading-relaxed">
-                    {selectedItem.usabilityNotes.map((note, i) => (
-                      <li key={i} className="leading-snug">{note}</li>
-                    ))}
-                  </ul>
+                <div className="grid grid-cols-1 gap-2.5">
+                  {selectedItem.usabilityNotes.map((note, i) => (
+                    <div key={i} className="p-3.5 bg-[#0a0b0c] pixel-box border border-[#23252a] flex items-start gap-3 text-sm text-[#d0d6e0] font-sans leading-relaxed transition-all hover:border-[#8b5cf6]/40">
+                      <span className="px-2 py-0.5 bg-[#8b5cf6]/15 text-[#a78bfa] border border-[#8b5cf6]/30 font-pixel-mono text-xs font-bold shrink-0 rounded">
+                        #{i + 1}
+                      </span>
+                      <div className="flex-1">
+                        <RenderFormattedInlineText text={note.replace(/^\d+\.\s*/, '')} />
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             )}
 
             {/* PILAR: EXEMPLO PRÁTICO EXECUTÁVEL (Somente se houver código de exemplo) */}
             {selectedItem.exampleCode && selectedItem.exampleCode.trim().length > 0 && (
-              <div className="space-y-2">
+              <div className="space-y-2.5">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-xs font-bold font-mono text-[#27a644] uppercase tracking-wider flex items-center gap-1.5">
-                    <Terminal className="w-4 h-4 text-[#27a644]" />
+                  <h3 className="text-sm font-bold font-pixel-mono text-[#22c55e] uppercase tracking-wider flex items-center gap-2">
+                    <Terminal className="w-4.5 h-4.5 text-[#22c55e]" />
                     Exemplo Prático de Script
                   </h3>
 
                   {/* Code Language Switcher */}
-                  <div className="flex items-center gap-1 bg-[#08090a] border border-[#23252a] p-0.5 rounded">
+                  <div className="flex items-center gap-1 bg-[#08090a] border border-[#23252a] p-1 rounded">
                     <button
                       onClick={() => setActiveCodeLang('python')}
-                      className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold transition-all ${
-                        activeCodeLang === 'python' ? 'bg-[#27a644] text-white' : 'text-[#8a8f98] hover:text-[#ffffff]'
+                      className={`px-2.5 py-1 rounded text-xs font-mono font-bold transition-all ${
+                        activeCodeLang === 'python' ? 'bg-[#22c55e] text-black' : 'text-[#8a8f98] hover:text-[#ffffff]'
                       }`}
                     >
                       Python
                     </button>
                     <button
                       onClick={() => setActiveCodeLang('javascript')}
-                      className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold transition-all ${
+                      className={`px-2.5 py-1 rounded text-xs font-mono font-bold transition-all ${
                         activeCodeLang === 'javascript' ? 'bg-[#eab308] text-black' : 'text-[#8a8f98] hover:text-[#ffffff]'
                       }`}
                     >
@@ -530,29 +733,29 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ engine, initialSel
                   </div>
                 </div>
 
-                <div className="p-3 bg-[#08090a] border border-[#23252a] rounded-[8px] relative group space-y-2">
-                  <div className="flex items-center justify-between border-b border-[#23252a] pb-2 text-[11px] font-mono text-[#8a8f98]">
+                <div className="p-3.5 bg-[#08090a] border border-[#23252a] rounded-[8px] relative group space-y-2.5">
+                  <div className="flex items-center justify-between border-b border-[#23252a] pb-2 text-xs font-mono text-[#8a8f98]">
                     <span>Script Prático ({activeCodeLang === 'python' ? 'Python' : 'JavaScript'})</span>
                     <button 
                       onClick={() => copyCode(selectedItem.exampleCode)}
-                      className="flex items-center gap-1 px-2 py-1 bg-[#161718] hover:bg-[#23252a] text-[#ffffff] rounded border border-[#23252a] text-xs transition-all active:scale-95"
+                      className="flex items-center gap-1.5 px-2.5 py-1 bg-[#161718] hover:bg-[#23252a] text-[#ffffff] rounded border border-[#23252a] text-xs transition-all active:scale-95 font-bold"
                       title="Copiar código para o clipboard"
                     >
                       {copiedSnippet === selectedItem.exampleCode ? (
                         <>
-                          <Check className="w-3.5 h-3.5 text-[#27a644]" />
-                          <span className="text-[#27a644]">Copiado!</span>
+                          <Check className="w-4 h-4 text-[#22c55e]" />
+                          <span className="text-[#22c55e]">Copiado!</span>
                         </>
                       ) : (
                         <>
-                          <Copy className="w-3.5 h-3.5 text-[#8a8f98]" />
+                          <Copy className="w-4 h-4 text-[#8a8f98]" />
                           <span>Copiar Código</span>
                         </>
                       )}
                     </button>
                   </div>
 
-                  <pre className="p-3 bg-[#161718] rounded border border-[#23252a] text-xs font-mono text-[#27a644] leading-relaxed overflow-x-auto">
+                  <pre className="p-3.5 bg-[#161718] rounded border border-[#23252a] text-sm font-mono text-[#22c55e] leading-relaxed overflow-x-auto">
                     <code>
                       {activeCodeLang === 'python' 
                         ? selectedItem.exampleCode 
@@ -565,30 +768,30 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ engine, initialSel
 
             {/* PILAR: VÍNCULO NA ÁRVORE DE TECNOLOGIAS */}
             {selectedTechNode && (
-              <div className="space-y-2 pt-2 border-t border-[#23252a]">
-                <h3 className="text-xs font-bold font-mono text-[#8a8f98] uppercase tracking-wider flex items-center gap-1.5">
-                  <FlaskConical className="w-4 h-4 text-[#27a644]" />
+              <div className="space-y-2.5 pt-3 border-t border-[#23252a]">
+                <h3 className="text-sm font-bold font-pixel-mono text-[#8a8f98] uppercase tracking-wider flex items-center gap-2">
+                  <FlaskConical className="w-4.5 h-4.5 text-[#22c55e]" />
                   Vínculo na Árvore de Tecnologias
                 </h3>
 
-                <div className="p-3.5 bg-[#161718] border border-[#23252a] rounded-[8px] flex flex-col md:flex-row md:items-center justify-between gap-3">
+                <div className="p-4 bg-[#161718] border border-[#23252a] rounded-[8px] flex flex-col md:flex-row md:items-center justify-between gap-3">
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
-                      <span className="font-bold text-xs text-[#ffffff] font-mono">{selectedTechNode.name}</span>
-                      <span className="text-[10px] font-mono text-[#8a8f98]">({selectedTechNode.id})</span>
-                      <span className="px-1.5 py-0.2 rounded text-[10px] font-mono bg-[#08090a] border border-[#23252a] text-[#27a644]">
+                      <span className="font-bold text-sm text-[#ffffff] font-mono">{selectedTechNode.name}</span>
+                      <span className="text-xs font-mono text-[#8a8f98]">({selectedTechNode.id})</span>
+                      <span className="px-2 py-0.5 rounded text-xs font-mono bg-[#08090a] border border-[#23252a] text-[#22c55e] font-bold">
                         Nível {selectedTechNode.tier}
                       </span>
                     </div>
-                    <p className="text-xs text-[#a0a6b0] font-sans">{selectedTechNode.description}</p>
+                    <p className="text-sm text-[#a0a6b0] font-sans">{selectedTechNode.description}</p>
                   </div>
 
                   {onNavigateToTab && (
                     <button
                       onClick={() => onNavigateToTab('research')}
-                      className="px-3 py-1.5 bg-[#238636] hover:bg-[#2ea043] text-white rounded text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm shrink-0 border border-[#3fb950]/30 active:scale-95"
+                      className="px-3.5 py-2 bg-[#238636] hover:bg-[#2ea043] text-white rounded text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm shrink-0 border border-[#3fb950]/30 active:scale-95"
                     >
-                      <FlaskConical className="w-3.5 h-3.5" />
+                      <FlaskConical className="w-4 h-4" />
                       <span>Ir para Pesquisa ({selectedTechNode.id})</span>
                     </button>
                   )}

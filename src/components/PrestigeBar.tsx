@@ -28,17 +28,17 @@ export const PrestigeBar: React.FC<PrestigeBarProps> = ({ engine }) => {
   }, []);
 
   return (
-    <div className="w-full bg-[#0f1011] border-y-2 border-[#23252a] px-3 py-1.5 flex items-center gap-3 text-xs select-none shrink-0 z-10 font-pixel-body relative">
+    <div className="w-full bg-[#0f1011] border-y-2 border-[#23252a] px-3.5 py-2 flex items-center gap-3.5 text-sm select-none shrink-0 z-10 font-pixel-body relative">
       {/* Prestige Level Badge */}
-      <div className="flex items-center gap-1.5 px-2.5 py-0.5 pixel-box-amber text-[#ffffff] font-medium text-xs shrink-0">
-        <Trophy className="w-3.5 h-3.5 text-[#facc15]" />
-        <span className="text-[#fef08a] font-pixel-header text-[9px]">Nível</span>
-        <span className="text-[#ffffff] font-pixel-mono text-sm font-semibold">{prestige.level}</span>
-        <span className="text-[10px] text-[#fef08a]/60">/100</span>
+      <div className="flex items-center gap-2 px-3 py-1 pixel-box-amber text-[#ffffff] font-medium text-xs sm:text-sm shrink-0">
+        <Trophy className="w-4 h-4 text-[#facc15]" />
+        <span className="text-[#fef08a] font-pixel-header text-xs">Nível</span>
+        <span className="text-[#ffffff] font-pixel-mono text-base font-bold">{prestige.level}</span>
+        <span className="text-xs text-[#fef08a]/80 font-mono">/100</span>
       </div>
 
       {/* Prestige Progress Bar Container */}
-      <div className="flex-1 relative h-5 pixel-box bg-[#08090a] overflow-hidden flex items-center px-1 group cursor-pointer">
+      <div className="flex-1 relative h-6 pixel-box bg-[#08090a] overflow-hidden flex items-center px-1 group cursor-pointer">
         {/* Progress Fill */}
         <div 
           className="absolute left-0 top-0 bottom-0 bg-[#facc15] transition-all duration-300 shadow-[inset_0_-2px_0_0_#b45309]"
@@ -46,7 +46,7 @@ export const PrestigeBar: React.FC<PrestigeBarProps> = ({ engine }) => {
         />
 
         {/* Text Overlay inside bar */}
-        <div className="relative w-full flex items-center justify-between px-3 text-[11px] font-pixel-mono font-medium z-10 drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]">
+        <div className="relative w-full flex items-center justify-between px-3 text-xs sm:text-sm font-pixel-mono font-bold z-10 drop-shadow-[0_1px_2px_rgba(0,0,0,0.95)]">
           <span className="text-[#ffffff] font-bold">
             <span className="hidden sm:inline">Progresso de Prestígio</span>
           </span>

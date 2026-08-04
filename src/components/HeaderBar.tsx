@@ -64,22 +64,22 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({ engine, activeTab, setActi
   };
 
   return (
-    <header className="h-13 bg-[#0f1011] border-b-2 border-[#23252a] flex items-center justify-between px-3 text-[#d0d6e0] select-none shrink-0 z-20 font-pixel-body text-xs">
+    <header className="min-h-[56px] py-1.5 bg-[#0f1011] border-b-2 border-[#23252a] flex items-center justify-between px-3.5 text-[#d0d6e0] select-none shrink-0 z-20 font-pixel-body text-sm">
       {/* App Branding */}
-      <div className="flex items-center gap-2.5">
-        <div className="w-8 h-8 bg-[#08090a] pixel-box flex items-center justify-center p-1 group hover:brightness-125 transition-all cursor-pointer">
-          <GameLogo className="w-6 h-6 pixelated" />
+      <div className="flex items-center gap-3">
+        <div className="w-9 h-9 bg-[#08090a] pixel-box flex items-center justify-center p-1 group hover:brightness-125 transition-all cursor-pointer">
+          <GameLogo className="w-7 h-7 pixelated" />
         </div>
         <div>
           <div className="flex items-center gap-2">
-            <span className="font-pixel-header text-xs tracking-tight text-[#ffffff]">TerraScript <span className="text-[#facc15]">3D</span></span>
+            <span className="font-pixel-header text-sm tracking-tight text-[#ffffff]">TerraScript <span className="text-[#facc15]">3D</span></span>
             {onOpenWelcome && (
               <button
                 onClick={onOpenWelcome}
                 title="Clique para alterar seu nome de programador(a)"
-                className="hidden sm:flex items-center gap-1.5 px-2 py-0.5 pixel-btn text-[11px] text-[#d0d6e0] font-pixel-mono transition-all cursor-pointer"
+                className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 pixel-btn text-xs text-[#d0d6e0] font-pixel-mono transition-all cursor-pointer"
               >
-                <User className="w-3 h-3 text-[#22c55e]" />
+                <User className="w-3.5 h-3.5 text-[#22c55e]" />
                 <span className="font-normal truncate max-w-[120px]">{programmerName}</span>
               </button>
             )}
@@ -91,19 +91,19 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({ engine, activeTab, setActi
       <div className="flex items-center gap-1 bg-[#08090a] p-1 pixel-box">
         <button
           onClick={() => setActiveTab('workspace')}
-          className={`flex items-center gap-1.5 px-3 py-1 pixel-btn text-xs font-normal transition-all ${
+          className={`flex items-center gap-1.5 px-3.5 py-1.5 pixel-btn text-xs font-bold transition-all ${
             activeTab === 'workspace' 
               ? 'pixel-btn-amber text-[#0f172a]' 
               : 'text-[#8a8f98] hover:text-[#ffffff]'
           }`}
         >
-          <Cpu className="w-3.5 h-3.5" />
+          <Cpu className="w-4 h-4" />
           IDE
         </button>
 
         <button
           onClick={() => setActiveTab('research')}
-          className={`relative flex items-center gap-1.5 px-3 py-1 pixel-btn text-xs font-normal transition-all ${
+          className={`relative flex items-center gap-1.5 px-3.5 py-1.5 pixel-btn text-xs font-bold transition-all ${
             activeTab === 'research' 
               ? 'pixel-btn-purple text-[#ffffff]' 
               : hasUpgrades
@@ -111,10 +111,10 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({ engine, activeTab, setActi
                 : 'text-[#8a8f98] hover:text-[#ffffff]'
           }`}
         >
-          <FlaskConical className="w-3.5 h-3.5" />
+          <FlaskConical className="w-4 h-4" />
           <span>Árvore de Pesquisa</span>
           {hasUpgrades && (
-            <span className="ml-0.5 pixel-badge bg-[#a855f7] text-white">
+            <span className="ml-0.5 pixel-badge bg-[#a855f7] text-white text-xs px-1.5 py-0.5">
               {unlockableCount}
             </span>
           )}
@@ -123,83 +123,83 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({ engine, activeTab, setActi
         {(engine.isTechUnlocked('SCALE_5') || engine.isTechUnlocked('AUTO_6') || engine.getAgents().length > 1) && (
           <button
             onClick={() => setActiveTab('agents')}
-            className={`flex items-center gap-1.5 px-3 py-1 pixel-btn text-xs font-normal transition-all ${
+            className={`flex items-center gap-1.5 px-3.5 py-1.5 pixel-btn text-xs font-bold transition-all ${
               activeTab === 'agents' 
                 ? 'pixel-btn-cyan text-[#083344]' 
                 : 'text-[#8a8f98] hover:text-[#ffffff]'
             }`}
           >
-            <Bot className="w-3.5 h-3.5" />
+            <Bot className="w-4 h-4" />
             Agentes ({engine.getAgents().length})
           </button>
         )}
 
         <button
           onClick={() => setActiveTab('tutorial')}
-          className={`flex items-center gap-1.5 px-3 py-1 pixel-btn text-xs font-normal transition-all ${
+          className={`flex items-center gap-1.5 px-3.5 py-1.5 pixel-btn text-xs font-bold transition-all ${
             activeTab === 'tutorial' 
               ? 'pixel-btn-green text-[#052e16]' 
               : 'text-[#8a8f98] hover:text-[#ffffff]'
           }`}
         >
-          <BookOpen className="w-3.5 h-3.5" />
+          <BookOpen className="w-4 h-4" />
           Guia
         </button>
       </div>
 
-      {/* Resource Indicators Bar (Progressive Disclosure) */}
-      <div className="hidden lg:flex items-center gap-3 bg-[#08090a] px-3 py-1 pixel-box text-xs font-pixel-mono">
-        <div className="flex items-center gap-1.5 text-[#facc15]" title="Fibra Selvagem">
-          <PixelFiberIcon className="w-4 h-4" />
-          <span>{resources.fiber}</span>
+      {/* Resource Indicators Bar (VISOR DE RECURSOS) */}
+      <div className="hidden md:flex items-center gap-3.5 bg-[#08090a] px-4 py-1.5 pixel-box font-pixel-mono text-sm sm:text-base border border-[#23252a] shadow-inner">
+        <div className="flex items-center gap-2 text-[#facc15] font-bold" title="Fibra Selvagem">
+          <PixelFiberIcon className="w-5 h-5 sm:w-6 sm:h-6 shrink-0 drop-shadow" />
+          <span className="tracking-wide text-sm sm:text-base">{resources.fiber}</span>
         </div>
 
         {(resources.wood > 0 || engine.isTechUnlocked('AGRO_2')) && (
           <>
-            <div className="w-px h-3 bg-[#23252a]" />
-            <div className="flex items-center gap-1.5 text-[#22c55e]" title="Madeira">
-              <PixelWoodIcon className="w-4 h-4" />
-              <span>{resources.wood}</span>
+            <div className="w-px h-4 bg-[#23252a]" />
+            <div className="flex items-center gap-2 text-[#22c55e] font-bold" title="Madeira">
+              <PixelWoodIcon className="w-5 h-5 sm:w-6 sm:h-6 shrink-0 drop-shadow" />
+              <span className="tracking-wide text-sm sm:text-base">{resources.wood}</span>
             </div>
           </>
         )}
 
         {(resources.roots > 0 || engine.isTechUnlocked('AGRO_3')) && (
           <>
-            <div className="w-px h-3 bg-[#23252a]" />
-            <div className="flex items-center gap-1.5 text-[#f97316]" title="Raízes Cultivadas">
-              <PixelRootsIcon className="w-4 h-4" />
-              <span>{resources.roots}</span>
+            <div className="w-px h-4 bg-[#23252a]" />
+            <div className="flex items-center gap-2 text-[#f97316] font-bold" title="Raízes Cultivadas">
+              <PixelRootsIcon className="w-5 h-5 sm:w-6 sm:h-6 shrink-0 drop-shadow" />
+              <span className="tracking-wide text-sm sm:text-base">{resources.roots}</span>
             </div>
           </>
         )}
 
         {(resources.fruits > 0 || engine.isTechUnlocked('AGRO_5')) && (
           <>
-            <div className="w-px h-3 bg-[#23252a]" />
-            <div className="flex items-center gap-1.5 text-[#ef4444]" title="Frutas">
-              <PixelFruitsIcon className="w-4 h-4" />
-              <span>{resources.fruits}</span>
+            <div className="w-px h-4 bg-[#23252a]" />
+            <div className="flex items-center gap-2 text-[#ef4444] font-bold" title="Frutas">
+              <PixelFruitsIcon className="w-5 h-5 sm:w-6 sm:h-6 shrink-0 drop-shadow" />
+              <span className="tracking-wide text-sm sm:text-base">{resources.fruits}</span>
             </div>
           </>
         )}
 
         {(resources.energy > 0 || engine.isTechUnlocked('AGRO_6')) && (
           <>
-            <div className="w-px h-3 bg-[#23252a]" />
-            <div className="flex items-center gap-1.5 text-[#06b6d4]" title="Flor de Energia">
-              <PixelEnergyIcon className="w-4 h-4" />
-              <span>{resources.energy}</span>
+            <div className="w-px h-4 bg-[#23252a]" />
+            <div className="flex items-center gap-2 text-[#06b6d4] font-bold" title="Flor de Energia">
+              <PixelEnergyIcon className="w-5 h-5 sm:w-6 sm:h-6 shrink-0 drop-shadow" />
+              <span className="tracking-wide text-sm sm:text-base">{resources.energy}</span>
             </div>
           </>
         )}
 
         {(resources.biomass > 0 || engine.isTechUnlocked('AGRO_7')) && (
           <>
-            <div className="w-px h-3 bg-[#23252a]" />
-            <div className="flex items-center gap-1.5 text-[#a855f7]" title="Biomassa">
-              <PixelBiomassIcon className="w-4 h-4" />
-              <span>{resources.biomass}</span>
+            <div className="w-px h-4 bg-[#23252a]" />
+            <div className="flex items-center gap-2 text-[#a855f7] font-bold" title="Biomassa">
+              <PixelBiomassIcon className="w-5 h-5 sm:w-6 sm:h-6 shrink-0 drop-shadow" />
+              <span className="tracking-wide text-sm sm:text-base">{resources.biomass}</span>
             </div>
           </>
         )}
