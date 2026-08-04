@@ -432,6 +432,11 @@ export class GameEngine {
   }
 
   // Engine Execution Control Methods
+  public triggerSyntheticGuardrail() {
+    this.addLog(1, 'stderr', '🛡️ [Guardrail Anti-Cheat] Cliques sintéticos via DevTools (console/setInterval) foram bloqueados! Escreva a automação em main.py usando a API farm.*.');
+    audioManager.playError();
+  }
+
   public startSimulation() {
     this.mode = 'RUNNING';
     audioManager.playExecute();

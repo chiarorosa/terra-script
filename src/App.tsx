@@ -114,9 +114,20 @@ export default function App() {
     return () => clearInterval(intervalId);
   }, [engine, engine.getSpeed()]);
 
-  // Global Keyboard Shortcuts
+  // Global Keyboard Shortcuts & DevTools Guardrail Security Banner
   useEffect(() => {
+    // Print Guardrail security message in browser console
+    console.log(
+      "%c🛑 GUARDRAILS DE SEGURANÇA - TERRASCRIPT 3D %c\n\nAviso de Integridade: Injeção de scripts via DevTools (setInterval, console.click) são bloqueados por Guardrails no jogo.\nEm TerraScript 3D, a automação das fazendas e robôs deve ser programada em Python/JavaScript dentro do editor em 'main.py' utilizando a API do jogo (farm.*).\n",
+      "color: #ef4444; font-size: 16px; font-weight: bold; background: #0f1011; padding: 4px 8px; border-radius: 4px; border: 1px solid #ef4444;",
+      "color: #facc15; font-size: 12px; font-weight: bold;"
+    );
+
     const handleKeyDown = (e: KeyboardEvent) => {
+      if (e && !e.isTrusted) {
+        engine.triggerSyntheticGuardrail();
+        return;
+      }
       if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
         e.preventDefault();
         const fileToRun = activeFilePath || vfs.getEntrypoint().path;

@@ -269,7 +269,13 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({ engine, activeTab, setActi
         <div className="flex items-center gap-1.5">
           {mode === 'RUNNING' ? (
             <button
-              onClick={() => engine.pauseSimulation()}
+              onClick={(e) => {
+                if (e && !e.isTrusted) {
+                  engine.triggerSyntheticGuardrail();
+                  return;
+                }
+                engine.pauseSimulation();
+              }}
               className="flex items-center gap-1 px-3 py-1 pixel-btn pixel-btn-amber text-xs transition-all"
               title="Pausar Execução"
             >
@@ -278,7 +284,13 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({ engine, activeTab, setActi
             </button>
           ) : (
             <button
-              onClick={() => engine.startSimulation()}
+              onClick={(e) => {
+                if (e && !e.isTrusted) {
+                  engine.triggerSyntheticGuardrail();
+                  return;
+                }
+                engine.startSimulation();
+              }}
               className="flex items-center gap-1 px-3 py-1 pixel-btn pixel-btn-green text-xs transition-all"
               title="Executar Código (F5)"
             >
@@ -288,7 +300,13 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({ engine, activeTab, setActi
           )}
 
           <button
-            onClick={() => engine.stepSimulation()}
+            onClick={(e) => {
+              if (e && !e.isTrusted) {
+                engine.triggerSyntheticGuardrail();
+                return;
+              }
+              engine.stepSimulation();
+            }}
             className="p-1.5 pixel-btn pixel-btn-cyan transition-all"
             title="Avançar Uma Linha (F10)"
           >
@@ -296,7 +314,13 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({ engine, activeTab, setActi
           </button>
 
           <button
-            onClick={() => engine.stopSimulation()}
+            onClick={(e) => {
+              if (e && !e.isTrusted) {
+                engine.triggerSyntheticGuardrail();
+                return;
+              }
+              engine.stopSimulation();
+            }}
             className="p-1.5 pixel-btn text-[#ef4444] hover:bg-[#ef4444]/20 transition-all"
             title="Parar & Reiniciar Execução (Shift+F5)"
           >

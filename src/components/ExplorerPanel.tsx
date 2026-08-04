@@ -390,6 +390,10 @@ export const ExplorerPanel: React.FC<ExplorerPanelProps> = ({
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
+                      if (e && !e.isTrusted) {
+                        engine.triggerSyntheticGuardrail();
+                        return;
+                      }
                       onSelectFile(file.path);
                       engine.runScriptOnPrimaryAgent(file.path);
                     }}
