@@ -55,6 +55,8 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
   const [filterUnlockedOnly, setFilterUnlockedOnly] = useState(false);
   const [copiedItem, setCopiedItem] = useState<string | null>(null);
 
+  const lineCount = useMemo(() => file.content.split('\n').length, [file.content]);
+
   const handleEditorChange = (value: string) => {
     vfs.setFileContent(file.path, value);
     engine.onScriptModified(file.path);
@@ -124,6 +126,20 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
               Entrada Principal
             </span>
           )}
+          <span
+            className={`text-[10px] px-1.5 py-0.5 rounded font-mono font-bold transition-all ${
+              lineCount > 100
+                ? 'bg-[#f85149]/20 text-[#f85149] border border-[#f85149]/50 animate-pulse'
+                : 'bg-[#21262d] text-[#8b949e] border border-[#30363d]'
+            }`}
+            title={
+              lineCount > 100
+                ? '🚨 Limite excedido! O script possui mais de 100 linhas e não poderá ser executado.'
+                : 'Linhas no script atual (Limite do jogo: 100 linhas)'
+            }
+          >
+            {lineCount} / 100 linhas
+          </span>
         </div>
 
         <div className="flex items-center gap-3 text-[#8b949e] text-[11px]">
@@ -139,6 +155,16 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
           )}
         </div>
       </div>
+
+      {/* Warning Banner when exceeding 100 lines limit */}
+      {lineCount > 100 && (
+        <div className="px-3 py-1.5 bg-[#f85149]/15 border-b border-[#f85149]/40 text-[#f85149] text-[11px] font-mono flex items-center justify-between shrink-0 select-none">
+          <span className="flex items-center gap-1.5 font-semibold">
+            <span>🚨</span>
+            <span>Limite de Código Excedido ({lineCount}/100 linhas). O script foi travado e não executará enquanto não for reduzido.</span>
+          </span>
+        </div>
+      )}
 
       {/* CodeMirror Workspace */}
       <div className="flex-1 overflow-auto text-sm font-mono relative">

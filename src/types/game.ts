@@ -108,6 +108,7 @@ export interface Agent {
   currentLine: number;
   actionMessage?: string;
   lastActionTick?: number;
+  runStartTime?: number;
   tailLength?: number; // For fossil trail snake challenge
   tailCoords?: Array<{ x: number; y: number }>;
   stats: AgentStats;

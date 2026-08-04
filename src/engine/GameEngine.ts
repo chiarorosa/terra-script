@@ -441,6 +441,7 @@ export class GameEngine {
     this.mode = 'RUNNING';
     audioManager.playExecute();
     this.handleFirstScriptExecuted();
+    const now = Date.now();
     this.agents.forEach(agent => {
       const ctx = this.agentContexts.get(agent.id);
       if (!ctx || ctx.isCompleted) {
@@ -448,6 +449,7 @@ export class GameEngine {
       }
       agent.status = 'RUNNING';
       agent.actionMessage = 'Running';
+      agent.runStartTime = now;
     });
     this.addLog(1, 'system', `Simulation STARTED at ${this.speed}x speed.`);
     this.notify();
@@ -457,6 +459,7 @@ export class GameEngine {
     this.mode = 'PAUSED';
     this.agents.forEach(agent => {
       agent.status = 'PAUSED';
+      agent.runStartTime = undefined;
     });
     this.addLog(1, 'system', 'Simulation PAUSED.');
     this.notify();
@@ -469,6 +472,7 @@ export class GameEngine {
       agent.status = 'IDLE';
       agent.currentLine = 1;
       agent.actionMessage = 'Stopped';
+      agent.runStartTime = undefined;
     });
     this.addLog(1, 'system', 'Simulation STOPPED and reset.');
     this.notify();
@@ -492,6 +496,7 @@ export class GameEngine {
         if (agent.status === 'RUNNING') {
           agent.status = 'PAUSED';
           agent.actionMessage = 'Paused (script modified)';
+          agent.runStartTime = undefined;
           affected = true;
         }
       }
@@ -635,6 +640,22 @@ export class GameEngine {
   public prepareAgentContext(agent: Agent) {
     const file = this.vfs.getFile(agent.assignedFile) || this.vfs.getEntrypoint();
     if (!file) return;
+
+    const lineCount = file.content.split('\n').length;
+    if (lineCount > 100) {
+      agent.status = 'ERROR';
+      agent.actionMessage = 'Erro: >100 Linhas';
+      agent.runStartTime = undefined;
+      this.addLog(
+        agent.id,
+        'stderr',
+        `🚨 Limite de Código Excedido! O script '${file.name}' possui ${lineCount} linhas, mas o limite máximo permitido pelo jogo é de 100 linhas por arquivo. Otimize e reduza seu código para executá-lo!`
+      );
+      audioManager.playError();
+      this.agentContexts.delete(agent.id);
+      return;
+    }
+
     const ctx = this.runner.createExecutionContext(agent.id, file.path, file.content, file.language);
     this.agentContexts.set(agent.id, ctx);
   }
@@ -733,12 +754,51 @@ export class GameEngine {
       }
     });
 
-    // 2. Run active Agent Scripts
+    // 2. Run active Agent Scripts (Internal 5-minute continuous run time limit / Mecanismo Anti-Preguiça)
     let anyAction = false;
+    const MAX_CONTINUOUS_RUN_MS = 5 * 60 * 1000; // 5 minutos corridos (300.000 ms)
+    const now = Date.now();
+
     this.agents.forEach(agent => {
       if (agent.status === 'RUNNING' || isSingleStep) {
+        if (agent.status === 'RUNNING') {
+          if (!agent.runStartTime) {
+            agent.runStartTime = now;
+          } else if (now - agent.runStartTime >= MAX_CONTINUOUS_RUN_MS) {
+            // Anti-lazy mechanism triggered after 5 continuous minutes
+            agent.status = 'PAUSED';
+            agent.actionMessage = 'Pausa Forçada';
+            agent.runStartTime = undefined;
+
+            const funMessages = [
+              `☕ Script parou! Claudio decidiu fazer uma pausa para o café e esticar os circuitos. Reative a simulação quando estiver pronto para continuar!`,
+              `🤖 Script parou! O sindicato dos robôs ativou a pausa obrigatória de 5 minutos para evitar o superaquecimento dos transistores. Clique em Executar para continuar!`,
+              `🔌 Script parou! O robô olhou para o relógio e decidiu fazer uma pausa reflexiva. Reative o script para continuar a automação!`,
+              `💤 Script parou! Detector de descanso acionado: hora de tomar uma água e revisar sua estratégia de plantio.`
+            ];
+            const funMsg = funMessages[Math.floor(Math.random() * funMessages.length)];
+            this.addLog(agent.id, 'stderr', `🛑 ${funMsg}`);
+            audioManager.playError();
+            return;
+          }
+        }
+
         const file = this.vfs.getFile(agent.assignedFile) || this.vfs.getEntrypoint();
         if (!file) return;
+
+        const lineCount = file.content.split('\n').length;
+        if (lineCount > 100) {
+          agent.status = 'ERROR';
+          agent.actionMessage = 'Erro: >100 Linhas';
+          agent.runStartTime = undefined;
+          this.addLog(
+            agent.id,
+            'stderr',
+            `🚨 Limite Excedido: O script '${file.name}' possui ${lineCount} linhas (máximo 100). Otimize o código para continuar.`
+          );
+          audioManager.playError();
+          return;
+        }
 
         let ctx = this.agentContexts.get(agent.id);
         if (!ctx || (isSingleStep && ctx.isCompleted)) {
@@ -752,13 +812,17 @@ export class GameEngine {
           if (res.error) {
             agent.status = 'ERROR';
             agent.actionMessage = `Error: Line ${agent.currentLine}`;
+            agent.runStartTime = undefined;
           } else if (res.completed) {
             agent.status = 'PAUSED';
             agent.actionMessage = 'Finished';
+            agent.runStartTime = undefined;
             this.addLog(agent.id, 'system', `Script '${ctx.filePath}' finished execution.`);
           }
           anyAction = true;
         }
+      } else {
+        agent.runStartTime = undefined;
       }
     });
 
@@ -1537,6 +1601,7 @@ export class GameEngine {
     this.agents.forEach(agent => {
       if (agent.id !== primaryAgent.id) {
         agent.status = 'PAUSED';
+        agent.runStartTime = undefined;
       }
     });
 
@@ -1546,10 +1611,16 @@ export class GameEngine {
     // Re-prepare context for primary agent to execute from beginning
     this.prepareAgentContext(primaryAgent);
 
+    if (primaryAgent.status === 'ERROR') {
+      this.notify();
+      return;
+    }
+
     // Set primary agent state to RUNNING
     primaryAgent.status = 'RUNNING';
     primaryAgent.actionMessage = 'Running';
     primaryAgent.currentLine = 1;
+    primaryAgent.runStartTime = Date.now();
 
     // Start simulation mode if not running
     this.mode = 'RUNNING';

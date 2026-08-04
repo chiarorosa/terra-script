@@ -8,10 +8,22 @@ export interface ChangelogRelease {
 
 export const CHANGELOG_HISTORY: ChangelogRelease[] = [
   {
+    version: 'v2.6.2',
+    date: '2026-08-04',
+    title: 'Mecanismo Anti-Preguiça Silencioso (Timer 5 Minutos), Limite de 100 Linhas de Código & Ajustes de Interface',
+    isCurrent: true,
+    changes: [
+      'Limite Estrito de 100 Linhas por Script: Trava automática de segurança que impede a execução de scripts com mais de 100 linhas de código. Exibe indicador em tempo real no cabeçalho do editor e alertas educativos no Console.',
+      'Mecanismo Anti-Preguiça Interno (5 Minutos Corridos): Execuções contínuas de scripts em laço infinito são limitadas a 5 minutos corridos por agente sem poluir a interface. Ao estourar o tempo, o script é pausado e registra no Console uma mensagem divertida ao jogador.',
+      'Ajuste Visual no Guia Rápido: Remoção dos ícones de faísca (sparkles) no botão "Guia Rápido" do Explorador e do ícone de cadeado no selo de Leitura da pasta /guia.',
+      'Dica Essencial de Início: Adição do aviso destacado orientando o jogador a consultar a aba GUIA antes de começar nas telas de boas-vindas dos Primeiros Passos.'
+    ]
+  },
+  {
     version: 'v2.6.1',
     date: '2026-08-04',
     title: 'Mecanismo de Pastas no Explorador (/guia e /fazenda), Filtro Discreto de Extensões & Guardrails de DevTools',
-    isCurrent: true,
+    isCurrent: false,
     changes: [
       'Estrutura de Pastas no Explorador de Arquivos (/guia e /fazenda): Organização do workspace em duas pastas principais com suporte a clique para maximizar e minimizar o conteúdo. Sugestão enviada por @jeronimofeijo.',
       'Diretório /guia (Somente Leitura): Contém todos os scripts padrão e guias de início do jogo protegidos contra exclusão e renomeação para preservar os exemplos.',
