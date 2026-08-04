@@ -1283,6 +1283,10 @@ export class GameEngine {
     return { ...this.prestige };
   }
 
+  public getPrestigeLevel(): number {
+    return this.prestige.level;
+  }
+
   public getPrestigeBlockCoords(): { x: number; y: number } | null {
     for (const tile of this.tiles.values()) {
       if (tile.ground === 'PRESTIGE' || tile.crop === 'PRESTIGE') {

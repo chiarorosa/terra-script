@@ -17,6 +17,7 @@ import { QuickStartModal } from './components/QuickStartModal';
 import { PrestigeBar } from './components/PrestigeBar';
 import { SupabaseModal } from './components/SupabaseModal';
 import { audioManager } from './utils/audioManager';
+import { uploadCloudSaveWithAntiFraud } from './utils/supabaseClient';
 
 export default function App() {
   const vfs = useMemo(() => new VirtualFS(), []);
@@ -29,7 +30,9 @@ export default function App() {
   const [isSupabaseModalOpen, setIsSupabaseModalOpen] = useState<boolean>(false);
   const [isWelcomeModalOpen, setIsWelcomeModalOpen] = useState<boolean>(() => {
     if (typeof window !== 'undefined') {
-      return localStorage.getItem('terrascript_welcome_seen') !== 'true';
+      const welcomeSeen = localStorage.getItem('terrascript_welcome_seen') === 'true';
+      const migrated = localStorage.getItem('terrascript_migrated') === 'true';
+      return !welcomeSeen || !migrated;
     }
     return false;
   });
@@ -62,6 +65,40 @@ export default function App() {
       window.removeEventListener('keydown', handleGesture);
     };
   }, []);
+
+  // Automatic sync when internet connection is restored (Situation B)
+  useEffect(() => {
+    const handleOnline = async () => {
+      const isMigrated = localStorage.getItem('terrascript_migrated') === 'true';
+      const playerName = localStorage.getItem('terrascript_programmer_name');
+      if (isMigrated && playerName && playerName !== 'Dev Master' && playerName !== 'Programador Anônimo') {
+        const saveData = engine.exportSaveData();
+        const resources = engine.getResources();
+        const prestige = engine.getPrestige().level;
+
+        const res = await uploadCloudSaveWithAntiFraud(
+          playerName,
+          saveData,
+          resources.fiber,
+          prestige,
+          saveData.currentTick || 0,
+          0
+        );
+
+        if (res.success) {
+          setToastNotification({
+            title: 'Sincronização em Nuvem',
+            subtitle: 'Conexão Restaurada!',
+            description: res.message,
+            type: 'milestone'
+          });
+        }
+      }
+    };
+
+    window.addEventListener('online', handleOnline);
+    return () => window.removeEventListener('online', handleOnline);
+  }, [engine]);
 
   // Subscribe to engine state updates (throttled to animation frames for maximum UI responsiveness & low CPU usage)
   useEffect(() => {

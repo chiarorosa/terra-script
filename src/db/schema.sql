@@ -4,23 +4,49 @@
 -- (https://app.supabase.com -> SQL Editor)
 -- ==========================================
 
--- 1. Tabela de Saves na Nuvem
+-- 1. Tabela de Usuários / Credenciais na Nuvem
+CREATE TABLE IF NOT EXISTS public.terrascript_users (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    player_name TEXT NOT NULL UNIQUE,
+    email TEXT NOT NULL,
+    password_hash TEXT NOT NULL,
+    migrated BOOLEAN DEFAULT true,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    last_login_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Enable RLS & Allow public read/write for users
+ALTER TABLE public.terrascript_users ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Permitir leitura publica de usuarios" ON public.terrascript_users FOR SELECT USING (true);
+CREATE POLICY "Permitir criacao/atualizacao de usuarios" ON public.terrascript_users FOR ALL USING (true);
+
+-- 2. Tabela de Saves na Nuvem (com Anti-Fraude & Sincronização)
 CREATE TABLE IF NOT EXISTS public.terrascript_saves (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     player_name TEXT NOT NULL UNIQUE,
     save_json JSONB NOT NULL,
     fiber_count BIGINT DEFAULT 0,
     prestige_level INT DEFAULT 1,
+    save_hash TEXT,
+    last_known_tick BIGINT DEFAULT 0,
+    play_time_seconds BIGINT DEFAULT 0,
+    migrated BOOLEAN DEFAULT true,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- Adicionar colunas caso a tabela já existisse anteriormente
+ALTER TABLE public.terrascript_saves ADD COLUMN IF NOT EXISTS save_hash TEXT;
+ALTER TABLE public.terrascript_saves ADD COLUMN IF NOT EXISTS last_known_tick BIGINT DEFAULT 0;
+ALTER TABLE public.terrascript_saves ADD COLUMN IF NOT EXISTS play_time_seconds BIGINT DEFAULT 0;
+ALTER TABLE public.terrascript_saves ADD COLUMN IF NOT EXISTS migrated BOOLEAN DEFAULT true;
 
 -- Enable RLS & Allow public read/write
 ALTER TABLE public.terrascript_saves ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Permitir leitura publica de saves" ON public.terrascript_saves FOR SELECT USING (true);
 CREATE POLICY "Permitir criacao/atualizacao publica de saves" ON public.terrascript_saves FOR ALL USING (true);
 
--- 2. Tabela de Leaderboard / Placar de Líderes
+-- 3. Tabela de Leaderboard / Placar de Líderes
 CREATE TABLE IF NOT EXISTS public.terrascript_leaderboard (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     player_name TEXT NOT NULL UNIQUE,
@@ -41,7 +67,7 @@ ALTER TABLE public.terrascript_leaderboard ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Permitir leitura publica do leaderboard" ON public.terrascript_leaderboard FOR SELECT USING (true);
 CREATE POLICY "Permitir escrita publica do leaderboard" ON public.terrascript_leaderboard FOR ALL USING (true);
 
--- 3. Tabela de Scripts da Comunidade
+-- 4. Tabela de Scripts da Comunidade
 CREATE TABLE IF NOT EXISTS public.terrascript_community_scripts (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     title TEXT NOT NULL,
@@ -57,3 +83,4 @@ CREATE TABLE IF NOT EXISTS public.terrascript_community_scripts (
 ALTER TABLE public.terrascript_community_scripts ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Permitir leitura de scripts" ON public.terrascript_community_scripts FOR SELECT USING (true);
 CREATE POLICY "Permitir compartilhamento de scripts" ON public.terrascript_community_scripts FOR INSERT WITH CHECK (true);
+

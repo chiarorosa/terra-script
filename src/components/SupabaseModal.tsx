@@ -25,7 +25,7 @@ import { VirtualFS } from '../engine/virtualFs';
 import { 
   supabaseUrl, 
   testSupabaseConnection, 
-  uploadCloudSave, 
+  uploadCloudSaveWithAntiFraud, 
   fetchCloudSave, 
   listAllCloudSaves, 
   submitLeaderboardScore, 
@@ -124,7 +124,14 @@ export const SupabaseModal: React.FC<SupabaseModalProps> = ({
     const resources = engine.getResources();
     const prestige = engine.getPrestige().level;
 
-    const res = await uploadCloudSave(programmerName, saveData, resources.fiber, prestige);
+    const res = await uploadCloudSaveWithAntiFraud(
+      programmerName, 
+      saveData, 
+      resources.fiber, 
+      prestige,
+      saveData.currentTick || 0,
+      0
+    );
     setIsSavingCloud(false);
 
     if (res.success) {

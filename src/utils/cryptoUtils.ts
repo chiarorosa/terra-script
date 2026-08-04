@@ -1,6 +1,17 @@
 const SAVE_SECRET_KEY = 'TS3D_SECRET_INTEGRITY_SALT_#2026_@AGRO';
 
 /**
+ * Computes a secure SHA-256 hash string for user passwords using Web Crypto API.
+ */
+export async function hashPassword(password: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(password + SAVE_SECRET_KEY);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+/**
  * Computes a fast synchronous checksum string over an object for local storage guardrails.
  */
 export function computeSyncChecksum(payload: Record<string, any>): string {
