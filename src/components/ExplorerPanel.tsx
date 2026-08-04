@@ -377,8 +377,8 @@ export const ExplorerPanel: React.FC<ExplorerPanelProps> = ({
           {onOpenSaveManager && (
             <button
               onClick={onOpenSaveManager}
-              className="p-1 pixel-btn text-xs text-[#d0d6e0] transition-all"
-              title="Gerenciador de Saves e Backup"
+              className="p-1 pixel-btn text-[#d0d6e0] text-xs transition-all"
+              title="Gerenciador de Scripts e Nuvem"
             >
               <Save className="w-3.5 h-3.5" />
             </button>

@@ -63,7 +63,7 @@ export interface CommunityScript {
 }
 
 /**
- * Test connection to Supabase REST endpoint
+ * Test connection to cloud REST endpoint
  */
 export async function testSupabaseConnection(): Promise<{ success: boolean; message: string }> {
   try {
@@ -76,17 +76,17 @@ export async function testSupabaseConnection(): Promise<{ success: boolean; mess
     });
 
     if (res.ok || res.status === 200 || res.status === 404) {
-      return { success: true, message: 'Conectado ao Supabase com sucesso!' };
+      return { success: true, message: 'Conectado ao servidor em nuvem com sucesso!' };
     }
     return { success: false, message: `Status de resposta HTTP: ${res.status} ${res.statusText}` };
   } catch (err: any) {
-    console.error('Erro de conexão Supabase:', err);
-    return { success: false, message: err.message || 'Não foi possível conectar ao Supabase.' };
+    console.error('Erro de conexão com servidor em nuvem:', err);
+    return { success: false, message: err.message || 'Não foi possível conectar ao servidor em nuvem.' };
   }
 }
 
 /**
- * Save Game Progress to Cloud (Supabase)
+ * Save Game Progress to Cloud
  */
 export async function uploadCloudSave(
   playerName: string, 
@@ -109,19 +109,19 @@ export async function uploadCloudSave(
       .upsert([payload], { onConflict: 'player_name' });
 
     if (error) {
-      // If table doesn't exist, try alternative table name or return error with SQL instructions
+      // If table doesn't exist
       if (error.code === '42P01') {
         return { 
           success: false, 
-          message: 'Tabela "terrascript_saves" ainda não existe no Supabase. Crie as tabelas executando o script SQL no Supabase!' 
+          message: 'Tabela "terrascript_saves" ainda não existe no banco em nuvem.' 
         };
       }
       return { success: false, message: `Erro ao salvar na nuvem: ${error.message}` };
     }
 
-    return { success: true, message: 'Progresso salvo na nuvem Supabase com sucesso!' };
+    return { success: true, message: 'Progresso salvo na nuvem com sucesso!' };
   } catch (err: any) {
-    return { success: false, message: err.message || 'Erro inesperado ao conectar ao Supabase.' };
+    return { success: false, message: err.message || 'Erro inesperado ao conectar à nuvem.' };
   }
 }
 
@@ -173,7 +173,7 @@ export async function listAllCloudSaves(): Promise<{ success: boolean; saves?: C
 }
 
 /**
- * Submit High Score / Progress to Global Supabase Leaderboard
+ * Submit High Score / Progress to Global Leaderboard
  */
 export async function submitLeaderboardScore(entry: {
   playerName: string;
@@ -210,13 +210,13 @@ export async function submitLeaderboardScore(entry: {
       if (error.code === '42P01') {
         return { 
           success: false, 
-          message: 'Tabela "terrascript_leaderboard" não existe no Supabase. Crie as tabelas com a Query SQL fornecida.' 
+          message: 'Tabela "terrascript_leaderboard" não existe no banco em nuvem.' 
         };
       }
       return { success: false, message: `Erro no Leaderboard: ${error.message}` };
     }
 
-    return { success: true, message: 'Sua pontuação foi publicada no Leaderboard Supabase!' };
+    return { success: true, message: 'Sua pontuação foi publicada no Leaderboard Global em nuvem!' };
   } catch (err: any) {
     return { success: false, message: err.message || 'Erro ao publicar pontuação.' };
   }
@@ -244,7 +244,7 @@ export async function fetchLeaderboard(): Promise<{ success: boolean; entries?: 
 }
 
 /**
- * Share script to Supabase Community Scripts
+ * Share script to Community Scripts in Cloud
  */
 export async function publishCommunityScript(script: {
   title: string;
@@ -268,12 +268,12 @@ export async function publishCommunityScript(script: {
 
     if (error) {
       if (error.code === '42P01') {
-        return { success: false, message: 'Tabela "terrascript_community_scripts" não existe no Supabase.' };
+        return { success: false, message: 'Tabela "terrascript_community_scripts" não existe na nuvem.' };
       }
       return { success: false, message: error.message };
     }
 
-    return { success: true, message: 'Script compartilhado com a comunidade no Supabase!' };
+    return { success: true, message: 'Script compartilhado com a comunidade na nuvem!' };
   } catch (err: any) {
     return { success: false, message: err.message };
   }

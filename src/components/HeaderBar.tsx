@@ -88,11 +88,11 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({ engine, activeTab, setActi
             {onOpenSupabase && (
               <button
                 onClick={onOpenSupabase}
-                title="Abrir Integração com Banco de Dados Supabase (Saves na Nuvem, Leaderboard & Scripts)"
+                title="Abrir Painel de Sincronização em Nuvem (Saves Remotos, Leaderboard & Scripts)"
                 className="hidden md:flex items-center gap-1.5 px-2.5 py-1 bg-[#10b981]/15 hover:bg-[#10b981]/25 text-[#10b981] border border-[#10b981]/40 rounded-md text-xs font-pixel-mono transition-all cursor-pointer"
               >
                 <Database className="w-3.5 h-3.5 text-[#10b981]" />
-                <span className="font-bold">Supabase</span>
+                <span className="font-bold">Sincronização em Nuvem</span>
               </button>
             )}
           </div>

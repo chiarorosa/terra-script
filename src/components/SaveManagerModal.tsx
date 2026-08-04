@@ -7,9 +7,6 @@ import {
   CheckCircle2, 
   AlertCircle, 
   X, 
-  FolderArchive, 
-  FileText, 
-  Bot,
   Trash2,
   RotateCcw,
   Database,
@@ -17,10 +14,7 @@ import {
 } from 'lucide-react';
 import { GameEngine } from '../engine/GameEngine';
 import { VirtualFS } from '../engine/virtualFs';
-import { VirtualFile } from '../types/game';
 import { 
-  exportGameSave, 
-  importGameSave, 
   downloadScript, 
   downloadAllScriptsBundle, 
   importLocalScriptFile 
@@ -49,7 +43,6 @@ export const SaveManagerModal: React.FC<SaveManagerModalProps> = ({
   const [showResetModal, setShowResetModal] = useState<boolean>(false);
   const [resetConfirmInput, setResetConfirmInput] = useState<string>('');
 
-  const saveFileInputRef = useRef<HTMLInputElement>(null);
   const scriptFileInputRef = useRef<HTMLInputElement>(null);
 
   const activeFile = activeFilePath ? vfs.getFile(activeFilePath) : vfs.getEntrypoint();
@@ -83,32 +76,7 @@ export const SaveManagerModal: React.FC<SaveManagerModalProps> = ({
     }
   };
 
-  // 1. Export Game Save
-  const handleExportSave = async () => {
-    await exportGameSave(engine);
-    showFeedback('success', 'Save assinado digitalmente (.json) baixado com sucesso!');
-  };
-
-  // 2. Import Game Save
-  const handleSaveFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    importGameSave(engine, file, (success, message) => {
-      if (success) {
-        showFeedback('success', message || 'Progresso do jogo importado com sucesso!');
-        if (onFileImported) {
-          const ep = vfs.getEntrypoint();
-          if (ep) onFileImported(ep.path);
-        }
-      } else {
-        showFeedback('error', message || 'Falha ao importar arquivo de Save.');
-      }
-    });
-    // Reset file input
-    e.target.value = '';
-  };
-
-  // 3. Download Single Active Script
+  // 1. Download Single Active Script
   const handleDownloadActiveScript = () => {
     if (!activeFile) {
       showFeedback('error', 'Nenhum script ativo selecionado.');
@@ -118,13 +86,13 @@ export const SaveManagerModal: React.FC<SaveManagerModalProps> = ({
     showFeedback('success', `Script '${activeFile.name}' baixado com sucesso!`);
   };
 
-  // 4. Download All Scripts Bundle
+  // 2. Download All Scripts Bundle
   const handleDownloadAllScripts = () => {
     downloadAllScriptsBundle(vfs);
     showFeedback('success', 'Todos os scripts da workspace foram exportados em um pacote!');
   };
 
-  // 5. Import Local Script (.py or .js)
+  // 3. Import Local Script (.py or .js)
   const handleScriptFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
@@ -147,14 +115,7 @@ export const SaveManagerModal: React.FC<SaveManagerModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200 font-pixel-body">
-      {/* Hidden File Inputs */}
-      <input 
-        type="file" 
-        ref={saveFileInputRef} 
-        onChange={handleSaveFileChange} 
-        accept=".json" 
-        className="hidden" 
-      />
+      {/* Hidden File Input for Scripts */}
       <input 
         type="file" 
         ref={scriptFileInputRef} 
@@ -173,8 +134,8 @@ export const SaveManagerModal: React.FC<SaveManagerModalProps> = ({
               <Save className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-sm font-pixel-header text-[#ffffff]">Gerenciador de Saves & Scripts</h2>
-              <p className="text-xs text-[#8a8f98] font-pixel-body">Exporte/Importe o progresso do jogo ou arquivos de código Python/JS locais</p>
+              <h2 className="text-sm font-pixel-header text-[#ffffff]">Gerenciador de Scripts & Nuvem</h2>
+              <p className="text-xs text-[#8a8f98] font-pixel-body">Exporte/Importe arquivos de código Python/JS locais e acesse os Saves na Nuvem</p>
             </div>
           </div>
 
@@ -205,23 +166,23 @@ export const SaveManagerModal: React.FC<SaveManagerModalProps> = ({
         {/* Content Body */}
         <div className="p-5 space-y-6 overflow-y-auto">
 
-          {/* SECTION 0: Supabase Cloud Saves & Integration */}
+          {/* SECTION 0: Cloud Saves & Integration */}
           {onOpenSupabase && (
             <div className="bg-[#10b981]/10 border border-[#10b981]/30 rounded-[12px] p-4 space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Database className="w-4 h-4 text-[#10b981]" />
                   <h3 className="text-xs font-bold text-[#10b981] uppercase tracking-wider">
-                    Sincronização em Nuvem Supabase
+                    Sincronização em Nuvem
                   </h3>
                 </div>
                 <span className="text-[10px] font-mono text-[#10b981] bg-[#10b981]/15 px-2 py-0.5 rounded border border-[#10b981]/30">
-                  PostgreSQL Supabase Connected
+                  Banco em Nuvem Conectado
                 </span>
               </div>
 
               <p className="text-xs text-[#d0d6e0] leading-relaxed font-sans">
-                Sincronize seu progresso, publique seu recorde no Leaderboard Global ou compartilhe e baixe scripts da comunidade diretamente do banco de dados Supabase!
+                Sincronize seu progresso, publique seu recorde no Leaderboard Global ou compartilhe e baixe scripts da comunidade diretamente do servidor em nuvem!
               </p>
 
               <div className="pt-1">
@@ -233,50 +194,13 @@ export const SaveManagerModal: React.FC<SaveManagerModalProps> = ({
                   className="flex items-center justify-center gap-2 px-4 py-2.5 bg-[#10b981] hover:bg-[#059669] text-white rounded-[6px] text-xs font-bold transition-all active:scale-98 shadow-md cursor-pointer w-full sm:w-auto"
                 >
                   <CloudUpload className="w-4 h-4" />
-                  Abrir Painel de Saves & Banco Supabase
+                  Abrir Painel de Saves na Nuvem
                 </button>
               </div>
             </div>
           )}
 
-          {/* SECTION 1: Full Game Save State */}
-          <div className="bg-[#161718] border border-[#23252a] rounded-[12px] p-4 space-y-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <FolderArchive className="w-4 h-4 text-[#02b8cc]" />
-                <h3 className="text-xs font-medium text-[#ffffff] uppercase tracking-wider">
-                  Progresso do Jogo Completo (Save File .json)
-                </h3>
-              </div>
-              <span className="text-[10px] font-mono text-[#8a8f98] bg-[#08090a] px-2 py-0.5 rounded-[4px] border border-[#23252a]">
-                Contém Terreno 3D, Recursos e Scripts
-              </span>
-            </div>
-
-            <p className="text-xs text-[#8a8f98] leading-relaxed font-sans">
-              O Save completo guarda o tamanho do mapa 3D, todos os recursos acumulados (fibra, madeira, raízes, etc.), pesquisas desbloqueadas na Árvore de Pesquisa e todos os seus scripts.
-            </p>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-              <button
-                onClick={handleExportSave}
-                className="flex items-center justify-center gap-2 px-4 py-2.5 bg-[#27a644] hover:bg-[#27a644]/90 text-[#ffffff] rounded-[6px] text-xs font-medium transition-all active:scale-98"
-              >
-                <Download className="w-4 h-4" />
-                Exportar Save (.json)
-              </button>
-
-              <button
-                onClick={() => saveFileInputRef.current?.click()}
-                className="flex items-center justify-center gap-2 px-4 py-2.5 bg-[#08090a] hover:bg-[#161718] text-[#ffffff] border border-[#23252a] rounded-[6px] text-xs font-medium transition-all active:scale-98"
-              >
-                <Upload className="w-4 h-4 text-[#02b8cc]" />
-                Importar Save (.json)
-              </button>
-            </div>
-          </div>
-
-          {/* SECTION 2: Individual Scripts Export / Import */}
+          {/* SECTION 1: Individual Scripts Export / Import */}
           <div className="bg-[#161718] border border-[#23252a] rounded-[12px] p-4 space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -299,7 +223,7 @@ export const SaveManagerModal: React.FC<SaveManagerModalProps> = ({
               <button
                 onClick={handleDownloadActiveScript}
                 disabled={!activeFile}
-                className="flex items-center justify-center gap-2 px-3 py-2.5 bg-[#08090a] hover:bg-[#161718] text-[#ffffff] border border-[#23252a] rounded-[6px] text-xs font-medium transition-all disabled:opacity-50"
+                className="flex items-center justify-center gap-2 px-3 py-2.5 bg-[#08090a] hover:bg-[#161718] text-[#ffffff] border border-[#23252a] rounded-[6px] text-xs font-medium transition-all disabled:opacity-50 cursor-pointer"
               >
                 <Download className="w-3.5 h-3.5 text-[#27a644]" />
                 Baixar '{activeFile ? activeFile.name : 'Atual'}'
@@ -308,7 +232,7 @@ export const SaveManagerModal: React.FC<SaveManagerModalProps> = ({
               {/* Download All Scripts Bundle */}
               <button
                 onClick={handleDownloadAllScripts}
-                className="flex items-center justify-center gap-2 px-3 py-2.5 bg-[#08090a] hover:bg-[#161718] text-[#ffffff] border border-[#23252a] rounded-[6px] text-xs font-medium transition-all"
+                className="flex items-center justify-center gap-2 px-3 py-2.5 bg-[#08090a] hover:bg-[#161718] text-[#ffffff] border border-[#23252a] rounded-[6px] text-xs font-medium transition-all cursor-pointer"
               >
                 <Download className="w-3.5 h-3.5 text-[#d0d6e0]" />
                 Baixar Todos os Scripts
@@ -317,7 +241,7 @@ export const SaveManagerModal: React.FC<SaveManagerModalProps> = ({
               {/* Import Script File */}
               <button
                 onClick={() => scriptFileInputRef.current?.click()}
-                className="flex items-center justify-center gap-2 px-3 py-2.5 bg-[#27a644] hover:bg-[#27a644]/90 text-[#ffffff] rounded-[6px] text-xs font-medium transition-all"
+                className="flex items-center justify-center gap-2 px-3 py-2.5 bg-[#27a644] hover:bg-[#27a644]/90 text-[#ffffff] rounded-[6px] text-xs font-medium transition-all cursor-pointer"
               >
                 <Upload className="w-3.5 h-3.5" />
                 Importar Script (.py/.js)
@@ -344,7 +268,7 @@ export const SaveManagerModal: React.FC<SaveManagerModalProps> = ({
 
                     <button
                       onClick={() => downloadScript(file)}
-                      className="p-1 text-[#8a8f98] hover:text-[#27a644] transition-colors"
+                      className="p-1 text-[#8a8f98] hover:text-[#27a644] transition-colors cursor-pointer"
                       title={`Baixar ${file.name}`}
                     >
                       <Download className="w-3.5 h-3.5" />
@@ -356,7 +280,7 @@ export const SaveManagerModal: React.FC<SaveManagerModalProps> = ({
 
           </div>
 
-          {/* SECTION 3: Danger Zone - Reset Game from Scratch */}
+          {/* SECTION 2: Danger Zone - Reset Game from Scratch */}
           <div className="bg-[#161718] border border-[#eb5757]/30 rounded-[12px] p-4 space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -380,7 +304,7 @@ export const SaveManagerModal: React.FC<SaveManagerModalProps> = ({
                   setResetConfirmInput('');
                   setShowResetModal(true);
                 }}
-                className="flex items-center justify-center gap-2 px-4 py-2.5 bg-[#eb5757]/10 hover:bg-[#eb5757]/20 border border-[#eb5757]/30 text-[#eb5757] rounded-[6px] text-xs font-medium transition-all active:scale-98"
+                className="flex items-center justify-center gap-2 px-4 py-2.5 bg-[#eb5757]/10 hover:bg-[#eb5757]/20 border border-[#eb5757]/30 text-[#eb5757] rounded-[6px] text-xs font-medium transition-all active:scale-98 cursor-pointer"
               >
                 <RotateCcw className="w-4 h-4 text-[#eb5757]" />
                 Começar do Zero (Resetar Tudo)
@@ -394,7 +318,7 @@ export const SaveManagerModal: React.FC<SaveManagerModalProps> = ({
         <div className="px-5 py-3 bg-[#010409] border-t border-[#30363d] flex items-center justify-end">
           <button
             onClick={onClose}
-            className="px-4 py-2 bg-[#21262d] hover:bg-[#30363d] text-[#c9d1d9] rounded-lg text-xs font-bold transition-all"
+            className="px-4 py-2 bg-[#21262d] hover:bg-[#30363d] text-[#c9d1d9] rounded-lg text-xs font-bold transition-all cursor-pointer"
           >
             Fechar
           </button>
@@ -443,14 +367,14 @@ export const SaveManagerModal: React.FC<SaveManagerModalProps> = ({
             <div className="flex items-center justify-end gap-2 pt-2">
               <button
                 onClick={() => setShowResetModal(false)}
-                className="px-3.5 py-2 bg-[#21262d] hover:bg-[#30363d] text-[#c9d1d9] rounded-lg text-xs font-bold transition-all"
+                className="px-3.5 py-2 bg-[#21262d] hover:bg-[#30363d] text-[#c9d1d9] rounded-lg text-xs font-bold transition-all cursor-pointer"
               >
                 Cancelar
               </button>
               <button
                 onClick={handleResetGame}
                 disabled={!['RESETAR', 'DELETAR'].includes(resetConfirmInput.trim().toUpperCase())}
-                className="px-4 py-2 bg-rose-600 hover:bg-rose-500 disabled:opacity-30 disabled:hover:bg-rose-600 text-white rounded-lg text-xs font-bold transition-all active:scale-98 shadow-md"
+                className="px-4 py-2 bg-rose-600 hover:bg-rose-500 disabled:opacity-30 disabled:hover:bg-rose-600 text-white rounded-lg text-xs font-bold transition-all active:scale-98 shadow-md cursor-pointer"
               >
                 Confirmar Reset Total
               </button>
@@ -461,3 +385,4 @@ export const SaveManagerModal: React.FC<SaveManagerModalProps> = ({
     </div>
   );
 };
+

@@ -10,8 +10,6 @@ import {
   AlertCircle, 
   X, 
   RefreshCw, 
-  Copy, 
-  Check, 
   Sparkles,
   Server,
   Zap,
@@ -20,8 +18,7 @@ import {
   Download,
   FileCode,
   User,
-  ShieldCheck,
-  Terminal
+  ShieldCheck
 } from 'lucide-react';
 import { GameEngine } from '../engine/GameEngine';
 import { VirtualFS } from '../engine/virtualFs';
@@ -35,7 +32,6 @@ import {
   fetchLeaderboard, 
   publishCommunityScript, 
   fetchCommunityScripts, 
-  getSupabaseSqlSetupScript,
   CloudSaveData,
   LeaderboardEntry,
   CommunityScript
@@ -56,11 +52,11 @@ export const SupabaseModal: React.FC<SupabaseModalProps> = ({
   onClose,
   onFileImported
 }) => {
-  const [activeTab, setActiveTab] = useState<'cloud_save' | 'leaderboard' | 'scripts' | 'schema'>('cloud_save');
+  const [activeTab, setActiveTab] = useState<'cloud_save' | 'leaderboard' | 'scripts'>('cloud_save');
   const [connectionStatus, setConnectionStatus] = useState<{ loading: boolean; success: boolean; message: string }>({
     loading: true,
     success: false,
-    message: 'Verificando conexão com o Supabase...'
+    message: 'Verificando conexão com o servidor em nuvem...'
   });
 
   const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
@@ -82,9 +78,6 @@ export const SupabaseModal: React.FC<SupabaseModalProps> = ({
   const [scriptTitle, setScriptTitle] = useState('');
   const [scriptDesc, setScriptDesc] = useState('');
 
-  // SQL Schema Copy state
-  const [copiedSql, setCopiedSql] = useState(false);
-
   const programmerName = typeof window !== 'undefined' ? (localStorage.getItem('terrascript_programmer_name') || 'Dev Master') : 'Dev Master';
 
   const showFeedback = (type: 'success' | 'error', message: string) => {
@@ -104,7 +97,7 @@ export const SupabaseModal: React.FC<SupabaseModalProps> = ({
     loadTabContent('cloud_save');
   }, []);
 
-  const loadTabContent = async (tab: 'cloud_save' | 'leaderboard' | 'scripts' | 'schema') => {
+  const loadTabContent = async (tab: 'cloud_save' | 'leaderboard' | 'scripts') => {
     setActiveTab(tab);
     if (tab === 'cloud_save') {
       setIsLoadingSaves(true);
@@ -236,13 +229,6 @@ export const SupabaseModal: React.FC<SupabaseModalProps> = ({
     }
   };
 
-  // Copy SQL Script
-  const handleCopySql = () => {
-    navigator.clipboard.writeText(getSupabaseSqlSetupScript());
-    setCopiedSql(true);
-    setTimeout(() => setCopiedSql(false), 2500);
-  };
-
   return (
     <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200 font-pixel-body select-none">
       <div className="bg-[#0f1011] pixel-box-emerald w-full max-w-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
@@ -255,9 +241,9 @@ export const SupabaseModal: React.FC<SupabaseModalProps> = ({
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-sm font-pixel-header text-[#ffffff]">Integração Supabase</h2>
+                <h2 className="text-sm font-pixel-header text-[#ffffff]">Sincronização em Nuvem</h2>
                 <span className="text-[10px] font-pixel-mono px-2 py-0.5 rounded bg-[#10b981]/15 text-[#10b981] border border-[#10b981]/30">
-                  Banco de Dados PostgreSQL
+                  Banco de Dados em Nuvem
                 </span>
               </div>
               <p className="text-xs text-[#8a8f98] font-pixel-body">Cloud Saves, Leaderboard Global & Compartilhamento de Scripts na Nuvem</p>
@@ -266,7 +252,7 @@ export const SupabaseModal: React.FC<SupabaseModalProps> = ({
 
           <button
             onClick={onClose}
-            className="p-1.5 text-[#8a8f98] hover:text-[#ffffff] pixel-btn transition-all"
+            className="p-1.5 text-[#8a8f98] hover:text-[#ffffff] pixel-btn transition-all cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -276,7 +262,7 @@ export const SupabaseModal: React.FC<SupabaseModalProps> = ({
         <div className="px-5 py-2.5 bg-[#161718] border-b border-[#23252a] flex flex-wrap items-center justify-between gap-2 text-xs font-pixel-mono">
           <div className="flex items-center gap-2">
             <Server className="w-4 h-4 text-[#10b981]" />
-            <span className="text-[#8a8f98]">URL:</span>
+            <span className="text-[#8a8f98]">Servidor Nuvem:</span>
             <code className="text-[#34d399] bg-[#08090a] px-2 py-0.5 rounded border border-[#23252a] text-[11px] truncate max-w-[280px]">
               {supabaseUrl}
             </code>
@@ -293,14 +279,14 @@ export const SupabaseModal: React.FC<SupabaseModalProps> = ({
               </span>
             ) : (
               <span className="text-rose-400 flex items-center gap-1.5 font-bold">
-                <AlertCircle className="w-4 h-4 text-rose-400" /> Offline / Requer Tabelas
+                <AlertCircle className="w-4 h-4 text-rose-400" /> Offline / Erro de Servidor
               </span>
             )}
 
             <button
               onClick={handleTestConnection}
-              className="p-1 hover:bg-[#23252a] text-[#8a8f98] hover:text-white rounded transition-colors"
-              title="Re-testar conexão Supabase"
+              className="p-1 hover:bg-[#23252a] text-[#8a8f98] hover:text-white rounded transition-colors cursor-pointer"
+              title="Re-testar conexão com a nuvem"
             >
               <RefreshCw className="w-3.5 h-3.5" />
             </button>
@@ -327,7 +313,7 @@ export const SupabaseModal: React.FC<SupabaseModalProps> = ({
         <div className="flex items-center gap-1 px-5 pt-3 bg-[#08090a] border-b border-[#23252a] text-xs font-pixel-header">
           <button
             onClick={() => loadTabContent('cloud_save')}
-            className={`flex items-center gap-1.5 px-3.5 py-2 border-b-2 font-bold transition-all ${
+            className={`flex items-center gap-1.5 px-3.5 py-2 border-b-2 font-bold transition-all cursor-pointer ${
               activeTab === 'cloud_save'
                 ? 'border-[#10b981] text-[#10b981] bg-[#161718]'
                 : 'border-transparent text-[#8a8f98] hover:text-white'
@@ -339,7 +325,7 @@ export const SupabaseModal: React.FC<SupabaseModalProps> = ({
 
           <button
             onClick={() => loadTabContent('leaderboard')}
-            className={`flex items-center gap-1.5 px-3.5 py-2 border-b-2 font-bold transition-all ${
+            className={`flex items-center gap-1.5 px-3.5 py-2 border-b-2 font-bold transition-all cursor-pointer ${
               activeTab === 'leaderboard'
                 ? 'border-[#facc15] text-[#facc15] bg-[#161718]'
                 : 'border-transparent text-[#8a8f98] hover:text-white'
@@ -351,7 +337,7 @@ export const SupabaseModal: React.FC<SupabaseModalProps> = ({
 
           <button
             onClick={() => loadTabContent('scripts')}
-            className={`flex items-center gap-1.5 px-3.5 py-2 border-b-2 font-bold transition-all ${
+            className={`flex items-center gap-1.5 px-3.5 py-2 border-b-2 font-bold transition-all cursor-pointer ${
               activeTab === 'scripts'
                 ? 'border-[#02b8cc] text-[#02b8cc] bg-[#161718]'
                 : 'border-transparent text-[#8a8f98] hover:text-white'
@@ -359,18 +345,6 @@ export const SupabaseModal: React.FC<SupabaseModalProps> = ({
           >
             <Share2 className="w-4 h-4" />
             Scripts da Comunidade
-          </button>
-
-          <button
-            onClick={() => setActiveTab('schema')}
-            className={`flex items-center gap-1.5 px-3.5 py-2 border-b-2 font-bold transition-all ${
-              activeTab === 'schema'
-                ? 'border-[#a855f7] text-[#a855f7] bg-[#161718]'
-                : 'border-transparent text-[#8a8f98] hover:text-white'
-            }`}
-          >
-            <Terminal className="w-4 h-4" />
-            SQL Schema
           </button>
         </div>
 
@@ -394,7 +368,7 @@ export const SupabaseModal: React.FC<SupabaseModalProps> = ({
                 </div>
 
                 <p className="text-xs text-[#8a8f98] leading-relaxed font-sans">
-                  Sincronize todo o estado do terreno 3D, pesquisas desbloqueadas, recursos e scripts da workspace com seu banco de dados Supabase na nuvem.
+                  Sincronize todo o estado do terreno 3D, pesquisas desbloqueadas, recursos e scripts da workspace com seu banco de dados na nuvem.
                 </p>
 
                 <div className="pt-1 flex items-center gap-3">
@@ -404,12 +378,12 @@ export const SupabaseModal: React.FC<SupabaseModalProps> = ({
                     className="flex items-center gap-2 px-4 py-2.5 bg-[#10b981] hover:bg-[#059669] disabled:opacity-50 text-white rounded-lg text-xs font-bold transition-all active:scale-95 shadow-md cursor-pointer"
                   >
                     <CloudUpload className="w-4 h-4" />
-                    {isSavingCloud ? 'Salvando no Supabase...' : 'Enviar Save Atual para Nuvem'}
+                    {isSavingCloud ? 'Salvando na Nuvem...' : 'Enviar Save Atual para Nuvem'}
                   </button>
 
                   <button
                     onClick={() => loadTabContent('cloud_save')}
-                    className="p-2.5 bg-[#08090a] hover:bg-[#161718] border border-[#23252a] text-[#8a8f98] hover:text-white rounded-lg text-xs transition-all"
+                    className="p-2.5 bg-[#08090a] hover:bg-[#161718] border border-[#23252a] text-[#8a8f98] hover:text-white rounded-lg text-xs transition-all cursor-pointer"
                     title="Atualizar lista de saves"
                   >
                     <RefreshCw className={`w-4 h-4 ${isLoadingSaves ? 'animate-spin text-[#10b981]' : ''}`} />
@@ -422,18 +396,18 @@ export const SupabaseModal: React.FC<SupabaseModalProps> = ({
                 <div className="flex items-center justify-between">
                   <h3 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
                     <CloudDownload className="w-4 h-4 text-[#34d399]" />
-                    Saves Salvos na Nuvem Supabase ({cloudSaves.length})
+                    Saves Salvos na Nuvem ({cloudSaves.length})
                   </h3>
                 </div>
 
                 {isLoadingSaves ? (
                   <div className="py-8 text-center text-xs text-[#8a8f98] flex items-center justify-center gap-2">
                     <RefreshCw className="w-4 h-4 animate-spin text-[#10b981]" />
-                    Buscando saves do banco Supabase...
+                    Buscando saves do servidor em nuvem...
                   </div>
                 ) : cloudSaves.length === 0 ? (
                   <div className="p-6 text-center text-xs text-[#8a8f98] bg-[#08090a] rounded-lg border border-[#23252a] space-y-1">
-                    <p>Nenhum save na nuvem encontrado na tabela <code className="text-[#10b981]">terrascript_saves</code>.</p>
+                    <p>Nenhum save em nuvem encontrado.</p>
                     <p className="text-[11px] text-[#525866]">Clique acima em "Enviar Save Atual para Nuvem" para criar seu primeiro backup remoto!</p>
                   </div>
                 ) : (
@@ -479,7 +453,7 @@ export const SupabaseModal: React.FC<SupabaseModalProps> = ({
                     Ranking de Programadores & Automatizadores
                   </h3>
                   <p className="text-xs text-[#8a8f98] font-sans mt-1">
-                    Publique seus resultados de colheita e nível de prestígio para competir no ranking Supabase.
+                    Publique seus resultados de colheita e nível de prestígio para competir no ranking global na nuvem.
                   </p>
                 </div>
 
@@ -501,7 +475,7 @@ export const SupabaseModal: React.FC<SupabaseModalProps> = ({
                   </div>
                 ) : leaderboard.length === 0 ? (
                   <div className="p-6 text-center text-xs text-[#8a8f98] bg-[#08090a] rounded-lg border border-[#23252a]">
-                    Nenhuma pontuação registrada na tabela <code className="text-[#facc15]">terrascript_leaderboard</code> ainda. Seja o primeiro!
+                    Nenhuma pontuação registrada no ranking global ainda. Seja o primeiro!
                   </div>
                 ) : (
                   <div className="space-y-1.5 max-h-72 overflow-y-auto pr-1 font-pixel-mono text-xs">
@@ -543,7 +517,7 @@ export const SupabaseModal: React.FC<SupabaseModalProps> = ({
               <div className="bg-[#161718] border border-[#23252a] rounded-xl p-4 space-y-3">
                 <h3 className="text-xs font-bold text-[#02b8cc] uppercase tracking-wider flex items-center gap-2">
                   <Share2 className="w-4 h-4 text-[#02b8cc]" />
-                  Compartilhar Script Ativo no Supabase
+                  Compartilhar Script Ativo na Nuvem
                 </h3>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -590,11 +564,11 @@ export const SupabaseModal: React.FC<SupabaseModalProps> = ({
                 {isLoadingScripts ? (
                   <div className="py-8 text-center text-xs text-[#8a8f98] flex items-center justify-center gap-2">
                     <RefreshCw className="w-4 h-4 animate-spin text-[#02b8cc]" />
-                    Carregando scripts do Supabase...
+                    Carregando scripts da nuvem...
                   </div>
                 ) : communityScripts.length === 0 ? (
                   <div className="p-6 text-center text-xs text-[#8a8f98] bg-[#08090a] rounded-lg border border-[#23252a]">
-                    Nenhum script na tabela <code className="text-[#02b8cc]">terrascript_community_scripts</code> ainda. Seja o primeiro a compartilhar!
+                    Nenhum script compartilhado na nuvem ainda. Seja o primeiro a compartilhar!
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-64 overflow-y-auto pr-1">
@@ -630,43 +604,13 @@ export const SupabaseModal: React.FC<SupabaseModalProps> = ({
             </div>
           )}
 
-          {/* TAB 4: SQL SCHEMA SETUP */}
-          {activeTab === 'schema' && (
-            <div className="space-y-3">
-              <div className="bg-[#161718] border border-[#23252a] rounded-xl p-4 space-y-2">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-xs font-bold text-[#a855f7] uppercase tracking-wider flex items-center gap-2">
-                    <Terminal className="w-4 h-4 text-[#a855f7]" />
-                    Script DDL de Criação de Tabelas
-                  </h3>
-
-                  <button
-                    onClick={handleCopySql}
-                    className="flex items-center gap-1.5 px-3 py-1.5 bg-[#a855f7] hover:bg-[#9333ea] text-white rounded-lg text-xs font-bold transition-all active:scale-95 cursor-pointer"
-                  >
-                    {copiedSql ? <Check className="w-3.5 h-3.5 text-white" /> : <Copy className="w-3.5 h-3.5" />}
-                    {copiedSql ? 'Copiado!' : 'Copiar Código SQL'}
-                  </button>
-                </div>
-
-                <p className="text-xs text-[#8a8f98] font-sans leading-relaxed">
-                  Para que a integração de Saves, Leaderboard e Scripts funcione 100%, certifique-se de executar este código SQL dentro do <strong>SQL Editor</strong> do seu painel do Supabase (<code className="text-[#a855f7]">https://app.supabase.com</code>).
-                </p>
-
-                <div className="bg-[#08090a] p-3 rounded-lg border border-[#23252a] font-mono text-[11px] text-slate-300 max-h-64 overflow-y-auto leading-relaxed select-all">
-                  <pre>{getSupabaseSqlSetupScript()}</pre>
-                </div>
-              </div>
-            </div>
-          )}
-
         </div>
 
         {/* Modal Footer */}
         <div className="px-5 py-3 bg-[#08090a] border-t border-[#23252a] flex items-center justify-between shrink-0">
           <div className="text-[11px] text-[#8a8f98] font-mono flex items-center gap-1.5">
             <ShieldCheck className="w-3.5 h-3.5 text-[#10b981]" />
-            <span>Supabase Anon Key configurada e pronta.</span>
+            <span>Conexão com servidor em nuvem configurada e pronta.</span>
           </div>
 
           <button
