@@ -18,7 +18,7 @@ import {
   VolumeX,
   Music,
   User,
-  Database
+  Trophy
 } from 'lucide-react';
 import { GameLogo } from './GameLogo';
 import { GameEngine } from '../engine/GameEngine';
@@ -38,10 +38,17 @@ interface HeaderBarProps {
   setActiveTab: (tab: 'workspace' | 'research' | 'agents' | 'tutorial') => void;
   onOpenSaveManager?: () => void;
   onOpenWelcome?: () => void;
-  onOpenSupabase?: () => void;
+  onOpenLeaderboard?: () => void;
 }
 
-export const HeaderBar: React.FC<HeaderBarProps> = ({ engine, activeTab, setActiveTab, onOpenSaveManager, onOpenWelcome, onOpenSupabase }) => {
+export const HeaderBar: React.FC<HeaderBarProps> = ({ 
+  engine, 
+  activeTab, 
+  setActiveTab, 
+  onOpenSaveManager, 
+  onOpenWelcome, 
+  onOpenLeaderboard 
+}) => {
   const resources = engine.getResources();
   const mode = engine.getMode();
   const speed = engine.getSpeed();
@@ -85,16 +92,6 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({ engine, activeTab, setActi
                 <span className="font-normal truncate max-w-[120px]">{programmerName}</span>
               </button>
             )}
-            {onOpenSupabase && (
-              <button
-                onClick={onOpenSupabase}
-                title="Abrir Painel de Sincronização em Nuvem (Saves Remotos, Leaderboard & Scripts)"
-                className="hidden md:flex items-center gap-1.5 px-2.5 py-1 bg-[#10b981]/15 hover:bg-[#10b981]/25 text-[#10b981] border border-[#10b981]/40 rounded-md text-xs font-pixel-mono transition-all cursor-pointer"
-              >
-                <Database className="w-3.5 h-3.5 text-[#10b981]" />
-                <span className="font-bold">Sincronização em Nuvem</span>
-              </button>
-            )}
           </div>
         </div>
       </div>
@@ -124,7 +121,7 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({ engine, activeTab, setActi
           }`}
         >
           <FlaskConical className="w-4 h-4" />
-          <span>Árvore de Pesquisa</span>
+          <span>Pesquisas</span>
           {hasUpgrades && (
             <span className="ml-0.5 pixel-badge bg-[#a855f7] text-white text-xs px-1.5 py-0.5">
               {unlockableCount}
@@ -157,6 +154,17 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({ engine, activeTab, setActi
           <BookOpen className="w-4 h-4" />
           Guia
         </button>
+
+        {onOpenLeaderboard && (
+          <button
+            onClick={onOpenLeaderboard}
+            className="flex items-center gap-1.5 px-3.5 py-1.5 pixel-btn text-xs font-bold transition-all text-[#facc15] hover:text-[#ffffff] hover:bg-[#facc15]/20 bg-[#facc15]/10 border border-[#facc15]/30 cursor-pointer"
+            title="Abrir Leaderboard Global de Automatizadores"
+          >
+            <Trophy className="w-4 h-4 text-[#facc15]" />
+            Rank
+          </button>
+        )}
       </div>
 
       {/* Resource Indicators Bar (VISOR DE RECURSOS) */}

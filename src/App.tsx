@@ -15,7 +15,7 @@ import { SaveManagerModal } from './components/SaveManagerModal';
 import { WelcomeModal } from './components/WelcomeModal';
 import { QuickStartModal } from './components/QuickStartModal';
 import { PrestigeBar } from './components/PrestigeBar';
-import { SupabaseModal } from './components/SupabaseModal';
+import { LeaderboardModal } from './components/LeaderboardModal';
 import { audioManager } from './utils/audioManager';
 import { uploadCloudSaveWithAntiFraud } from './utils/supabaseClient';
 
@@ -27,7 +27,7 @@ export default function App() {
   const [activeFilePath, setActiveFilePath] = useState<string>('guia/main.py');
   const [activeTab, setActiveTab] = useState<'workspace' | 'research' | 'agents' | 'tutorial'>('workspace');
   const [isSaveModalOpen, setIsSaveModalOpen] = useState<boolean>(false);
-  const [isSupabaseModalOpen, setIsSupabaseModalOpen] = useState<boolean>(false);
+  const [isLeaderboardOpen, setIsLeaderboardOpen] = useState<boolean>(false);
   const [isWelcomeModalOpen, setIsWelcomeModalOpen] = useState<boolean>(() => {
     if (typeof window !== 'undefined') {
       const welcomeSeen = localStorage.getItem('terrascript_welcome_seen') === 'true';
@@ -207,7 +207,7 @@ export default function App() {
         setActiveTab={setActiveTab}
         onOpenSaveManager={() => setIsSaveModalOpen(true)}
         onOpenWelcome={() => setIsWelcomeModalOpen(true)}
-        onOpenSupabase={() => setIsSupabaseModalOpen(true)}
+        onOpenLeaderboard={() => setIsLeaderboardOpen(true)}
       />
 
       {/* Prestige Progress Bar (v2.1.0 - Progressive Disclosure) */}
@@ -291,21 +291,14 @@ export default function App() {
             setIsQuickStartModalOpen(false);
             setRenderTick(t => t + 1);
           }}
-          onOpenSupabase={() => setIsSupabaseModalOpen(true)}
         />
       )}
 
-      {/* Supabase Database Modal */}
-      {isSupabaseModalOpen && (
-        <SupabaseModal
+      {/* Global Leaderboard Modal */}
+      {isLeaderboardOpen && (
+        <LeaderboardModal
           engine={engine}
-          vfs={vfs}
-          activeFilePath={activeFile ? activeFile.path : 'main.py'}
-          onClose={() => setIsSupabaseModalOpen(false)}
-          onFileImported={(newPath) => {
-            setActiveFilePath(newPath);
-            setRenderTick(t => t + 1);
-          }}
+          onClose={() => setIsLeaderboardOpen(false)}
         />
       )}
 
