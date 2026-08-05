@@ -8,10 +8,21 @@ export interface ChangelogRelease {
 
 export const CHANGELOG_HISTORY: ChangelogRelease[] = [
   {
+    version: 'v2.7.0',
+    date: '2026-08-05',
+    title: 'Sistema de Leaderboards, Sincronização em Nuvem & Conta Online',
+    isCurrent: true,
+    changes: [
+      'Implementação do sistema de Leaderboards',
+      'Migração para sincronização em Nuvem',
+      'Criação de Conta Online do jogador'
+    ]
+  },
+  {
     version: 'v2.6.2',
     date: '2026-08-04',
     title: 'Mecanismo Anti-Preguiça Silencioso (Timer 5 Minutos), Limite de 100 Linhas de Código & Ajustes de Interface',
-    isCurrent: true,
+    isCurrent: false,
     changes: [
       'Limite Estrito de 100 Linhas por Script: Trava automática de segurança que impede a execução de scripts com mais de 100 linhas de código. Exibe indicador em tempo real no cabeçalho do editor e alertas educativos no Console.',
       'Mecanismo Anti-Preguiça Interno (5 Minutos Corridos): Execuções contínuas de scripts em laço infinito são limitadas a 5 minutos corridos por agente sem poluir a interface. Ao estourar o tempo, o script é pausado e registra no Console uma mensagem divertida ao jogador.',
