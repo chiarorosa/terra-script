@@ -86,8 +86,7 @@ export class GameEngine {
     energy: 0,
     biomass: 0,
     catalyst: 0,
-    crystals: 0,
-    fossils: 0
+    crystals: 0
   };
   private techTree: TechNode[] = getInitialTechTree();
   private prestige: PrestigeState = {
@@ -557,8 +556,7 @@ export class GameEngine {
       energy: 0,
       biomass: 0,
       catalyst: 0,
-      crystals: 0,
-      fossils: 0
+      crystals: 0
     };
 
     // Reset Tech Tree with clean unmutated template
@@ -1173,8 +1171,7 @@ export class GameEngine {
       harvested_energy: ag.stats.harvestedResources.energy || 0,
       harvested_biomass: ag.stats.harvestedResources.biomass || 0,
       harvested_crystals: ag.stats.harvestedResources.crystals || 0,
-      harvested_catalyst: ag.stats.harvestedResources.catalyst || 0,
-      harvested_fossils: ag.stats.harvestedResources.fossils || 0,
+      harvested_catalyst: ag.stats.harvestedResources.catalyst || 0
     };
   }
 
@@ -1402,9 +1399,8 @@ export class GameEngine {
     else if (['energy', 'energia'].includes(normalized)) key = 'energy';
     else if (['biomass', 'biomassa'].includes(normalized)) key = 'biomass';
     else if (['crystals', 'crystal', 'cristal', 'cristais'].includes(normalized)) key = 'crystals';
-    else if (['fossils', 'fossil', 'fosseis'].includes(normalized)) key = 'fossils';
     else {
-      this.addLog(agentId, 'stderr', `🚨 Recurso inválido '${rawResource}' para prestígio. Use: 'fiber', 'wood', 'roots', 'fruits', 'energy', 'biomass', 'crystals' ou 'fossils'.`);
+      this.addLog(agentId, 'stderr', `🚨 Recurso inválido '${rawResource}' para prestígio. Use: 'fiber', 'wood', 'roots', 'fruits', 'energy', 'biomass', 'crystals' ou 'catalyst'.`);
       return false;
     }
 
@@ -1423,8 +1419,7 @@ export class GameEngine {
       energy: 500,
       biomass: 2000,
       catalyst: 5000,
-      crystals: 10000,
-      fossils: 50000
+      crystals: 10000
     };
 
     const ptsGained = amount * (rates[key] || 1);

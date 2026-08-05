@@ -62,7 +62,6 @@ export interface LeaderboardEntry {
   biomass: number;
   catalyst?: number;
   crystals?: number;
-  fossils?: number;
   prestige_level: number;
   prestige_points?: number;
   wealth_score?: number;
@@ -75,7 +74,7 @@ export interface LeaderboardEntry {
  * Calculates a balanced stock wealth score based on item complexity and production difficulty.
  * Base crops: Fiber=1, Wood=2, Roots=3, Fruits=4
  * Refined energy/biomass: Energy=5, Biomass=8
- * Rare resources: Catalyst=15, Crystals=25, Fossils=40
+ * Rare resources: Catalyst=15, Crystals=25
  */
 export function calculateWealthScore(res: {
   fiber?: number;
@@ -86,7 +85,6 @@ export function calculateWealthScore(res: {
   biomass?: number;
   catalyst?: number;
   crystals?: number;
-  fossils?: number;
 }): number {
   const f = Math.max(0, Number(res?.fiber) || 0);
   const w = Math.max(0, Number(res?.wood) || 0);
@@ -96,9 +94,8 @@ export function calculateWealthScore(res: {
   const b = Math.max(0, Number(res?.biomass) || 0);
   const c = Math.max(0, Number(res?.catalyst) || 0);
   const cr = Math.max(0, Number(res?.crystals) || 0);
-  const fo = Math.max(0, Number(res?.fossils) || 0);
 
-  const totalWeighted = f * 1 + w * 2 + r * 3 + fr * 4 + e * 5 + b * 8 + c * 15 + cr * 25 + fo * 40;
+  const totalWeighted = f * 1 + w * 2 + r * 3 + fr * 4 + e * 5 + b * 8 + c * 15 + cr * 25;
   return Math.floor(totalWeighted);
 }
 
@@ -395,7 +392,6 @@ export async function uploadCloudSaveWithAntiFraud(
       biomass: finalSaveData.resources?.biomass || 0,
       catalyst: finalSaveData.resources?.catalyst || 0,
       crystals: finalSaveData.resources?.crystals || 0,
-      fossils: finalSaveData.resources?.fossils || 0,
       prestigeLevel: prestigeLevel,
       prestigePoints: prestigeTotalPts,
       agentsCount: Array.isArray(finalSaveData.agents) ? finalSaveData.agents.length : 1,
@@ -490,7 +486,6 @@ export async function submitLeaderboardScore(entry: {
   biomass: number;
   catalyst?: number;
   crystals?: number;
-  fossils?: number;
   prestigeLevel: number;
   prestigePoints?: number;
   agentsCount: number;
@@ -505,8 +500,7 @@ export async function submitLeaderboardScore(entry: {
       energy: entry.energy,
       biomass: entry.biomass,
       catalyst: entry.catalyst,
-      crystals: entry.crystals,
-      fossils: entry.fossils
+      crystals: entry.crystals
     });
 
     const record = {
@@ -519,7 +513,6 @@ export async function submitLeaderboardScore(entry: {
       biomass: entry.biomass || 0,
       catalyst: entry.catalyst || 0,
       crystals: entry.crystals || 0,
-      fossils: entry.fossils || 0,
       prestige_level: entry.prestigeLevel || 1,
       prestige_points: entry.prestigePoints || 0,
       wealth_score: calculatedWealth,
@@ -733,7 +726,6 @@ CREATE TABLE IF NOT EXISTS public.terrascript_leaderboard (
     biomass BIGINT DEFAULT 0,
     catalyst BIGINT DEFAULT 0,
     crystals BIGINT DEFAULT 0,
-    fossils BIGINT DEFAULT 0,
     prestige_level INT DEFAULT 1,
     prestige_points BIGINT DEFAULT 0,
     wealth_score BIGINT DEFAULT 0,
@@ -747,8 +739,7 @@ ALTER TABLE public.terrascript_leaderboard
   ADD COLUMN IF NOT EXISTS prestige_points BIGINT DEFAULT 0,
   ADD COLUMN IF NOT EXISTS wealth_score BIGINT DEFAULT 0,
   ADD COLUMN IF NOT EXISTS catalyst BIGINT DEFAULT 0,
-  ADD COLUMN IF NOT EXISTS crystals BIGINT DEFAULT 0,
-  ADD COLUMN IF NOT EXISTS fossils BIGINT DEFAULT 0;
+  ADD COLUMN IF NOT EXISTS crystals BIGINT DEFAULT 0;
 
 CREATE INDEX IF NOT EXISTS idx_leaderboard_prestige_points ON public.terrascript_leaderboard (prestige_points DESC, prestige_level DESC);
 CREATE INDEX IF NOT EXISTS idx_leaderboard_wealth_score ON public.terrascript_leaderboard (wealth_score DESC);

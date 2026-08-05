@@ -10,8 +10,7 @@ ALTER TABLE public.terrascript_leaderboard
   ADD COLUMN IF NOT EXISTS prestige_points BIGINT DEFAULT 0,
   ADD COLUMN IF NOT EXISTS wealth_score BIGINT DEFAULT 0,
   ADD COLUMN IF NOT EXISTS catalyst BIGINT DEFAULT 0,
-  ADD COLUMN IF NOT EXISTS crystals BIGINT DEFAULT 0,
-  ADD COLUMN IF NOT EXISTS fossils BIGINT DEFAULT 0;
+  ADD COLUMN IF NOT EXISTS crystals BIGINT DEFAULT 0;
 
 -- 2. Criar índices de alta performance para consulta dos dois rankings
 CREATE INDEX IF NOT EXISTS idx_leaderboard_prestige_points 
@@ -30,8 +29,7 @@ SET wealth_score = (
   COALESCE(energy, 0) * 5 +
   COALESCE(biomass, 0) * 8 +
   COALESCE(catalyst, 0) * 15 +
-  COALESCE(crystals, 0) * 25 +
-  COALESCE(fossils, 0) * 40
+  COALESCE(crystals, 0) * 25
 )
 WHERE wealth_score IS NULL OR wealth_score = 0;
 

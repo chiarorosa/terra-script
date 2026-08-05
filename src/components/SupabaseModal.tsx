@@ -192,7 +192,6 @@ export const SupabaseModal: React.FC<SupabaseModalProps> = ({
       biomass: resources.biomass,
       catalyst: resources.catalyst,
       crystals: resources.crystals,
-      fossils: resources.fossils,
       prestigeLevel: prestigeLevel,
       prestigePoints: prestigePoints,
       agentsCount: agents,
@@ -538,7 +537,7 @@ export const SupabaseModal: React.FC<SupabaseModalProps> = ({
                 <div className="p-2.5 bg-[#0284c7]/10 border border-[#0284c7]/30 rounded-lg text-[11px] text-[#7dd3fc] font-sans flex items-start gap-2">
                   <Coins className="w-4 h-4 shrink-0 mt-0.5 text-[#38bdf8]" />
                   <span>
-                    <strong className="text-white">Métrica de Riqueza Balanceada:</strong> Cálculo em tempo real do estoque em inventário ponderado por complexidade (Fibra=1, Madeira=2, Raízes=3, Frutas=4, Energia=5, Biomassa=8, Catalisador=15, Cristais=25, Fósseis=40).
+                    <strong className="text-white">Métrica de Riqueza Balanceada:</strong> Cálculo em tempo real do estoque em inventário ponderado por complexidade (Fibra=1, Madeira=2, Raízes=3, Frutas=4, Energia=5, Biomassa=8, Catalisador=15, Cristais=25).
                   </span>
                 </div>
               )}

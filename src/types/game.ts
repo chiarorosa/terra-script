@@ -10,7 +10,6 @@ export type CropType =
   | 'COMPANION_CROP'
   | 'MAZE_WALL'
   | 'MAZE_CORE'
-  | 'FOSSIL_TRAIL'
   | 'PRESTIGE';
 
 export type GroundType = 'NATURAL' | 'SOIL' | 'TILLED' | 'IRRIGATED' | 'SOAKED' | 'PRESTIGE';
@@ -42,7 +41,6 @@ export interface ResourceMap {
   biomass: number;
   catalyst: number;
   crystals: number;
-  fossils: number;
 }
 
 export interface CompanionRequest {
@@ -86,8 +84,7 @@ export function createDefaultAgentStats(): AgentStats {
       energy: 0,
       biomass: 0,
       catalyst: 0,
-      crystals: 0,
-      fossils: 0
+      crystals: 0
     },
     plantedCount: 0,
     harvestedCount: 0,
@@ -109,7 +106,6 @@ export interface Agent {
   actionMessage?: string;
   lastActionTick?: number;
   runStartTime?: number;
-  tailLength?: number; // For fossil trail snake challenge
   tailCoords?: Array<{ x: number; y: number }>;
   stats: AgentStats;
 }
