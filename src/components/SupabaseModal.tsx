@@ -18,7 +18,12 @@ import {
   Download,
   FileCode,
   User,
-  ShieldCheck
+  ShieldCheck,
+  Copy,
+  Coins,
+  TrendingUp,
+  Award,
+  Gem
 } from 'lucide-react';
 import { GameEngine } from '../engine/GameEngine';
 import { VirtualFS } from '../engine/virtualFs';
@@ -32,6 +37,8 @@ import {
   fetchLeaderboard, 
   publishCommunityScript, 
   fetchCommunityScripts, 
+  getSupabaseSqlSetupScript,
+  calculateWealthScore,
   CloudSaveData,
   LeaderboardEntry,
   CommunityScript
@@ -52,7 +59,8 @@ export const SupabaseModal: React.FC<SupabaseModalProps> = ({
   onClose,
   onFileImported
 }) => {
-  const [activeTab, setActiveTab] = useState<'cloud_save' | 'leaderboard' | 'scripts'>('cloud_save');
+  const [activeTab, setActiveTab] = useState<'cloud_save' | 'leaderboard' | 'scripts' | 'sql_setup'>('cloud_save');
+  const [copiedSql, setCopiedSql] = useState<boolean>(false);
   const [connectionStatus, setConnectionStatus] = useState<{ loading: boolean; success: boolean; message: string }>({
     loading: true,
     success: false,
@@ -68,6 +76,7 @@ export const SupabaseModal: React.FC<SupabaseModalProps> = ({
 
   // Leaderboard state
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
+  const [leaderboardSubTab, setLeaderboardSubTab] = useState<'prestige' | 'wealth'>('prestige');
   const [isSubmittingScore, setIsSubmittingScore] = useState(false);
   const [isLoadingLeaderboard, setIsLoadingLeaderboard] = useState(false);
 
@@ -97,7 +106,10 @@ export const SupabaseModal: React.FC<SupabaseModalProps> = ({
     loadTabContent('cloud_save');
   }, []);
 
-  const loadTabContent = async (tab: 'cloud_save' | 'leaderboard' | 'scripts') => {
+  const loadTabContent = async (
+    tab: 'cloud_save' | 'leaderboard' | 'scripts' | 'sql_setup',
+    targetLeaderboardTab?: 'prestige' | 'wealth'
+  ) => {
     setActiveTab(tab);
     if (tab === 'cloud_save') {
       setIsLoadingSaves(true);
@@ -105,8 +117,10 @@ export const SupabaseModal: React.FC<SupabaseModalProps> = ({
       if (res.success && res.saves) setCloudSaves(res.saves);
       setIsLoadingSaves(false);
     } else if (tab === 'leaderboard') {
+      const activeType = targetLeaderboardTab || leaderboardSubTab;
+      if (targetLeaderboardTab) setLeaderboardSubTab(targetLeaderboardTab);
       setIsLoadingLeaderboard(true);
-      const res = await fetchLeaderboard();
+      const res = await fetchLeaderboard(activeType);
       if (res.success && res.entries) setLeaderboard(res.entries);
       setIsLoadingLeaderboard(false);
     } else if (tab === 'scripts') {
@@ -162,7 +176,9 @@ export const SupabaseModal: React.FC<SupabaseModalProps> = ({
   const handleSubmitScore = async () => {
     setIsSubmittingScore(true);
     const resources = engine.getResources();
-    const prestige = engine.getPrestige().level;
+    const prestigeObj = engine.getPrestige();
+    const prestigeLevel = prestigeObj.level;
+    const prestigePoints = prestigeObj.totalPoints || 0;
     const agents = engine.getAgents().length;
     const techs = engine.getUnlockedTechIds().length;
 
@@ -174,7 +190,11 @@ export const SupabaseModal: React.FC<SupabaseModalProps> = ({
       fruits: resources.fruits,
       energy: resources.energy,
       biomass: resources.biomass,
-      prestigeLevel: prestige,
+      catalyst: resources.catalyst,
+      crystals: resources.crystals,
+      fossils: resources.fossils,
+      prestigeLevel: prestigeLevel,
+      prestigePoints: prestigePoints,
       agentsCount: agents,
       techsUnlocked: techs
     });
@@ -353,6 +373,18 @@ export const SupabaseModal: React.FC<SupabaseModalProps> = ({
             <Share2 className="w-4 h-4" />
             Scripts da Comunidade
           </button>
+
+          <button
+            onClick={() => loadTabContent('sql_setup')}
+            className={`flex items-center gap-1.5 px-3.5 py-2 border-b-2 font-bold transition-all cursor-pointer ${
+              activeTab === 'sql_setup'
+                ? 'border-[#a855f7] text-[#a855f7] bg-[#161718]'
+                : 'border-transparent text-[#8a8f98] hover:text-white'
+            }`}
+          >
+            <FileCode className="w-4 h-4" />
+            Script SQL (Setup)
+          </button>
         </div>
 
         {/* Modal Body Content */}
@@ -457,10 +489,10 @@ export const SupabaseModal: React.FC<SupabaseModalProps> = ({
                 <div>
                   <h3 className="text-xs font-bold text-[#facc15] uppercase tracking-wider flex items-center gap-2">
                     <Trophy className="w-4 h-4 text-[#facc15]" />
-                    Ranking de Programadores & Automatizadores
+                    Leaderboard Global de Automatizadores
                   </h3>
                   <p className="text-xs text-[#8a8f98] font-sans mt-1">
-                    Publique seus resultados de colheita e nível de prestígio para competir no ranking global na nuvem.
+                    Compita nos rankings globais de Prestígio Acumulado e Riqueza em Estoque na nuvem.
                   </p>
                 </div>
 
@@ -474,6 +506,43 @@ export const SupabaseModal: React.FC<SupabaseModalProps> = ({
                 </button>
               </div>
 
+              {/* Sub-Tabs: Prestígio vs Riqueza */}
+              <div className="flex items-center gap-2 border-b border-[#23252a] pb-2">
+                <button
+                  onClick={() => loadTabContent('leaderboard', 'prestige')}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    leaderboardSubTab === 'prestige'
+                      ? 'bg-[#facc15]/20 text-[#facc15] border border-[#facc15]/40'
+                      : 'bg-[#161718] text-[#8a8f98] border border-[#23252a] hover:text-white'
+                  }`}
+                >
+                  <Award className="w-3.5 h-3.5" />
+                  <span>🏆 Prestígio Mais Alto</span>
+                </button>
+
+                <button
+                  onClick={() => loadTabContent('leaderboard', 'wealth')}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    leaderboardSubTab === 'wealth'
+                      ? 'bg-[#38bdf8]/20 text-[#38bdf8] border border-[#38bdf8]/40'
+                      : 'bg-[#161718] text-[#8a8f98] border border-[#23252a] hover:text-white'
+                  }`}
+                >
+                  <Coins className="w-3.5 h-3.5" />
+                  <span>💰 Maior Riqueza (Estoque)</span>
+                </button>
+              </div>
+
+              {/* Formula Explanation for Wealth Ranking */}
+              {leaderboardSubTab === 'wealth' && (
+                <div className="p-2.5 bg-[#0284c7]/10 border border-[#0284c7]/30 rounded-lg text-[11px] text-[#7dd3fc] font-sans flex items-start gap-2">
+                  <Coins className="w-4 h-4 shrink-0 mt-0.5 text-[#38bdf8]" />
+                  <span>
+                    <strong className="text-white">Métrica de Riqueza Balanceada:</strong> Cálculo em tempo real do estoque em inventário ponderado por complexidade (Fibra=1, Madeira=2, Raízes=3, Frutas=4, Energia=5, Biomassa=8, Catalisador=15, Cristais=25, Fósseis=40).
+                  </span>
+                </div>
+              )}
+
               <div className="bg-[#161718] border border-[#23252a] rounded-xl p-4 space-y-3">
                 {isLoadingLeaderboard ? (
                   <div className="py-8 text-center text-xs text-[#8a8f98] flex items-center justify-center gap-2">
@@ -482,35 +551,70 @@ export const SupabaseModal: React.FC<SupabaseModalProps> = ({
                   </div>
                 ) : leaderboard.length === 0 ? (
                   <div className="p-6 text-center text-xs text-[#8a8f98] bg-[#08090a] rounded-lg border border-[#23252a]">
-                    Nenhuma pontuação registrada no ranking global ainda. Seja o primeiro!
+                    Nenhuma pontuação registrada neste ranking ainda. Seja o primeiro!
                   </div>
                 ) : (
-                  <div className="space-y-1.5 max-h-72 overflow-y-auto pr-1 font-pixel-mono text-xs">
-                    <div className="grid grid-cols-12 px-3 py-1.5 text-[10px] text-[#8a8f98] uppercase tracking-wider font-bold border-b border-[#23252a]">
-                      <span className="col-span-1">#</span>
-                      <span className="col-span-4">Programador(a)</span>
-                      <span className="col-span-2 text-right">Fibra</span>
-                      <span className="col-span-2 text-right">Madeira</span>
-                      <span className="col-span-3 text-right">Prestígio</span>
-                    </div>
-
-                    {leaderboard.map((entry, idx) => (
-                      <div key={entry.id || entry.player_name} className={`grid grid-cols-12 px-3 py-2 items-center rounded-lg border text-xs ${
-                        idx === 0 ? 'bg-[#facc15]/10 border-[#facc15]/40 text-[#facc15]' :
-                        idx === 1 ? 'bg-slate-800/40 border-slate-600 text-slate-200' :
-                        idx === 2 ? 'bg-amber-950/30 border-amber-800/50 text-amber-300' :
-                        'bg-[#08090a] border-[#23252a] text-[#d0d6e0]'
-                      }`}>
-                        <span className="col-span-1 font-bold">{idx + 1}º</span>
-                        <span className="col-span-4 font-bold truncate flex items-center gap-1.5">
-                          {idx === 0 && <Sparkles className="w-3.5 h-3.5 text-[#facc15] shrink-0" />}
-                          {entry.player_name}
-                        </span>
-                        <span className="col-span-2 text-right">{entry.fiber || 0}</span>
-                        <span className="col-span-2 text-right text-emerald-400">{entry.wood || 0}</span>
-                        <span className="col-span-3 text-right font-bold text-amber-400">Nível {entry.prestige_level || 1}</span>
+                  <div className="space-y-1.5 max-h-80 overflow-y-auto pr-1 font-pixel-mono text-xs">
+                    {/* Header based on active SubTab */}
+                    {leaderboardSubTab === 'prestige' ? (
+                      <div className="grid grid-cols-12 px-3 py-1.5 text-[10px] text-[#8a8f98] uppercase tracking-wider font-bold border-b border-[#23252a]">
+                        <span className="col-span-1">#</span>
+                        <span className="col-span-4">Programador(a)</span>
+                        <span className="col-span-2 text-center">Nível</span>
+                        <span className="col-span-3 text-right">EXP Prestígio</span>
+                        <span className="col-span-2 text-right">Agentes</span>
                       </div>
-                    ))}
+                    ) : (
+                      <div className="grid grid-cols-12 px-3 py-1.5 text-[10px] text-[#8a8f98] uppercase tracking-wider font-bold border-b border-[#23252a]">
+                        <span className="col-span-1">#</span>
+                        <span className="col-span-4">Programador(a)</span>
+                        <span className="col-span-3 text-right">Pontos de Riqueza</span>
+                        <span className="col-span-4 text-right">Amostra Estoque</span>
+                      </div>
+                    )}
+
+                    {leaderboard.map((entry, idx) => {
+                      const computedWealth = entry.wealth_score || calculateWealthScore(entry);
+                      const computedExp = entry.prestige_points || ((entry.prestige_level || 1) * 100);
+
+                      return (
+                        <div key={entry.id || entry.player_name} className={`grid grid-cols-12 px-3 py-2 items-center rounded-lg border text-xs ${
+                          idx === 0 ? 'bg-[#facc15]/10 border-[#facc15]/40 text-[#facc15]' :
+                          idx === 1 ? 'bg-slate-800/40 border-slate-600 text-slate-200' :
+                          idx === 2 ? 'bg-amber-950/30 border-amber-800/50 text-amber-300' :
+                          'bg-[#08090a] border-[#23252a] text-[#d0d6e0]'
+                        }`}>
+                          <span className="col-span-1 font-bold">{idx + 1}º</span>
+                          <span className="col-span-4 font-bold truncate flex items-center gap-1.5">
+                            {idx === 0 && <Sparkles className="w-3.5 h-3.5 text-[#facc15] shrink-0" />}
+                            {entry.player_name}
+                          </span>
+
+                          {leaderboardSubTab === 'prestige' ? (
+                            <>
+                              <span className="col-span-2 text-center font-bold text-amber-400">
+                                Lv. {entry.prestige_level || 1}
+                              </span>
+                              <span className="col-span-3 text-right font-bold text-[#facc15]">
+                                {computedExp.toLocaleString()} EXP
+                              </span>
+                              <span className="col-span-2 text-right text-[#a855f7]">
+                                🤖 {entry.agents_count || 1}
+                              </span>
+                            </>
+                          ) : (
+                            <>
+                              <span className="col-span-3 text-right font-bold text-[#38bdf8]">
+                                {computedWealth.toLocaleString()} pts
+                              </span>
+                              <span className="col-span-4 text-right text-[11px] text-[#a1a1aa] font-mono truncate">
+                                🌱{entry.fiber || 0} 🪵{entry.wood || 0} ⚡{entry.energy || 0} {entry.crystals ? `💎${entry.crystals}` : ''}
+                              </span>
+                            </>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               </div>
@@ -607,6 +711,55 @@ export const SupabaseModal: React.FC<SupabaseModalProps> = ({
                     ))}
                   </div>
                 )}
+              </div>
+            </div>
+          )}
+
+          {/* TAB 4: SQL SETUP SCRIPT */}
+          {activeTab === 'sql_setup' && (
+            <div className="space-y-4">
+              <div className="bg-[#161718] border border-[#23252a] rounded-xl p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <FileCode className="w-5 h-5 text-[#a855f7]" />
+                    <div>
+                      <h3 className="text-xs font-bold text-white uppercase tracking-wider">
+                        Script SQL de Inicialização (Supabase Dashboard)
+                      </h3>
+                      <p className="text-[11px] text-[#8a8f98] font-sans">
+                        Execute este script no <strong className="text-white">SQL Editor</strong> do seu projeto Supabase (<span className="text-[#38bdf8]">app.supabase.com</span>) para criar as tabelas e permissões RLS.
+                      </p>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => {
+                      const sql = getSupabaseSqlSetupScript();
+                      navigator.clipboard.writeText(sql);
+                      setCopiedSql(true);
+                      setTimeout(() => setCopiedSql(false), 2500);
+                    }}
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-[#a855f7]/20 hover:bg-[#a855f7]/30 text-[#a855f7] border border-[#a855f7]/40 rounded font-pixel-mono text-xs font-bold transition-all cursor-pointer shrink-0"
+                  >
+                    {copiedSql ? (
+                      <>
+                        <CheckCircle2 className="w-3.5 h-3.5 text-[#a855f7]" />
+                        <span>Copiado!</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-3.5 h-3.5" />
+                        <span>Copiar SQL</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+
+                <div className="relative">
+                  <pre className="p-3 bg-[#08090a] border border-[#23252a] rounded-lg text-[10px] font-mono text-[#a855f7] max-h-72 overflow-y-auto whitespace-pre-wrap select-all">
+                    {getSupabaseSqlSetupScript()}
+                  </pre>
+                </div>
               </div>
             </div>
           )}

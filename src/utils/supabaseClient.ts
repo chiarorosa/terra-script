@@ -60,10 +60,46 @@ export interface LeaderboardEntry {
   fruits: number;
   energy: number;
   biomass: number;
+  catalyst?: number;
+  crystals?: number;
+  fossils?: number;
   prestige_level: number;
+  prestige_points?: number;
+  wealth_score?: number;
   agents_count: number;
   techs_unlocked: number;
   updated_at?: string;
+}
+
+/**
+ * Calculates a balanced stock wealth score based on item complexity and production difficulty.
+ * Base crops: Fiber=1, Wood=2, Roots=3, Fruits=4
+ * Refined energy/biomass: Energy=5, Biomass=8
+ * Rare resources: Catalyst=15, Crystals=25, Fossils=40
+ */
+export function calculateWealthScore(res: {
+  fiber?: number;
+  wood?: number;
+  roots?: number;
+  fruits?: number;
+  energy?: number;
+  biomass?: number;
+  catalyst?: number;
+  crystals?: number;
+  fossils?: number;
+}): number {
+  const f = Math.max(0, Number(res?.fiber) || 0);
+  const w = Math.max(0, Number(res?.wood) || 0);
+  const r = Math.max(0, Number(res?.roots) || 0);
+  const fr = Math.max(0, Number(res?.fruits) || 0);
+  const e = Math.max(0, Number(res?.energy) || 0);
+  const b = Math.max(0, Number(res?.biomass) || 0);
+  const c = Math.max(0, Number(res?.catalyst) || 0);
+  const cr = Math.max(0, Number(res?.crystals) || 0);
+  const fo = Math.max(0, Number(res?.fossils) || 0);
+
+  const totalWeighted = f * 1 + w * 2 + r * 3 + fr * 4 + e * 5 + b * 8 + c * 15 + cr * 25 + fo * 40;
+  return Math.floor(totalWeighted);
 }
 
 export interface CommunityScript {
@@ -168,12 +204,24 @@ export async function registerCloudUser(
       .insert([payload]);
 
     if (error) {
-      // Table might not exist yet if script wasn't executed in dashboard
+      console.error('Erro ao registrar usuário no Supabase:', error);
       if (error.code === '42P01') {
-        console.warn('Tabela terrascript_users não existe, prosseguindo com registro direto no save.');
+        return { 
+          success: false, 
+          message: 'A tabela "terrascript_users" ainda não existe no seu Supabase. Execute o script SQL de criação (schema.sql) no SQL Editor do Supabase.' 
+        };
       } else if (error.code === '23505') {
         return { success: false, message: 'Nome de jogador ou e-mail já cadastrado.' };
+      } else if (error.code === '42501') {
+        return { 
+          success: false, 
+          message: 'Permissão negada (RLS) no Supabase. Recrie as políticas de segurança usando o script SQL (schema.sql).' 
+        };
       }
+      return { 
+        success: false, 
+        message: `Falha ao cadastrar no Supabase: ${error.message}` 
+      };
     }
 
     if (typeof window !== 'undefined') {
@@ -335,6 +383,8 @@ export async function uploadCloudSaveWithAntiFraud(
     }
 
     // Also update Leaderboard automatically
+    const prestigeTotalPts = finalSaveData.prestige?.totalPoints || 0;
+
     await submitLeaderboardScore({
       playerName,
       fiber: fiberCount,
@@ -343,7 +393,11 @@ export async function uploadCloudSaveWithAntiFraud(
       fruits: finalSaveData.resources?.fruits || 0,
       energy: finalSaveData.resources?.energy || 0,
       biomass: finalSaveData.resources?.biomass || 0,
+      catalyst: finalSaveData.resources?.catalyst || 0,
+      crystals: finalSaveData.resources?.crystals || 0,
+      fossils: finalSaveData.resources?.fossils || 0,
       prestigeLevel: prestigeLevel,
+      prestigePoints: prestigeTotalPts,
       agentsCount: Array.isArray(finalSaveData.agents) ? finalSaveData.agents.length : 1,
       techsUnlocked: Array.isArray(finalSaveData.techTree) ? finalSaveData.techTree.filter((t: any) => t.unlocked).length : 0
     });
@@ -434,11 +488,27 @@ export async function submitLeaderboardScore(entry: {
   fruits: number;
   energy: number;
   biomass: number;
+  catalyst?: number;
+  crystals?: number;
+  fossils?: number;
   prestigeLevel: number;
+  prestigePoints?: number;
   agentsCount: number;
   techsUnlocked: number;
 }): Promise<{ success: boolean; message: string }> {
   try {
+    const calculatedWealth = calculateWealthScore({
+      fiber: entry.fiber,
+      wood: entry.wood,
+      roots: entry.roots,
+      fruits: entry.fruits,
+      energy: entry.energy,
+      biomass: entry.biomass,
+      catalyst: entry.catalyst,
+      crystals: entry.crystals,
+      fossils: entry.fossils
+    });
+
     const record = {
       player_name: entry.playerName || 'Dev Master',
       fiber: entry.fiber || 0,
@@ -447,7 +517,12 @@ export async function submitLeaderboardScore(entry: {
       fruits: entry.fruits || 0,
       energy: entry.energy || 0,
       biomass: entry.biomass || 0,
+      catalyst: entry.catalyst || 0,
+      crystals: entry.crystals || 0,
+      fossils: entry.fossils || 0,
       prestige_level: entry.prestigeLevel || 1,
+      prestige_points: entry.prestigePoints || 0,
+      wealth_score: calculatedWealth,
       agents_count: entry.agentsCount || 1,
       techs_unlocked: entry.techsUnlocked || 0,
       updated_at: new Date().toISOString()
@@ -474,21 +549,52 @@ export async function submitLeaderboardScore(entry: {
 }
 
 /**
- * Fetch Top Players Leaderboard
+ * Fetch Top Players Leaderboard (by 'prestige' experience or 'wealth' score)
  */
-export async function fetchLeaderboard(): Promise<{ success: boolean; entries?: LeaderboardEntry[]; message?: string }> {
+export async function fetchLeaderboard(rankingType: 'prestige' | 'wealth' = 'prestige'): Promise<{ success: boolean; entries?: LeaderboardEntry[]; message?: string }> {
   try {
-    const { data, error } = await supabase
-      .from('terrascript_leaderboard')
-      .select('*')
-      .order('fiber', { ascending: false })
-      .limit(25);
+    let query = supabase.from('terrascript_leaderboard').select('*');
+
+    if (rankingType === 'wealth') {
+      query = query.order('wealth_score', { ascending: false }).order('prestige_points', { ascending: false });
+    } else {
+      query = query.order('prestige_points', { ascending: false }).order('prestige_level', { ascending: false }).order('wealth_score', { ascending: false });
+    }
+
+    const { data, error } = await query.limit(50);
 
     if (error) {
       return { success: false, message: error.message };
     }
 
-    return { success: true, entries: (data || []) as LeaderboardEntry[] };
+    const parsedEntries: LeaderboardEntry[] = (data || []).map((row: any) => {
+      const wealth = row.wealth_score !== undefined && row.wealth_score !== null && row.wealth_score !== 0
+        ? Number(row.wealth_score)
+        : calculateWealthScore(row);
+      const points = row.prestige_points !== undefined && row.prestige_points !== null
+        ? Number(row.prestige_points)
+        : ((Number(row.prestige_level) || 1) * 100);
+
+      return {
+        ...row,
+        wealth_score: wealth,
+        prestige_points: points
+      };
+    });
+
+    // Fallback sorting in JS to guarantee order even if SQL schema columns were freshly added
+    if (rankingType === 'wealth') {
+      parsedEntries.sort((a, b) => (b.wealth_score || 0) - (a.wealth_score || 0));
+    } else {
+      parsedEntries.sort((a, b) => {
+        if ((b.prestige_points || 0) !== (a.prestige_points || 0)) {
+          return (b.prestige_points || 0) - (a.prestige_points || 0);
+        }
+        return (b.prestige_level || 1) - (a.prestige_level || 1);
+      });
+    }
+
+    return { success: true, entries: parsedEntries };
   } catch (err: any) {
     return { success: false, message: err.message };
   }
@@ -574,8 +680,14 @@ CREATE TABLE IF NOT EXISTS public.terrascript_users (
 
 -- Enable RLS & Allow public read/write for users
 ALTER TABLE public.terrascript_users ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Permitir leitura publica de usuarios" ON public.terrascript_users;
+DROP POLICY IF EXISTS "Permitir criacao/atualizacao de usuarios" ON public.terrascript_users;
+DROP POLICY IF EXISTS "Permitir insercao de usuarios" ON public.terrascript_users;
+DROP POLICY IF EXISTS "Permitir atualizacao de usuarios" ON public.terrascript_users;
+
 CREATE POLICY "Permitir leitura publica de usuarios" ON public.terrascript_users FOR SELECT USING (true);
-CREATE POLICY "Permitir criacao/atualizacao de usuarios" ON public.terrascript_users FOR ALL USING (true);
+CREATE POLICY "Permitir insercao de usuarios" ON public.terrascript_users FOR INSERT WITH CHECK (true);
+CREATE POLICY "Permitir atualizacao de usuarios" ON public.terrascript_users FOR UPDATE USING (true) WITH CHECK (true);
 
 -- 2. Tabela de Saves na Nuvem (com Anti-Fraude & Sincronização)
 CREATE TABLE IF NOT EXISTS public.terrascript_saves (
@@ -600,10 +712,16 @@ ALTER TABLE public.terrascript_saves ADD COLUMN IF NOT EXISTS migrated BOOLEAN D
 
 -- Enable RLS & Allow public read/write
 ALTER TABLE public.terrascript_saves ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Permitir leitura publica de saves" ON public.terrascript_saves FOR SELECT USING (true);
-CREATE POLICY "Permitir criacao/atualizacao publica de saves" ON public.terrascript_saves FOR ALL USING (true);
+DROP POLICY IF EXISTS "Permitir leitura publica de saves" ON public.terrascript_saves;
+DROP POLICY IF EXISTS "Permitir criacao/atualizacao publica de saves" ON public.terrascript_saves;
+DROP POLICY IF EXISTS "Permitir insercao de saves" ON public.terrascript_saves;
+DROP POLICY IF EXISTS "Permitir atualizacao de saves" ON public.terrascript_saves;
 
--- 3. Tabela de Leaderboard / Placar de Líderes
+CREATE POLICY "Permitir leitura publica de saves" ON public.terrascript_saves FOR SELECT USING (true);
+CREATE POLICY "Permitir insercao de saves" ON public.terrascript_saves FOR INSERT WITH CHECK (true);
+CREATE POLICY "Permitir atualizacao de saves" ON public.terrascript_saves FOR UPDATE USING (true) WITH CHECK (true);
+
+-- 3. Tabela de Leaderboard / Placar de Líderes (Rankings de Prestígio e Riqueza)
 CREATE TABLE IF NOT EXISTS public.terrascript_leaderboard (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     player_name TEXT NOT NULL UNIQUE,
@@ -613,16 +731,38 @@ CREATE TABLE IF NOT EXISTS public.terrascript_leaderboard (
     fruits BIGINT DEFAULT 0,
     energy BIGINT DEFAULT 0,
     biomass BIGINT DEFAULT 0,
+    catalyst BIGINT DEFAULT 0,
+    crystals BIGINT DEFAULT 0,
+    fossils BIGINT DEFAULT 0,
     prestige_level INT DEFAULT 1,
+    prestige_points BIGINT DEFAULT 0,
+    wealth_score BIGINT DEFAULT 0,
     agents_count INT DEFAULT 1,
     techs_unlocked INT DEFAULT 0,
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- Adicionar colunas em tabelas pré-existentes
+ALTER TABLE public.terrascript_leaderboard 
+  ADD COLUMN IF NOT EXISTS prestige_points BIGINT DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS wealth_score BIGINT DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS catalyst BIGINT DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS crystals BIGINT DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS fossils BIGINT DEFAULT 0;
+
+CREATE INDEX IF NOT EXISTS idx_leaderboard_prestige_points ON public.terrascript_leaderboard (prestige_points DESC, prestige_level DESC);
+CREATE INDEX IF NOT EXISTS idx_leaderboard_wealth_score ON public.terrascript_leaderboard (wealth_score DESC);
+
 -- Enable RLS & Allow public read/write
 ALTER TABLE public.terrascript_leaderboard ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Permitir leitura publica do leaderboard" ON public.terrascript_leaderboard;
+DROP POLICY IF EXISTS "Permitir escrita publica do leaderboard" ON public.terrascript_leaderboard;
+DROP POLICY IF EXISTS "Permitir insercao no leaderboard" ON public.terrascript_leaderboard;
+DROP POLICY IF EXISTS "Permitir atualizacao no leaderboard" ON public.terrascript_leaderboard;
+
 CREATE POLICY "Permitir leitura publica do leaderboard" ON public.terrascript_leaderboard FOR SELECT USING (true);
-CREATE POLICY "Permitir escrita publica do leaderboard" ON public.terrascript_leaderboard FOR ALL USING (true);
+CREATE POLICY "Permitir insercao no leaderboard" ON public.terrascript_leaderboard FOR INSERT WITH CHECK (true);
+CREATE POLICY "Permitir atualizacao no leaderboard" ON public.terrascript_leaderboard FOR UPDATE USING (true) WITH CHECK (true);
 
 -- 4. Tabela de Scripts da Comunidade
 CREATE TABLE IF NOT EXISTS public.terrascript_community_scripts (
@@ -638,6 +778,9 @@ CREATE TABLE IF NOT EXISTS public.terrascript_community_scripts (
 
 -- Enable RLS & Allow public read/write
 ALTER TABLE public.terrascript_community_scripts ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Permitir leitura de scripts" ON public.terrascript_community_scripts;
+DROP POLICY IF EXISTS "Permitir compartilhamento de scripts" ON public.terrascript_community_scripts;
+
 CREATE POLICY "Permitir leitura de scripts" ON public.terrascript_community_scripts FOR SELECT USING (true);
 CREATE POLICY "Permitir compartilhamento de scripts" ON public.terrascript_community_scripts FOR INSERT WITH CHECK (true);
 `;

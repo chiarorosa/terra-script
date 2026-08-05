@@ -19,7 +19,9 @@ import {
   Cloud,
   CheckCircle2,
   XCircle,
-  Loader2
+  Loader2,
+  Copy,
+  FileCode
 } from 'lucide-react';
 import { GameEngine } from '../engine/GameEngine';
 import { audioManager } from '../utils/audioManager';
@@ -29,7 +31,8 @@ import {
   registerCloudUser, 
   loginCloudUser, 
   uploadCloudSaveWithAntiFraud,
-  fetchCloudSave 
+  fetchCloudSave,
+  getSupabaseSqlSetupScript
 } from '../utils/supabaseClient';
 
 interface WelcomeModalProps {
@@ -61,12 +64,21 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({ engine, onClose }) =
     return true;
   });
 
+  const [copiedSql, setCopiedSql] = useState<boolean>(false);
+
   const [educationalErrors, setEducationalErrors] = useState<boolean>(() => {
     if (typeof window !== 'undefined') {
       return localStorage.getItem('terrascript_educational_errors') !== 'false';
     }
     return true;
   });
+
+  const handleCopySql = () => {
+    const sql = getSupabaseSqlSetupScript();
+    navigator.clipboard.writeText(sql);
+    setCopiedSql(true);
+    setTimeout(() => setCopiedSql(false), 2500);
+  };
 
   // Validation & Loading States
   const [isCheckingName, setIsCheckingName] = useState<boolean>(false);
@@ -76,23 +88,38 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({ engine, onClose }) =
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
   const presetTitles = [
-    'Cmd. Python',
-    'Ninja do JS',
-    'Senior do Café',
-    'Ninja do Indent',
-    'Engenheiro(a) Chefe'
+    'cmd_python',
+    'ninja_do_js',
+    'senior_do_cafe',
+    'ninja_do_indent',
+    'engenheiro_chefe'
   ];
+
+  // Helper to sanitize player names (lowercase, no special chars, spaces to underscore, min 2 chars)
+  const formatPlayerName = (val: string): string => {
+    return val
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/\s+/g, '_')
+      .replace(/[^a-z0-9_]/g, '');
+  };
 
   // Debounced check for player name availability in step 2
   useEffect(() => {
-    if (step !== 2 || authTab !== 'register' || !nameInput.trim() || nameInput.trim().length < 3) {
-      setNameStatus({});
+    const formatted = formatPlayerName(nameInput);
+    if (step !== 2 || authTab !== 'register' || !formatted || formatted.length < 2) {
+      if (formatted.length === 1) {
+        setNameStatus({ available: false, message: 'Mínimo de 2 caracteres' });
+      } else {
+        setNameStatus({});
+      }
       return;
     }
 
     const timer = setTimeout(async () => {
       setIsCheckingName(true);
-      const res = await checkPlayerNameExists(nameInput.trim());
+      const res = await checkPlayerNameExists(formatted);
       setIsCheckingName(false);
       if (res.exists) {
         setNameStatus({ available: false, message: 'Nome já em uso na nuvem' });
@@ -115,9 +142,9 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({ engine, onClose }) =
     setAuthError('');
     setAuthSuccess('');
 
-    const cleanName = nameInput.trim();
-    if (!cleanName || cleanName.length < 3) {
-      setAuthError('O nome de jogador deve conter pelo menos 3 caracteres.');
+    const cleanName = formatPlayerName(nameInput);
+    if (!cleanName || cleanName.length < 2) {
+      setAuthError('O nome de jogador deve conter pelo menos 2 caracteres (apenas letras, números e _).');
       return;
     }
 
@@ -167,6 +194,12 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({ engine, onClose }) =
         saveData.currentTick || 0,
         0
       );
+
+      if (!syncRes.success) {
+        setAuthError(syncRes.message);
+        setIsSubmitting(false);
+        return;
+      }
 
       if (typeof window !== 'undefined') {
         localStorage.setItem('terrascript_programmer_name', cleanName);
@@ -356,14 +389,18 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({ engine, onClose }) =
                     <input
                       type="text"
                       value={nameInput}
-                      onChange={(e) => setNameInput(e.target.value)}
-                      placeholder="Ex: Cmd. Python, DevNinja, Carlos_TS..."
+                      onChange={(e) => setNameInput(formatPlayerName(e.target.value))}
+                      placeholder="ex: cmd_python, dev_ninja, carlos_ts..."
                       maxLength={24}
                       className="w-full pl-9 pr-3.5 py-2 bg-[#08090a] pixel-box focus:border-[#facc15] text-[#ffffff] font-pixel-mono text-xs outline-none transition-all placeholder:text-[#62666d]"
                       required
                       disabled={isSubmitting}
                     />
                   </div>
+
+                  <span className="text-[10px] text-[#8a8f98] font-sans mt-1 block">
+                    Apenas letras minúsculas, números e underline (_). Mínimo 2 caracteres.
+                  </span>
 
                   {/* Preset Titles for Register */}
                   {authTab === 'register' && (
@@ -437,9 +474,36 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({ engine, onClose }) =
 
                 {/* Status Messages */}
                 {authError && (
-                  <div className="p-2.5 bg-[#ef4444]/15 border border-[#ef4444] text-[#ef4444] text-xs font-pixel-body flex items-start gap-2">
-                    <XCircle className="w-4 h-4 shrink-0 mt-0.5" />
-                    <span>{authError}</span>
+                  <div className="space-y-2">
+                    <div className="p-2.5 bg-[#ef4444]/15 border border-[#ef4444] text-[#ef4444] text-xs font-pixel-body flex items-start gap-2">
+                      <XCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                      <span>{authError}</span>
+                    </div>
+
+                    {(authError.includes('tabela') || authError.includes('SQL') || authError.includes('Supabase') || authError.includes('RLS')) && (
+                      <div className="p-3 bg-[#161718] border border-[#23252a] rounded space-y-2">
+                        <div className="text-[11px] text-[#8a8f98] font-pixel-body">
+                          💡 Seu banco Supabase precisa das tabelas criadas. Copie o script SQL abaixo e cole no <strong className="text-white">SQL Editor</strong> do seu Supabase Dashboard (<span className="text-[#38bdf8]">app.supabase.com</span>):
+                        </div>
+                        <button
+                          type="button"
+                          onClick={handleCopySql}
+                          className="w-full py-1.5 px-3 bg-[#10b981]/20 hover:bg-[#10b981]/30 text-[#10b981] border border-[#10b981]/40 rounded font-pixel-mono text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+                        >
+                          {copiedSql ? (
+                            <>
+                              <CheckCircle2 className="w-3.5 h-3.5 text-[#10b981]" />
+                              <span>Script SQL Copiado para a Área de Transferência!</span>
+                            </>
+                          ) : (
+                            <>
+                              <Copy className="w-3.5 h-3.5" />
+                              <span>Copiar Script SQL de Setup do Supabase</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    )}
                   </div>
                 )}
 

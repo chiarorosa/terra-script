@@ -17,8 +17,14 @@ CREATE TABLE IF NOT EXISTS public.terrascript_users (
 
 -- Enable RLS & Allow public read/write for users
 ALTER TABLE public.terrascript_users ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Permitir leitura publica de usuarios" ON public.terrascript_users;
+DROP POLICY IF EXISTS "Permitir criacao/atualizacao de usuarios" ON public.terrascript_users;
+DROP POLICY IF EXISTS "Permitir insercao de usuarios" ON public.terrascript_users;
+DROP POLICY IF EXISTS "Permitir atualizacao de usuarios" ON public.terrascript_users;
+
 CREATE POLICY "Permitir leitura publica de usuarios" ON public.terrascript_users FOR SELECT USING (true);
-CREATE POLICY "Permitir criacao/atualizacao de usuarios" ON public.terrascript_users FOR ALL USING (true);
+CREATE POLICY "Permitir insercao de usuarios" ON public.terrascript_users FOR INSERT WITH CHECK (true);
+CREATE POLICY "Permitir atualizacao de usuarios" ON public.terrascript_users FOR UPDATE USING (true) WITH CHECK (true);
 
 -- 2. Tabela de Saves na Nuvem (com Anti-Fraude & Sincronização)
 CREATE TABLE IF NOT EXISTS public.terrascript_saves (
@@ -43,8 +49,14 @@ ALTER TABLE public.terrascript_saves ADD COLUMN IF NOT EXISTS migrated BOOLEAN D
 
 -- Enable RLS & Allow public read/write
 ALTER TABLE public.terrascript_saves ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Permitir leitura publica de saves" ON public.terrascript_saves;
+DROP POLICY IF EXISTS "Permitir criacao/atualizacao publica de saves" ON public.terrascript_saves;
+DROP POLICY IF EXISTS "Permitir insercao de saves" ON public.terrascript_saves;
+DROP POLICY IF EXISTS "Permitir atualizacao de saves" ON public.terrascript_saves;
+
 CREATE POLICY "Permitir leitura publica de saves" ON public.terrascript_saves FOR SELECT USING (true);
-CREATE POLICY "Permitir criacao/atualizacao publica de saves" ON public.terrascript_saves FOR ALL USING (true);
+CREATE POLICY "Permitir insercao de saves" ON public.terrascript_saves FOR INSERT WITH CHECK (true);
+CREATE POLICY "Permitir atualizacao de saves" ON public.terrascript_saves FOR UPDATE USING (true) WITH CHECK (true);
 
 -- 3. Tabela de Leaderboard / Placar de Líderes
 CREATE TABLE IF NOT EXISTS public.terrascript_leaderboard (
@@ -64,8 +76,14 @@ CREATE TABLE IF NOT EXISTS public.terrascript_leaderboard (
 
 -- Enable RLS & Allow public read/write
 ALTER TABLE public.terrascript_leaderboard ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Permitir leitura publica do leaderboard" ON public.terrascript_leaderboard;
+DROP POLICY IF EXISTS "Permitir escrita publica do leaderboard" ON public.terrascript_leaderboard;
+DROP POLICY IF EXISTS "Permitir insercao no leaderboard" ON public.terrascript_leaderboard;
+DROP POLICY IF EXISTS "Permitir atualizacao no leaderboard" ON public.terrascript_leaderboard;
+
 CREATE POLICY "Permitir leitura publica do leaderboard" ON public.terrascript_leaderboard FOR SELECT USING (true);
-CREATE POLICY "Permitir escrita publica do leaderboard" ON public.terrascript_leaderboard FOR ALL USING (true);
+CREATE POLICY "Permitir insercao no leaderboard" ON public.terrascript_leaderboard FOR INSERT WITH CHECK (true);
+CREATE POLICY "Permitir atualizacao no leaderboard" ON public.terrascript_leaderboard FOR UPDATE USING (true) WITH CHECK (true);
 
 -- 4. Tabela de Scripts da Comunidade
 CREATE TABLE IF NOT EXISTS public.terrascript_community_scripts (
@@ -81,6 +99,9 @@ CREATE TABLE IF NOT EXISTS public.terrascript_community_scripts (
 
 -- Enable RLS & Allow public read/write
 ALTER TABLE public.terrascript_community_scripts ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Permitir leitura de scripts" ON public.terrascript_community_scripts;
+DROP POLICY IF EXISTS "Permitir compartilhamento de scripts" ON public.terrascript_community_scripts;
+
 CREATE POLICY "Permitir leitura de scripts" ON public.terrascript_community_scripts FOR SELECT USING (true);
 CREATE POLICY "Permitir compartilhamento de scripts" ON public.terrascript_community_scripts FOR INSERT WITH CHECK (true);
 
