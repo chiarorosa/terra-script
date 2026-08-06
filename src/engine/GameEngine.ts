@@ -275,12 +275,12 @@ export class GameEngine {
           this.addLog(1, 'system', '🛡️ [Guardrail] Alteração manual detectada no armazenamento local! Progresso sanitizado.');
         }
 
-        // 1. Sanitize Resources (finite non-negative numbers)
+        // 1. Sanitize Resources (finite non-negative numbers up to 1,000,000,000)
         if (parsed.resources && typeof parsed.resources === 'object') {
           for (const resKey of Object.keys(this.resources) as (keyof ResourceMap)[]) {
             const val = parsed.resources[resKey];
             if (typeof val === 'number' && Number.isFinite(val) && !Number.isNaN(val) && val >= 0) {
-              this.resources[resKey] = Math.floor(val);
+              this.resources[resKey] = Math.min(1000000000, Math.floor(val));
             }
           }
           if (this.resources.fiber === 0 && (!parsed.techTree || !parsed.techTree.some((t: any) => t.unlocked))) {
