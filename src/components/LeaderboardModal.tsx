@@ -64,7 +64,9 @@ export const LeaderboardModal: React.FC<LeaderboardModalProps> = ({ engine, onCl
     const prestigeLevel = prestigeObj.level;
     const prestigePoints = prestigeObj.totalPoints || 0;
     const agents = engine.getAgents().length;
-    const techs = engine.getUnlockedTechIds().length;
+    const techs = typeof engine.getUnlockedTechIds === 'function' 
+      ? engine.getUnlockedTechIds().length 
+      : (engine.getTechTree?.() || []).filter(t => t.unlocked).length;
 
     const res = await submitLeaderboardScore({
       playerName: programmerName,

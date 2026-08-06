@@ -66,9 +66,9 @@ export default function App() {
     };
   }, []);
 
-  // Automatic sync when internet connection is restored (Situation B)
+  // Automatic sync when internet connection is restored or periodically every 60s
   useEffect(() => {
-    const handleOnline = async () => {
+    const handleSync = async () => {
       const isMigrated = localStorage.getItem('terrascript_migrated') === 'true';
       const playerName = localStorage.getItem('terrascript_programmer_name');
       if (isMigrated && playerName && playerName !== 'Dev Master' && playerName !== 'Programador Anônimo') {
@@ -76,7 +76,7 @@ export default function App() {
         const resources = engine.getResources();
         const prestige = engine.getPrestige().level;
 
-        const res = await uploadCloudSaveWithAntiFraud(
+        await uploadCloudSaveWithAntiFraud(
           playerName,
           saveData,
           resources.fiber,
@@ -84,20 +84,26 @@ export default function App() {
           saveData.currentTick || 0,
           0
         );
-
-        if (res.success) {
-          setToastNotification({
-            title: 'Sincronização em Nuvem',
-            subtitle: 'Conexão Restaurada!',
-            description: res.message,
-            type: 'milestone'
-          });
-        }
       }
     };
 
+    const handleOnline = async () => {
+      await handleSync();
+      setToastNotification({
+        title: 'Sincronização em Nuvem',
+        subtitle: 'Conexão Restaurada!',
+        description: 'Seu progresso foi sincronizado com a nuvem.',
+        type: 'milestone'
+      });
+    };
+
     window.addEventListener('online', handleOnline);
-    return () => window.removeEventListener('online', handleOnline);
+    const syncInterval = setInterval(handleSync, 60000);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      clearInterval(syncInterval);
+    };
   }, [engine]);
 
   // Subscribe to engine state updates (throttled to animation frames for maximum UI responsiveness & low CPU usage)

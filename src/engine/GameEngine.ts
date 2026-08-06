@@ -1443,6 +1443,9 @@ export class GameEngine {
   public getResources() { return this.resources; }
   public getResourceCount(res: string) { return this.resources[res as keyof ResourceMap] || 0; }
   public getTechTree() { return this.techTree; }
+  public getUnlockedTechIds(): string[] {
+    return this.techTree.filter(t => t.unlocked).map(t => t.id);
+  }
 
   public hasUnlockableTech(): boolean {
     return this.techTree.some(node => {
@@ -1651,8 +1654,10 @@ export class GameEngine {
         tiles: tilesArray
       },
       resources: { ...this.resources },
+      prestige: { ...this.prestige },
+      milestones: { ...this.milestones },
       techTree: this.techTree.map(n => ({ id: n.id, unlocked: n.unlocked })),
-      agents: this.agents.map(a => ({ ...a })),
+      agents: this.agents.map(a => ({ id: a.id, stats: a.stats, assignedFile: a.assignedFile })),
       primaryAgentId: this.primaryAgentId,
       currentTick: this.currentTick,
       totalActionsPerformed: this.totalActionsPerformed,
@@ -1674,7 +1679,42 @@ export class GameEngine {
         }
       }
 
-      // 2. Tech Tree Prerequisites Sanitization
+      // 2. Prestige Restoration
+      if (saveObj.prestige && typeof saveObj.prestige === 'object') {
+        this.prestige = {
+          level: typeof saveObj.prestige.level === 'number' ? Math.max(1, Math.min(100, saveObj.prestige.level)) : 1,
+          points: typeof saveObj.prestige.points === 'number' ? Math.max(0, saveObj.prestige.points) : 0,
+          totalPoints: typeof saveObj.prestige.totalPoints === 'number' ? Math.max(0, saveObj.prestige.totalPoints) : 0,
+          worldChangeUnlocked: Boolean(saveObj.prestige.worldChangeUnlocked)
+        };
+      } else if (typeof saveObj.prestige_level === 'number') {
+        this.prestige.level = Math.max(1, Math.min(100, saveObj.prestige_level));
+      }
+
+      // 3. Milestones Restoration & Backward Compatibility Reconstruction
+      if (saveObj.milestones && typeof saveObj.milestones === 'object') {
+        this.milestones = {
+          quickStartSeen: Boolean(saveObj.milestones.quickStartSeen),
+          quickStartProminentDone: Boolean(saveObj.milestones.quickStartProminentDone),
+          firstExecutionDone: Boolean(saveObj.milestones.firstExecutionDone),
+          createFileUnlocked: Boolean(saveObj.milestones.createFileUnlocked),
+          prestigeUnlocked: Boolean(saveObj.milestones.prestigeUnlocked),
+          apiReferenceUnlocked: Boolean(saveObj.milestones.apiReferenceUnlocked)
+        };
+      } else {
+        // Reconstruct milestones for legacy save files
+        if ((saveObj.currentTick && saveObj.currentTick > 0) || (saveObj.totalActionsPerformed && saveObj.totalActionsPerformed > 0)) {
+          this.milestones.quickStartSeen = true;
+          this.milestones.quickStartProminentDone = true;
+          this.milestones.firstExecutionDone = true;
+          this.milestones.createFileUnlocked = true;
+        }
+        if (this.prestige.level >= 2 || this.prestige.worldChangeUnlocked) {
+          this.milestones.prestigeUnlocked = true;
+        }
+      }
+
+      // 4. Tech Tree Prerequisites Sanitization
       if (Array.isArray(saveObj.techTree)) {
         saveObj.techTree.forEach((savedNode: any) => {
           const node = this.techTree.find(n => n.id === savedNode.id);
@@ -1685,7 +1725,11 @@ export class GameEngine {
       }
       this.sanitizeTechTreePrerequisites();
 
-      // 3. Grid & Tiles (Clamped to Max Allowed Dimension based on unlocked SCALE tech)
+      // Ensure milestones unlock if requirements are met
+      this.checkPrestigeMilestone();
+      this.checkApiReferenceMilestone();
+
+      // 5. Grid & Tiles (Clamped to Max Allowed Dimension based on unlocked SCALE tech)
       let maxAllowedW = 1;
       let maxAllowedH = 1;
       if (this.isTechUnlocked('SCALE_9')) { maxAllowedW = 12; maxAllowedH = 12; }
@@ -1710,17 +1754,28 @@ export class GameEngine {
         }
       }
 
-      // 4. Agents Sync
+      // 6. Agents Sync
       if (typeof saveObj.primaryAgentId === 'number') {
         this.primaryAgentId = saveObj.primaryAgentId;
       }
       this.syncAgentsWithTechTree();
+      if (Array.isArray(saveObj.agents)) {
+        saveObj.agents.forEach((savedAgent: any) => {
+          const ag = this.agents.find(a => a.id === savedAgent.id);
+          if (ag) {
+            if (savedAgent.assignedFile) ag.assignedFile = savedAgent.assignedFile;
+            if (savedAgent.stats) {
+              ag.stats = { ...savedAgent.stats };
+            }
+          }
+        });
+      }
 
-      // 5. Statistics
+      // 7. Statistics
       if (typeof saveObj.currentTick === 'number' && saveObj.currentTick >= 0) this.currentTick = Math.floor(saveObj.currentTick);
       if (typeof saveObj.totalActionsPerformed === 'number' && saveObj.totalActionsPerformed >= 0) this.totalActionsPerformed = Math.floor(saveObj.totalActionsPerformed);
 
-      // 6. Virtual Filesystem
+      // 8. Virtual Filesystem
       if (Array.isArray(saveObj.scripts) && saveObj.scripts.length > 0) {
         this.vfs.loadFromFiles(saveObj.scripts);
       }

@@ -181,24 +181,35 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({ engine, onClose }) =
         }
       }
 
-      // Sync local save data to cloud & set migrated flag
-      const saveData = engine.exportSaveData();
-      const resources = engine.getResources();
-      const prestigeLevel = typeof engine.getPrestigeLevel === 'function' ? engine.getPrestigeLevel() : engine.getPrestige().level;
+      // If logging in, check for existing cloud save and restore it; if registering, upload local save
+      let loadedFromCloud = false;
+      if (authTab === 'login') {
+        const cloudSaveRes = await fetchCloudSave(cleanName);
+        if (cloudSaveRes.success && cloudSaveRes.save?.save_json) {
+          engine.importSaveData(cloudSaveRes.save.save_json);
+          loadedFromCloud = true;
+        }
+      }
 
-      const syncRes = await uploadCloudSaveWithAntiFraud(
-        cleanName, 
-        saveData, 
-        resources.fiber, 
-        prestigeLevel,
-        saveData.currentTick || 0,
-        0
-      );
+      if (!loadedFromCloud) {
+        const saveData = engine.exportSaveData();
+        const resources = engine.getResources();
+        const prestigeLevel = typeof engine.getPrestigeLevel === 'function' ? engine.getPrestigeLevel() : engine.getPrestige().level;
 
-      if (!syncRes.success) {
-        setAuthError(syncRes.message);
-        setIsSubmitting(false);
-        return;
+        const syncRes = await uploadCloudSaveWithAntiFraud(
+          cleanName, 
+          saveData, 
+          resources.fiber, 
+          prestigeLevel,
+          saveData.currentTick || 0,
+          0
+        );
+
+        if (!syncRes.success) {
+          setAuthError(syncRes.message);
+          setIsSubmitting(false);
+          return;
+        }
       }
 
       if (typeof window !== 'undefined') {
@@ -207,7 +218,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({ engine, onClose }) =
       }
 
       setIsPreImplementation(false);
-      setAuthSuccess('🎉 Usuário autenticado e progresso sincronizado com a nuvem!');
+      setAuthSuccess(loadedFromCloud ? '🎉 Login realizado! Seu progresso em nuvem (Prestígio e Conquistas) foi restaurado com sucesso.' : '🎉 Usuário cadastrado e progresso inicial sincronizado na nuvem!');
       audioManager.playSuccess();
 
       setTimeout(() => {
