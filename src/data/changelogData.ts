@@ -8,10 +8,30 @@ export interface ChangelogRelease {
 
 export const CHANGELOG_HISTORY: ChangelogRelease[] = [
   {
+    version: 'v2.7.2',
+    date: '2026-08-06',
+    title: 'Escalonamento de Experiência de Prestígio 50+',
+    isCurrent: true,
+    changes: [
+      'Aumento da Curva de XP de Prestígio (Nível 50+): A quantidade de pontos de experiência necessários para avançar a partir do Nível 50 passa a contar com um escalonamento exponencial mais rigoroso (fator de escala progressivo a cada nível acima do 50).',
+      'Atualização na documentação do Guia farm.prestige e Bloco de Prestígio refletindo a nova curva de experiência de níveis altos.'
+    ]
+  },
+  {
+    version: 'v2.7.1',
+    date: '2026-08-06',
+    title: 'Progressão do Prestígio & Tabela de Pontos Base no Guia farm.prestige',
+    isCurrent: false,
+    changes: [
+      'Rebalanceamento de Progressão do Prestígio: Aplicação de penalidades graduais de metade do valor (0.5x) para recursos no Upload do Bloco de Prestígio conforme o Nível de Prestígio avança (>nv25: fibra; >nv50: madeira e raízes + anteriores; >nv60: frutas + anteriores; >nv70: energia + anteriores; >nv80: biomassa + anteriores).',
+      'Documentação Detalhada no Guia farm.prestige: Adição da tabela completa de Pontos Base por recurso (Fibra: 1, Madeira: 5, Raízes: 25, Frutas: 100, Energia: 500, Biomassa: 2000) e explicação da curva de atenuação por nível.'
+    ]
+  },
+  {
     version: 'v2.7.0',
     date: '2026-08-05',
     title: 'Sistema de Leaderboards, Sincronização em Nuvem & Conta Online',
-    isCurrent: true,
+    isCurrent: false,
     changes: [
       'Implementação do sistema de Leaderboards',
       'Migração para sincronização em Nuvem',

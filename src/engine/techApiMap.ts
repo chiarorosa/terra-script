@@ -481,7 +481,7 @@ export const API_CATALOG: ApiItem[] = [
     description: 'Entrega recursos no Bloco de Prestígio Dourado para subir o Nível de Prestígio e ganhar Pontos de Prestígio.',
     techId: 'AUTO_2',
     category: 'Comandos da Fazenda',
-    docDetail: 'Disponível após a Mudança do Mundo ao completar as 4 pesquisas iniciais de Nível 1. O agente deve navegar até a célula Dourada do Bloco de Prestígio para depositar recursos.',
+    docDetail: 'Passo a Passo do Comando farm.prestige:\n\n1. ONDE E COMO USAR:\n• Disponível após a Mudança do Mundo ao completar as 4 pesquisas iniciais de Nível 1.\n• O agente deve navegar e posicionar-se sobre a célula Dourada do Bloco de Prestígio (world.ground() == "PRESTIGE") para depositar recursos do inventário.\n\n2. VALORES DE PONTOS BASE POR RECURSO:\nCada unidade do recurso entregue concede a seguinte pontuação base de experiência de prestígio:\n• Fibra ("fiber"): 1 Ponto Base / unidade\n• Madeira ("wood"): 5 Pontos Base / unidade\n• Raízes ("roots"): 25 Pontos Base / unidade\n• Frutas ("fruits"): 100 Pontos Base / unidade\n• Energia ("energy"): 500 Pontos Base / unidade\n• Biomassa ("biomass"): 2.000 Pontos Base / unidade\n\n3. PROGRESSÃO E CURVA DE ATENUAÇÃO DE PRESTÍGIO:\nConforme o seu Nível de Prestígio sobe, os recursos básicos sofrem atenuação gradual para incentivar a automação de culturas mais avançadas. Quando atenuado, o recurso passa a valer METADE (50% do valor base / multiplicador 0,5x):\n• Até Nível 25: Todos os recursos contam 100% de seus Pontos Base normais no Upload do bloco de prestígio.\n• > Nível 25: "fiber" passa a valer Metade (0,5 Ponto Base).\n• > Nível 50: "wood" e "roots" + anteriores passam a valer Metade (50%). A partir do Nível 50+, a quantidade de XP necessária para avançar de nível sofre um escalonamento exponencial mais elevado.\n• > Nível 60: "fruits" + anteriores passam a valer Metade (50%).\n• > Nível 70: "energy" + anteriores passam a valer Metade (50%).\n• > Nível 80: "biomass" + anteriores passam a valer Metade (50%).\n\n4. DICA DE AUTOMAÇÃO:\n• Monitore o seu Nível de Prestígio e adapte seus algoritmos de transporte para priorizar colheitas avançadas à medida que as penalidades de nível entram em vigor.',
     exampleCode: 'if world.ground() == "PRESTIGE":\n    farm.prestige("fiber", 100)',
     parameters: [
       {
@@ -489,7 +489,7 @@ export const API_CATALOG: ApiItem[] = [
         type: 'string',
         description: 'Nome do recurso a ser entregue.',
         required: true,
-        allowedValues: ['"fiber"', '"wood"', '"roots"', '"fruits"', '"energy"', '"biomass"', '"crystals"']
+        allowedValues: ['"fiber"', '"wood"', '"roots"', '"fruits"', '"energy"', '"biomass"']
       },
       {
         name: 'amount',
@@ -503,7 +503,9 @@ export const API_CATALOG: ApiItem[] = [
       description: 'Retorna true se a entrega foi aceita e convertida em pontos de prestígio.'
     },
     usabilityNotes: [
-      'Garante aumento no nível de prestígio e bônus passivos multiplicadores de colheita.'
+      '1. Requisito Físico: O agente deve estar exatamente sobre o Bloco Dourado (world.ground() == "PRESTIGE").',
+      '2. Tabela Base: Fibra=1, Madeira=5, Raízes=25, Frutas=100, Energia=500, Biomassa=2000 XP.',
+      '3. Progressão: Até Nv25 todos contam 100%. A partir de Nv25 (>25 fibra), Nv50 (>50 madeira/raízes), Nv60 (>60 frutas), Nv70 (>70 energia) e Nv80 (>80 biomassa) os recursos correspondentes + anteriores passam a valer metade (0.5x).'
     ],
     expectedOutput: 'Recursos consumidos e Pontos de Prestígio concedidos.'
   },
@@ -1085,7 +1087,7 @@ export const API_CATALOG: ApiItem[] = [
     description: 'Terminal de oferenda dourado gerado na fazenda após a 1ª Mudança do Mundo para conversão de colheitas em Pontos e Níveis de Prestígio.',
     techId: 'AUTO_2',
     category: 'Mecânicas de Jogo',
-    docDetail: 'Passo a Passo do Funcionamento do Bloco de Prestígio:\n\n1. LOCALIZANDO O BLOCO DE PRESTÍGIO:\n• Após a 1ª Mudança do Mundo, surge um lote metálico dourado reluzente na fazenda.\n• Esse bloco é indestrutível: não é afetado por world.clear(), não seca, não encharca e não aceita sementes.\n• No seu código, você pode detectar a célula exata testando: if world.ground() == "PRESTIGE":.\n\n2. COMO FAZER ENTREGAS COM farm.prestige():\n• Posicione qualquer nave agente sobre o Bloco de Prestígio.\n• Execute o comando farm.prestige(recurso, quantidade) — por exemplo: farm.prestige("fiber", 100) ou farm.prestige("wood", 50).\n• Os recursos informados são removidos do seu inventário e convertidos em Pontos de Prestígio.\n\n3. SUBINDO NÍVEIS E GANHANDO BÔNUS PASSIVOS:\n• Ao acumular Pontos de Prestígio suficientes para preencher a barra de experiência, o Nível de Prestígio do jogador sobe.\n• Cada Nível de Prestígio concede bônus passivos permanentes de velocidade de cultivo e eficiência em toda a fazenda!\n\n4. COMO AUTOMATIZAR A LOGÍSTICA DE PRESTÍGIO:\n• Quando você desbloquear múltiplos agentes (pesquisas SCALE_5 e SCALE_8), você pode dedicar um robô especialista em logística: ele coleta safras pela fazenda, desloca-se até a célula "PRESTIGE" e executa farm.prestige() de forma 100% automatizada e contínua.',
+    docDetail: 'Passo a Passo do Funcionamento do Bloco de Prestígio:\n\n1. LOCALIZANDO O BLOCO DE PRESTÍGIO:\n• Após a 1ª Mudança do Mundo, surge um lote metálico dourado reluzente na fazenda.\n• Esse bloco é indestrutível: não é afetado por world.clear(), não seca, não encharca e não aceita sementes.\n• No seu código, você pode detectar a célula exata testando: if world.ground() == "PRESTIGE":.\n\n2. PONTOS BASE DE UPLOAD POR RECURSO:\nCada unidade entregue através do comando farm.prestige(recurso, quantidade) concede Pontos de Prestígio conforme a tabela:\n• Fibra ("fiber"): 1 Ponto Base / unid.\n• Madeira ("wood"): 5 Pontos Base / unid.\n• Raízes ("roots"): 25 Pontos Base / unid.\n• Frutas ("fruits"): 100 Pontos Base / unid.\n• Energia ("energy"): 500 Pontos Base / unid.\n• Biomassa ("biomass"): 2.000 Pontos Base / unid.\n\n3. PROGRESSÃO E REBALANCIAMENTO POR NÍVEL DE PRESTÍGIO:\nConforme o Nível de Prestígio aumenta, os recursos básicos sofrem desvalorização gradual e passam a valer Metade (50% / 0,5x):\n• Até Nível 25: Todos os recursos contam 100% no Upload do Bloco de Prestígio.\n• > Nível 25: "fiber" vale metade.\n• > Nível 50: "wood" e "roots" + anteriores valem metade.\n• > Nível 60: "fruits" + anteriores valem metade.\n• > Nível 70: "energy" + anteriores valem metade.\n• > Nível 80: "biomass" + anteriores valem metade.\n\n4. COMO AUTOMATIZAR A LOGÍSTICA DE PRESTÍGIO:\n• Quando você desbloquear múltiplos agentes (pesquisas SCALE_5 e SCALE_8), dedique um robô especialista em logística: ele coleta safras pela fazenda, desloca-se até a célula "PRESTIGE" e executa farm.prestige() de forma 100% automatizada.',
     exampleCode: 'if world.ground() == "PRESTIGE":\n    farm.prestige("wood", 100)',
     parameters: [
       {
@@ -1093,7 +1095,7 @@ export const API_CATALOG: ApiItem[] = [
         type: 'string',
         description: 'Identificador do recurso a ser entregue.',
         required: true,
-        allowedValues: ['"fiber"', '"wood"', '"roots"', '"fruits"', '"energy"', '"biomass"', '"crystals"']
+        allowedValues: ['"fiber"', '"wood"', '"roots"', '"fruits"', '"energy"', '"biomass"']
       },
       {
         name: 'amount',
@@ -1108,7 +1110,7 @@ export const API_CATALOG: ApiItem[] = [
     },
     usabilityNotes: [
       '1. Requisitos: O comando farm.prestige() só funciona quando o agente está exatamente posicionado sobre a célula com world.ground() == "PRESTIGE".',
-      '2. Recursos Aceitos: "fiber", "wood", "roots", "fruits", "energy", "biomass", "crystals".',
+      '2. Recursos Aceitos: "fiber", "wood", "roots", "fruits", "energy", "biomass".',
       '3. Para ver a assinatura completa do método e seus tipos de parâmetros, consulte a página dedicada farm.prestige() na categoria Comandos da Fazenda.'
     ],
     expectedOutput: 'Recursos consumidos e Pontos e Níveis de Prestígio concedidos.'

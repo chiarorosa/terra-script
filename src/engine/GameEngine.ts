@@ -17,7 +17,21 @@ import {
 
 export function getRequiredPrestigePointsForLevel(level: number): number {
   if (level >= 100) return Infinity;
-  return Math.floor(100 * Math.pow(level, 2.5) + 200 * level);
+  const base = 100 * Math.pow(level, 2.5) + 200 * level;
+  if (level >= 50) {
+    const scaleFactor = Math.pow(1.08, level - 49);
+    return Math.floor(base * scaleFactor);
+  }
+  return Math.floor(base);
+}
+
+export function getPrestigeResourceMultiplier(level: number, resourceKey: keyof ResourceMap): number {
+  if (level > 80 && ['fiber', 'wood', 'roots', 'fruits', 'energy', 'biomass'].includes(resourceKey)) return 0.5;
+  if (level > 70 && ['fiber', 'wood', 'roots', 'fruits', 'energy'].includes(resourceKey)) return 0.5;
+  if (level > 60 && ['fiber', 'wood', 'roots', 'fruits'].includes(resourceKey)) return 0.5;
+  if (level > 50 && ['fiber', 'wood', 'roots'].includes(resourceKey)) return 0.5;
+  if (level > 25 && resourceKey === 'fiber') return 0.5;
+  return 1.0;
 }
 import { ExecutionContext, ScriptRunner } from './interpreters/ScriptRunner';
 import { PyodideManager } from './pyodideLoader';
@@ -33,7 +47,7 @@ export const INITIAL_TECH_TREE: TechNode[] = [
   { id: 'AUTO_4', branch: 'AUTOMATION', name: 'Loops (while / for)', description: 'Permite loops repetitivos contínuos.', tier: 3, cost: { fiber: 150, wood: 75 }, unlocked: false, requires: ['AUTO_3'] },
   { id: 'AUTO_5', branch: 'AUTOMATION', name: 'Funções', description: 'Agrupa código reutilizável em funções modulares.', tier: 4, cost: { fiber: 250, wood: 125, roots: 60 }, unlocked: false, requires: ['AUTO_4'] },
   { id: 'AUTO_6', branch: 'AUTOMATION', name: 'Comunicação Inter-Agentes (IPC)', description: 'Sinais em tempo real e barramento de mensagens para coordenação entre naves agentes.', tier: 5, cost: { roots: 400, fruits: 250, energy: 150 }, unlocked: false, requires: ['AUTO_5'] },
-  { id: 'AUTO_7', branch: 'AUTOMATION', name: 'SEGREDO', description: 'Conteúdo ultrassecreto em desenvolvimento. Instigação para futuras expansões.', tier: 10, cost: { energy: 9999 }, unlocked: false, requires: ['AUTO_6'] },
+  { id: 'AUTO_7', branch: 'AUTOMATION', name: 'SEGREDO', description: 'Conteúdo ultrassecreto em desenvolvimento. Instigação para futuras expansões.', tier: 10, cost: { energy: 9999, crystals: 42 }, unlocked: false, requires: ['AUTO_6'] },
 
   // AGRONOMY BRANCH
   { id: 'AGRO_1', branch: 'AGRONOMY', name: 'Fibra Selvagem e Irrigação', description: 'Colha fibras e use farm.water() para irrigar e restaurar a umidade do solo.', tier: 0, cost: {}, unlocked: true },
@@ -43,14 +57,14 @@ export const INITIAL_TECH_TREE: TechNode[] = [
   { id: 'AGRO_5', branch: 'AGRONOMY', name: 'Colônias de Frutas', description: 'Plantações de frutas conectadas geram recompensas multiplicadas.', tier: 4, cost: { wood: 300, roots: 150 }, unlocked: false, requires: ['AGRO_4'] },
   { id: 'AGRO_6', branch: 'AGRONOMY', name: 'Flores de Energia', description: 'Meça o nível de energia das flores com measure() e colha no pico.', tier: 5, cost: { roots: 300, fruits: 180 }, unlocked: false, requires: ['AGRO_5'] },
   { id: 'AGRO_7', branch: 'AGRONOMY', name: 'Culturas Graduadas', description: 'Plante culturas graduadas e ordene fileiras com swap() para biomassa.', tier: 6, cost: { fruits: 450, energy: 250 }, unlocked: false, requires: ['AGRO_6'] },
-  { id: 'AGRO_8', branch: 'AGRONOMY', name: 'SEGREDO', description: 'Conteúdo ultrassecreto em desenvolvimento. Instigação para futuras expansões.', tier: 10, cost: { energy: 9999 }, unlocked: false, requires: ['AGRO_7'] },
+  { id: 'AGRO_8', branch: 'AGRONOMY', name: 'SEGREDO', description: 'Conteúdo ultrassecreto em desenvolvimento. Instigação para futuras expansões.', tier: 10, cost: { energy: 9999, crystals: 42 }, unlocked: false, requires: ['AGRO_7'] },
 
   // SYSTEMS BRANCH
   { id: 'SYS_1', branch: 'SYSTEMS', name: 'Saída do Console print()', description: 'Exiba mensagens e dados de depuração no console stdout.', tier: 0, cost: {}, unlocked: true },
   { id: 'SYS_2', branch: 'SYSTEMS', name: 'Sensores Básicos e Coordenadas', description: 'Inspecione o ambiente com os sensores world.ground(), world.entity() e world.moisture().', tier: 1, cost: { fiber: 20 }, unlocked: false, requires: ['SYS_1'] },
   { id: 'SYS_3', branch: 'SYSTEMS', name: 'Medição de Lotes', description: 'Use world.measure() para inspecionar graus de plantas e valores de energia.', tier: 2, cost: { fiber: 100, wood: 60 }, unlocked: false, requires: ['SYS_2'] },
   { id: 'SYS_4', branch: 'SYSTEMS', name: 'Estatísticas do Agente', description: 'Leitura do dicionário de telemetria e estatísticas individuais via sys.get_agent_stats() ou agent.get_stats().', tier: 3, cost: { fiber: 150, wood: 100, roots: 50 }, unlocked: false, requires: ['SYS_3'] },
-  { id: 'SYS_5', branch: 'SYSTEMS', name: 'SEGREDO', description: 'Conteúdo ultrassecreto em desenvolvimento. Instigação para futuras expansões.', tier: 10, cost: { energy: 9999 }, unlocked: false, requires: ['SYS_4'] },
+  { id: 'SYS_5', branch: 'SYSTEMS', name: 'SEGREDO', description: 'Conteúdo ultrassecreto em desenvolvimento. Instigação para futuras expansões.', tier: 10, cost: { energy: 9999, crystals: 42 }, unlocked: false, requires: ['SYS_4'] },
 
   // SCALE BRANCH
   { id: 'SCALE_1', branch: 'SCALE', name: 'Micro Fazenda 1x1', description: 'Lote inicial de terreno com um único bloco.', tier: 0, cost: {}, unlocked: true },
@@ -62,7 +76,7 @@ export const INITIAL_TECH_TREE: TechNode[] = [
   { id: 'SCALE_7', branch: 'SCALE', name: 'Matriz Complexa 9x9', description: 'Expanda o terreno para uma grade 9x9.', tier: 6, cost: { energy: 400, biomass: 200 }, unlocked: false, requires: ['SCALE_6'] },
   { id: 'SCALE_8', branch: 'SCALE', name: 'Terceiro Agente', description: 'Desbloqueie a Nave Agente nº 3 para automatizar em paralelo.', tier: 7, cost: { biomass: 350, crystals: 75 }, unlocked: false, requires: ['SCALE_7'] },
   { id: 'SCALE_9', branch: 'SCALE', name: 'Mega Zona 12x12', description: 'Expanda o terreno para um lote mega agrícola 12x12.', tier: 8, cost: { biomass: 600, crystals: 150 }, unlocked: false, requires: ['SCALE_8'] },
-  { id: 'SCALE_10', branch: 'SCALE', name: 'SEGREDO', description: 'Conteúdo ultrassecreto em desenvolvimento. Instigação para futuras expansões.', tier: 10, cost: { energy: 9999 }, unlocked: false, requires: ['SCALE_9'] }
+  { id: 'SCALE_10', branch: 'SCALE', name: 'SEGREDO', description: 'Conteúdo ultrassecreto em desenvolvimento. Instigação para futuras expansões.', tier: 10, cost: { energy: 9999, crystals: 42 }, unlocked: false, requires: ['SCALE_9'] }
 ];
 
 export function getInitialTechTree(): TechNode[] {
@@ -1421,17 +1435,20 @@ export class GameEngine {
       fruits: 100,
       energy: 500,
       biomass: 2000,
-      catalyst: 5000,
-      crystals: 10000
+      catalyst: 0,
+      crystals: 0
     };
 
-    const ptsGained = amount * (rates[key] || 1);
+    const baseRate = rates[key] || 1;
+    const mult = getPrestigeResourceMultiplier(this.prestige.level, key);
+    const ptsGained = amount * baseRate * mult;
     this.addPrestigePoints(ptsGained);
 
     this.totalActionsPerformed++;
     const ag = this.getAgent(agentId);
     if (ag) ag.actionMessage = `Prestige +${ptsGained} XP (${amount}x ${key})`;
-    this.addLog(agentId, 'action', `Upload de Prestígio: ${amount}x ${key} transmitidos para a rede (+${ptsGained} XP de Prestígio)!`);
+    const isAttenuated = mult < 1.0;
+    this.addLog(agentId, 'action', `Upload de Prestígio: ${amount}x ${key} transmitidos para a rede (+${ptsGained} XP de Prestígio${isAttenuated ? ' [Atenuado: 50%]' : ''})!`);
 
     this.saveEngineState();
     this.notify();
