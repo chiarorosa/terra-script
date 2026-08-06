@@ -19,6 +19,7 @@ import {
   calculateWealthScore,
   LeaderboardEntry 
 } from '../utils/supabaseClient';
+import { PixelResourceIcon } from './PixelResourceIcon';
 
 interface LeaderboardModalProps {
   engine: GameEngine;
@@ -177,7 +178,7 @@ export const LeaderboardModal: React.FC<LeaderboardModalProps> = ({ engine, onCl
                 }`}
               >
                 <Award className="w-3.5 h-3.5" />
-                <span>🏆 Prestígio Mais Alto</span>
+                <span>Prestígio Mais Alto</span>
               </button>
 
               <button
@@ -189,7 +190,7 @@ export const LeaderboardModal: React.FC<LeaderboardModalProps> = ({ engine, onCl
                 }`}
               >
                 <Coins className="w-3.5 h-3.5" />
-                <span>💰 Maior Riqueza (Estoque)</span>
+                <span>Maior Riqueza (Estoque)</span>
               </button>
             </div>
 
@@ -270,8 +271,8 @@ export const LeaderboardModal: React.FC<LeaderboardModalProps> = ({ engine, onCl
                           <span className="col-span-3 text-right font-bold text-[#facc15]">
                             {computedExp.toLocaleString()} EXP
                           </span>
-                          <span className="col-span-2 text-right text-[#a855f7]">
-                            🤖 {entry.agents_count || 1}
+                          <span className="col-span-2 text-right text-[#a855f7] inline-flex items-center justify-end gap-1">
+                            <Bot className="w-3.5 h-3.5 shrink-0 text-[#a855f7]" /> {entry.agents_count || 1}
                           </span>
                         </>
                       ) : (
@@ -279,8 +280,11 @@ export const LeaderboardModal: React.FC<LeaderboardModalProps> = ({ engine, onCl
                           <span className="col-span-3 text-right font-bold text-[#38bdf8]">
                             {computedWealth.toLocaleString()} pts
                           </span>
-                          <span className="col-span-4 text-right text-[11px] text-[#a1a1aa] font-mono truncate">
-                            🌱{entry.fiber || 0} 🪵{entry.wood || 0} ⚡{entry.energy || 0} {entry.crystals ? `💎${entry.crystals}` : ''}
+                          <span className="col-span-4 text-right text-[11px] text-[#a1a1aa] font-mono truncate inline-flex items-center justify-end gap-2">
+                            <span className="inline-flex items-center gap-0.5"><PixelResourceIcon type="fiber" className="w-3 h-3" />{entry.fiber || 0}</span>
+                            <span className="inline-flex items-center gap-0.5"><PixelResourceIcon type="wood" className="w-3 h-3" />{entry.wood || 0}</span>
+                            <span className="inline-flex items-center gap-0.5"><PixelResourceIcon type="energy" className="w-3 h-3" />{entry.energy || 0}</span>
+                            {entry.crystals ? <span className="inline-flex items-center gap-0.5"><Sparkles className="w-3 h-3 text-cyan-400" />{entry.crystals}</span> : null}
                           </span>
                         </>
                       )}

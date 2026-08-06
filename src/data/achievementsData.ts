@@ -21,7 +21,7 @@ export function getInitialAchievements(): Achievement[] {
       category: 'UI_UNLOCK',
       icon: 'Boxes',
       unlocked: false,
-      expReward: 100,
+      expReward: 300,
       rewardText: 'Ativa a barra de Referência da API (farm.*) no rodapé da IDE.',
       hint: 'Pesquise a tecnologia de Expansão de Terreno (SCALE_2) na Árvore de Pesquisas.'
     },
@@ -32,7 +32,7 @@ export function getInitialAchievements(): Achievement[] {
       category: 'UI_UNLOCK',
       icon: 'Zap',
       unlocked: false,
-      expReward: 100,
+      expReward: 500,
       rewardText: 'Desbloqueia a Barra de Prestígio e o indicador de nível no topo.',
       hint: 'Acumule experiência na matriz de prestígio ou complete a primeira Troca de Mundo.'
     },
@@ -43,7 +43,7 @@ export function getInitialAchievements(): Achievement[] {
       category: 'UI_UNLOCK',
       icon: 'Bot',
       unlocked: false,
-      expReward: 100,
+      expReward: 1000,
       rewardText: 'Desbloqueia a Aba de Gestão de Agentes na barra superior.',
       hint: 'Pesquise a tecnologia Frota de Agentes II (SCALE_5) na Árvore de Pesquisas.'
     },
@@ -56,7 +56,7 @@ export function getInitialAchievements(): Achievement[] {
       category: 'MECHANIC',
       icon: 'Sparkles',
       unlocked: false,
-      expReward: 100,
+      expReward: 150,
       rewardText: 'Troféu comemorativo da primeira colheita.',
       hint: 'Execute o comando farm.harvest() posicionado sobre uma planta pronta.'
     },
@@ -67,7 +67,7 @@ export function getInitialAchievements(): Achievement[] {
       category: 'MECHANIC',
       icon: 'Droplets',
       unlocked: false,
-      expReward: 100,
+      expReward: 200,
       rewardText: 'Insígnia de Mestre da Irrigação.',
       hint: 'Programe seu agente para executar farm.water() nos canteiros da fazenda.',
       progress: { current: 0, max: 10, unit: 'solos regados' }
@@ -79,7 +79,7 @@ export function getInitialAchievements(): Achievement[] {
       category: 'MECHANIC',
       icon: 'Shovel',
       unlocked: false,
-      expReward: 100,
+      expReward: 250,
       rewardText: 'Insígnia de Agrônomo Dedicado.',
       hint: 'Programe o robô para preparar terrenos com o comando farm.till().',
       progress: { current: 0, max: 15, unit: 'solos arados' }
@@ -91,7 +91,7 @@ export function getInitialAchievements(): Achievement[] {
       category: 'MECHANIC',
       icon: 'FlaskConical',
       unlocked: false,
-      expReward: 100,
+      expReward: 600,
       rewardText: 'Insígnia de Cientista da Fazenda.',
       hint: 'Junte Fibras e Madeiras e desbloqueie pesquisas na aba Pesquisas.',
       progress: { current: 0, max: 3, unit: 'tecnologias' }
@@ -105,7 +105,7 @@ export function getInitialAchievements(): Achievement[] {
       category: 'STATS',
       icon: 'Award',
       unlocked: false,
-      expReward: 100,
+      expReward: 400,
       rewardText: 'Insígnia de Colecionador de Fibras.',
       hint: 'Mantenha seus agentes colhendo plantas na fazenda.',
       progress: { current: 0, max: 100, unit: 'Fibras' }
@@ -117,7 +117,7 @@ export function getInitialAchievements(): Achievement[] {
       category: 'STATS',
       icon: 'TreeTrunk',
       unlocked: false,
-      expReward: 100,
+      expReward: 1200,
       rewardText: 'Insígnia de Mestre das Madeiras.',
       hint: 'Cultive e colha arbustos de madeira.',
       progress: { current: 0, max: 250, unit: 'Madeiras' }
@@ -129,7 +129,7 @@ export function getInitialAchievements(): Achievement[] {
       category: 'STATS',
       icon: 'Footprints',
       unlocked: false,
-      expReward: 100,
+      expReward: 800,
       rewardText: 'Insígnia de Maratonista Agrícola.',
       hint: 'Mantenha scripts de movimentação rodando.',
       progress: { current: 0, max: 500, unit: 'passos' }
@@ -141,7 +141,7 @@ export function getInitialAchievements(): Achievement[] {
       category: 'STATS',
       icon: 'Cpu',
       unlocked: false,
-      expReward: 100,
+      expReward: 2000,
       rewardText: 'Insígnia de Automação em Massa.',
       hint: 'Execute scripts complexos em malhas e laços de repetição.',
       progress: { current: 0, max: 1000, unit: 'ações' }
@@ -153,7 +153,7 @@ export function getInitialAchievements(): Achievement[] {
       category: 'STATS',
       icon: 'Trophy',
       unlocked: false,
-      expReward: 100,
+      expReward: 5000,
       rewardText: 'Insígnia de Mestre da Galáxia.',
       hint: 'Realize trocas de mundo e acumule pontos de experiência.',
       progress: { current: 1, max: 10, unit: 'Nível' }
@@ -167,7 +167,7 @@ export function getInitialAchievements(): Achievement[] {
       category: 'SPECIAL',
       icon: 'ShieldCheck',
       unlocked: false,
-      expReward: 100,
+      expReward: 3000,
       rewardText: 'Insígnia de Engenheiro Senior de Software.',
       hint: 'Escreva rotinas seguras e sem erros nos loops de execução.',
       progress: { current: 0, max: 200, unit: 'ticks sem erros' }

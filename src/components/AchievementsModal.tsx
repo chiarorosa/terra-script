@@ -33,6 +33,14 @@ interface AchievementsModalProps {
   onClose: () => void;
 }
 
+const formatXP = (amount: number): string => {
+  if (amount >= 1000) {
+    const k = amount / 1000;
+    return Number.isInteger(k) ? `${k}K` : `${k.toFixed(1)}K`;
+  }
+  return `${amount}`;
+};
+
 export const AchievementsModal: React.FC<AchievementsModalProps> = ({ engine, onClose }) => {
   const [selectedCategory, setSelectedCategory] = useState<AchievementCategory | 'ALL'>('ALL');
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -161,7 +169,7 @@ export const AchievementsModal: React.FC<AchievementsModalProps> = ({ engine, on
                 title="Coletar a experiência de todas as conquistas desbloqueadas de uma só vez"
               >
                 <Gift className="w-4 h-4 text-[#0f172a]" />
-                <span>COLETAR TODOS (+{totalUnclaimedXP} XP)</span>
+                <span>COLETAR TODOS (+{formatXP(totalUnclaimedXP)} XP)</span>
               </button>
             )}
           </div>
@@ -298,16 +306,16 @@ export const AchievementsModal: React.FC<AchievementsModalProps> = ({ engine, on
                         ach.claimed ? (
                           <span className="flex items-center gap-1 text-xs font-pixel-mono text-[#22c55e] font-bold bg-[#22c55e]/15 px-2.5 py-1 border border-[#22c55e]/40 rounded-xs">
                             <CheckCircle2 className="w-3.5 h-3.5 text-[#22c55e]" />
-                            Coletado (+{ach.expReward || 100} XP)
+                            Coletado (+{formatXP(ach.expReward || 100)} XP)
                           </span>
                         ) : (
                           <button
                             onClick={() => handleClaim(ach.id)}
                             className="flex items-center gap-1.5 px-3 py-1 bg-[#facc15] hover:bg-[#fef08a] text-[#0f172a] font-pixel-header text-xs font-bold shadow-md transition-all active:scale-95 cursor-pointer rounded-xs border border-[#fef08a] animate-pulse"
-                            title="Coletar Experiência de Prestígio (+100 XP)"
+                            title={`Coletar Experiência de Prestígio (+${formatXP(ach.expReward || 100)} XP)`}
                           >
                             <Gift className="w-3.5 h-3.5 text-[#0f172a]" />
-                            <span>COLETAR (+{ach.expReward || 100} XP)</span>
+                            <span>COLETAR (+{formatXP(ach.expReward || 100)} XP)</span>
                           </button>
                         )
                       ) : (
