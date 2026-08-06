@@ -453,13 +453,19 @@ export async function fetchCloudSave(playerName: string): Promise<{ success: boo
 }
 
 /**
- * List all Cloud Saves
+ * List Cloud Saves for the connected player only
  */
-export async function listAllCloudSaves(): Promise<{ success: boolean; saves?: CloudSaveData[]; message?: string }> {
+export async function listAllCloudSaves(playerName?: string): Promise<{ success: boolean; saves?: CloudSaveData[]; message?: string }> {
   try {
+    const activePlayerName = playerName || (typeof window !== 'undefined' ? localStorage.getItem('terrascript_programmer_name') : null);
+    if (!activePlayerName) {
+      return { success: true, saves: [] };
+    }
+
     const { data, error } = await supabase
       .from('terrascript_saves')
       .select('*')
+      .eq('player_name', activePlayerName)
       .order('updated_at', { ascending: false })
       .limit(20);
 

@@ -1703,12 +1703,12 @@ export const World3DCanvas: React.FC<World3DCanvasProps> = ({ engine }) => {
             </div>
             <div className="flex justify-between">
               <span className="text-slate-400">Crescimento:</span>
-              <span className="font-semibold text-cyan-300">{inspectedTile.growth}%</span>
+              <span className="font-semibold text-cyan-300">{(Number(inspectedTile.growth) || 0).toFixed(3)}%</span>
             </div>
             <div className="flex justify-between">
               <span className="text-slate-400">Umidade:</span>
               <span className={`font-semibold ${inspectedTile.moisture > 1.0 ? 'text-blue-400 font-bold animate-pulse' : 'text-blue-400'}`}>
-                {Math.round(inspectedTile.moisture * 100)}%
+                {((Number(inspectedTile.moisture) || 0) * 100).toFixed(3)}%
               </span>
             </div>
             {(inspectedTile.crop === 'ENERGY_FLOWER' || engine.isTechUnlocked('AGRO_6')) && inspectedTile.energyValue !== undefined && (

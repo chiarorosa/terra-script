@@ -537,7 +537,7 @@ export const API_CATALOG: ApiItem[] = [
     },
     usabilityNotes: [
       'Evite mover contra as paredes externas do mapa para não gastar chamadas inválidas.',
-      'Sempre verifique world.can_move(dir) se estiver em mapas de labirinto.'
+      'Sempre verifique world.can_move(dir) antes de tentar mover para posições potencialmente bloqueadas.'
     ],
     expectedOutput: 'Agente deslocado para a célula adjacente.'
   },
@@ -552,7 +552,7 @@ export const API_CATALOG: ApiItem[] = [
     description: 'Sensor de obstáculo: verifica se a célula vizinha na direção informada está livre.',
     techId: 'AUTO_1',
     category: 'Sensores do Mundo',
-    docDetail: 'Garante navegação segura em terrenos expandidos e labirintos evitando colisão.',
+    docDetail: 'Garante navegação segura em terrenos expandidos evitando colisão.',
     exampleCode: 'if world.can_move("FORWARD"):\n    world.move("FORWARD")',
     parameters: [
       {

@@ -92,7 +92,7 @@ export const SaveManagerModal: React.FC<SaveManagerModalProps> = ({
 
   const loadCloudSaves = async () => {
     setIsLoadingSaves(true);
-    const res = await listAllCloudSaves();
+    const res = await listAllCloudSaves(programmerName);
     if (res.success && res.saves) {
       setCloudSaves(res.saves);
     } else if (res.message) {

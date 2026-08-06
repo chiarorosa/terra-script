@@ -321,7 +321,7 @@ export class JavaScriptSandbox {
 
     const checkSys4 = () => {
       if (!engine.isTechUnlocked('SYS_4')) {
-        throw new Error("Recurso 'Telemetria & Estatísticas do Agente' está bloqueado! Pesquise SYS_4 na Árvore de Pesquisa.");
+        throw new Error("Recurso 'Estatísticas do Agente' está bloqueado! Pesquise SYS_4 na Árvore de Pesquisa.");
       }
     };
 

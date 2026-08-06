@@ -561,7 +561,7 @@ def _create_py_step_generator(code_str, _jsBridge):
       },
       sys_get_agent_stats: () => {
         if (!engine.isTechUnlocked('SYS_4')) {
-          throw new Error("Recurso 'Telemetria & Estatísticas do Agente' está bloqueado! Pesquise SYS_4 na Árvore de Pesquisa.");
+          throw new Error("Recurso 'Estatísticas do Agente' está bloqueado! Pesquise SYS_4 na Árvore de Pesquisa.");
         }
         return engine.getAgentStats(agentId);
       }
