@@ -5,7 +5,7 @@ import { RenderPixelatedPass } from 'three/examples/jsm/postprocessing/RenderPix
 import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
 import { GameEngine } from '../engine/GameEngine';
 import { CropType, GroundType, TileState } from '../types/game';
-import { Info, Activity, Gauge, Eye, EyeOff, HardDrive, Target, ZoomIn, ZoomOut, Trash2, Sparkles } from 'lucide-react';
+import { Info, Activity, Gauge, Eye, EyeOff, HardDrive, Target, ZoomIn, ZoomOut, Trash2, Sparkles, RotateCcw, Layers } from 'lucide-react';
 import { GameLogo } from './GameLogo';
 
 interface World3DCanvasProps {
@@ -1509,60 +1509,19 @@ export const World3DCanvas: React.FC<World3DCanvasProps> = ({ engine }) => {
     : null;
 
   return (
-    <div className="flex-1 bg-[#08090a] flex flex-col h-full relative overflow-hidden font-sans select-none">
-      {/* Canvas Controls Header Bar */}
-      <div className="h-9 bg-[#08090a] border-b border-[#23252a] flex items-center justify-between px-3 text-xs text-slate-300 font-mono z-10 gap-2 overflow-x-auto no-scrollbar">
+    <div className="flex-1 min-w-[280px] bg-[#08090a] flex flex-col h-full relative overflow-hidden font-sans select-none">
+      {/* Canvas Header Bar */}
+      <div className="h-9 bg-[#08090a] border-b border-[#23252a] flex items-center justify-between px-3 text-xs text-slate-300 font-mono z-10 gap-2 shrink-0">
         <div className="flex items-center gap-2 shrink-0">
           <GameLogo className="w-4 h-4" />
-          <span className="font-semibold text-white">3D</span>
-          <span className="text-[10px] bg-[#161718] border border-[#23252a] px-2 py-0.5 rounded text-slate-400">
+          <span className="font-semibold text-white">Visualizador 3D</span>
+          <span className="text-[10px] bg-[#161718] border border-[#23252a] px-2 py-0.5 rounded text-slate-400 font-mono">
             {engine.getGridWidth()}x{engine.getGridHeight()}
           </span>
         </div>
 
-        <div className="flex items-center gap-2 shrink-0">
-          {/* Zoom Controls */}
-          <div className="flex items-center gap-1 bg-[#08090a]/90 border border-[#23252a] rounded px-1 py-0.5">
-            <button
-              onClick={() => setZoomLevel((prev) => Math.max(parseFloat((prev - 0.15).toFixed(2)), 0.4))}
-              className="p-1 hover:bg-[#161718] text-slate-300 hover:text-white rounded transition-colors"
-              title="Afastar Zoom (Scroll Down / Zoom Out)"
-            >
-              <ZoomOut className="w-3.5 h-3.5" />
-            </button>
-            <span className="text-[10px] font-mono text-cyan-300 w-9 text-center select-none">
-              {Math.round(zoomLevel * 100)}%
-            </span>
-            <button
-              onClick={() => setZoomLevel((prev) => Math.min(parseFloat((prev + 0.15).toFixed(2)), 2.5))}
-              className="p-1 hover:bg-[#161718] text-slate-300 hover:text-white rounded transition-colors"
-              title="Aproximar Zoom (Scroll Up / Zoom In)"
-            >
-              <ZoomIn className="w-3.5 h-3.5" />
-            </button>
-            {zoomLevel !== 1.0 && (
-              <button
-                onClick={() => setZoomLevel(1.0)}
-                className="px-1.5 py-0.5 text-[10px] text-slate-400 hover:text-white bg-[#161718] hover:bg-[#23252a] rounded transition-colors"
-                title="Ajustar Zoom para 100%"
-              >
-                100%
-              </button>
-            )}
-          </div>
-
-          <button
-            onClick={() => {
-              if (window.confirm('Limpar plantas e solos do terreno atual?\n\n(Pesquisas, tamanho do mundo e recursos em inventário serão MANTIDOS)')) {
-                engine.clearWorld();
-              }
-            }}
-            className="flex items-center gap-1 px-2 py-1 bg-[#08090a] hover:bg-[#161718] border border-[#23252a] text-slate-300 rounded text-xs transition-colors"
-            title="Limpar plantas do lote atual (Preserva pesquisas e tamanho do mundo)"
-          >
-            <Trash2 className="w-3.5 h-3.5 text-slate-400" />
-            Limpar Lote
-          </button>
+        <div className="flex items-center gap-2 shrink-0 text-[10px] text-slate-400">
+          <span className="hidden sm:inline font-mono">Setas (▲ ▼ ◄ ►) ou Scroll para Zoom</span>
         </div>
       </div>
 
@@ -1572,6 +1531,96 @@ export const World3DCanvas: React.FC<World3DCanvasProps> = ({ engine }) => {
         onClick={handleCanvasClick}
         className="flex-1 w-full h-full cursor-crosshair relative" 
       />
+
+      {/* ALWAYS-VISIBLE FLOATING 3D VIEWPORT CONTROLS DOCK */}
+      <div className="absolute top-12 right-3 z-30 flex flex-col items-end gap-2 font-mono text-xs select-none pointer-events-auto">
+        <div className="bg-[#0f1011]/90 backdrop-blur-md border border-[#383b3f] rounded-lg p-1.5 flex flex-col gap-1.5 shadow-[0_12px_36px_rgba(0,0,0,0.95)] min-w-[175px]">
+          {/* Zoom Control Group */}
+          <div className="flex items-center justify-between gap-1 bg-[#161718] border border-[#23252a] rounded p-1">
+            <button
+              onClick={() => setZoomLevel((prev) => Math.max(parseFloat((prev - 0.15).toFixed(2)), 0.4))}
+              className="p-1 hover:bg-[#23252a] text-slate-300 hover:text-white rounded transition-colors active:scale-95 cursor-pointer"
+              title="Afastar Zoom (Scroll Down / -)"
+            >
+              <ZoomOut className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => setZoomLevel(1.0)}
+              className="px-2 py-0.5 text-[11px] font-bold text-cyan-300 hover:text-white hover:bg-[#23252a] rounded transition-colors cursor-pointer"
+              title="Ajustar Zoom para 100%"
+            >
+              {Math.round(zoomLevel * 100)}%
+            </button>
+            <button
+              onClick={() => setZoomLevel((prev) => Math.min(parseFloat((prev + 0.15).toFixed(2)), 2.5))}
+              className="p-1 hover:bg-[#23252a] text-slate-300 hover:text-white rounded transition-colors active:scale-95 cursor-pointer"
+              title="Aproximar Zoom (Scroll Up / +)"
+            >
+              <ZoomIn className="w-4 h-4" />
+            </button>
+          </div>
+
+          {/* Camera POV & Agent Tracking Group */}
+          <div className="flex items-center gap-1">
+            <button
+              onClick={resetPOV}
+              className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 bg-[#161718] hover:bg-[#23252a] border border-[#23252a] text-slate-200 hover:text-white rounded text-[10px] transition-colors active:scale-95 cursor-pointer"
+              title="Resetar Posição da Câmera & Centralizar Agente (100%)"
+            >
+              <RotateCcw className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+              <span>Resetar</span>
+            </button>
+
+            <button
+              onClick={() => {
+                const nextState = !followAgent;
+                setFollowAgent(nextState);
+                if (nextState && primaryAgent) {
+                  setInspectedCoords({ x: primaryAgent.x, y: primaryAgent.y });
+                }
+              }}
+              className={`flex items-center gap-1 px-2 py-1.5 rounded text-[10px] border transition-all active:scale-95 cursor-pointer ${
+                followAgent
+                  ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/50 font-bold'
+                  : 'bg-[#161718] text-slate-400 border-[#23252a] hover:text-slate-200'
+              }`}
+              title={followAgent ? "Seguir Agente: ATIVADO (Clique para desativar)" : "Seguir Agente: DESATIVADO (Clique para ativar)"}
+            >
+              {followAgent ? <Eye className="w-3.5 h-3.5 text-emerald-400 shrink-0" /> : <EyeOff className="w-3.5 h-3.5 text-slate-400 shrink-0" />}
+              <span>Seguir {followAgent ? 'ON' : 'OFF'}</span>
+            </button>
+          </div>
+
+          {/* Render Mode & Plot Action Group */}
+          <div className="flex items-center gap-1 border-t border-[#23252a] pt-1.5">
+            <button
+              onClick={() => setPixelMode(!pixelMode)}
+              className={`flex-1 flex items-center justify-center gap-1 px-2 py-1 rounded text-[10px] border transition-all cursor-pointer ${
+                pixelMode
+                  ? 'bg-indigo-500/20 text-indigo-300 border-indigo-500/50 font-semibold'
+                  : 'bg-[#161718] text-slate-400 border-[#23252a] hover:text-slate-200'
+              }`}
+              title={pixelMode ? "Modo 3D Pixel Art (2px) Ativado" : "Modo 3D Nativo Suave Ativado"}
+            >
+              <Sparkles className="w-3 h-3 text-indigo-400 shrink-0" />
+              <span>{pixelMode ? 'Pixel 3D' : '3D Smooth'}</span>
+            </button>
+
+            <button
+              onClick={() => {
+                if (window.confirm('Limpar plantas e solos do terreno atual?\n\n(Pesquisas, tamanho do mundo e recursos em inventário serão MANTIDOS)')) {
+                  engine.clearWorld();
+                }
+              }}
+              className="flex items-center justify-center gap-1 px-2 py-1 bg-[#161718] hover:bg-[#23252a] border border-[#23252a] text-slate-400 hover:text-rose-400 rounded text-[10px] transition-colors cursor-pointer"
+              title="Limpar plantas do lote atual"
+            >
+              <Trash2 className="w-3 h-3 shrink-0" />
+              <span>Limpar</span>
+            </button>
+          </div>
+        </div>
+      </div>
 
       {/* Navigation Instruction Badge */}
       <div className="absolute bottom-4 left-3 z-20 font-mono text-[10px] select-none">
@@ -1592,7 +1641,7 @@ export const World3DCanvas: React.FC<World3DCanvasProps> = ({ engine }) => {
               </span>
               <button
                 onClick={() => setShowHud(false)}
-                className="p-1 hover:bg-[#161718] text-slate-400 hover:text-white rounded transition-colors"
+                className="p-1 hover:bg-[#161718] text-slate-400 hover:text-white rounded transition-colors cursor-pointer"
                 title="Esconder métricas"
               >
                 <EyeOff className="w-3.5 h-3.5" />
@@ -1631,7 +1680,7 @@ export const World3DCanvas: React.FC<World3DCanvasProps> = ({ engine }) => {
         ) : (
           <button
             onClick={() => setShowHud(true)}
-            className="flex items-center gap-2 bg-[#0f1011] hover:bg-[#161718] border border-[#383b3f] px-3 py-1.5 rounded-md text-[10px] text-slate-200 shadow-[0_8px_24px_rgba(0,0,0,0.95)] hover:text-white transition-all"
+            className="flex items-center gap-2 bg-[#0f1011] hover:bg-[#161718] border border-[#383b3f] px-3 py-1.5 rounded-md text-[10px] text-slate-200 shadow-[0_8px_24px_rgba(0,0,0,0.95)] hover:text-white transition-all cursor-pointer"
             title="Mostrar Métricas"
           >
             <span className="text-emerald-400 font-bold">{ramMb} MB</span>
@@ -1644,37 +1693,19 @@ export const World3DCanvas: React.FC<World3DCanvasProps> = ({ engine }) => {
 
       {/* Tile Inspector Overlay Panel */}
       {inspectedTile && (
-        <div className="absolute bottom-4 right-4 bg-[#0f1011] border border-[#383b3f] rounded-lg p-3 text-xs font-mono text-slate-200 shadow-[0_12px_36px_rgba(0,0,0,0.95),0_0_1px_rgba(255,255,255,0.15)] w-68 z-20">
+        <div className="absolute bottom-4 right-3 bg-[#0f1011]/95 backdrop-blur-md border border-[#383b3f] rounded-lg p-3 text-xs font-mono text-slate-200 shadow-[0_12px_36px_rgba(0,0,0,0.95)] w-68 z-20">
           <div className="flex items-center justify-between border-b border-[#383b3f] pb-2 mb-2 font-bold text-emerald-400">
             <span className="flex items-center gap-1.5 truncate text-xs">
               <Info className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
               Bloco ({inspectedTile.x}, {inspectedTile.y})
             </span>
             <div className="flex items-center gap-2 shrink-0">
-              <button
-                onClick={() => {
-                  const nextState = !followAgent;
-                  setFollowAgent(nextState);
-                  if (nextState && primaryAgent) {
-                    setInspectedCoords({ x: primaryAgent.x, y: primaryAgent.y });
-                  }
-                }}
-                className={`px-2 py-0.5 rounded text-[10px] font-mono transition-colors border ${
-                  followAgent
-                    ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/50 font-bold'
-                    : 'bg-[#161718] text-slate-400 border-[#383b3f] hover:text-slate-200 font-normal'
-                }`}
-                title={followAgent ? "Seguir Agente: ON (Clique para desligar)" : "Seguir Agente: OFF (Clique para ligar)"}
-              >
-                Seguir {followAgent ? 'ON' : 'OFF'}
-              </button>
               <button 
                 onClick={() => {
-                  setFollowAgent(false);
                   setInspectedCoords(null);
                 }}
-                className="text-slate-400 hover:text-white text-sm font-bold pl-0.5 leading-none"
-                title="Fechar"
+                className="text-slate-400 hover:text-white text-sm font-bold px-1 py-0.5 leading-none hover:bg-[#161718] rounded cursor-pointer transition-colors"
+                title="Fechar Inspecção de Bloco"
               >
                 ×
               </button>
