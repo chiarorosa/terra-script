@@ -31,8 +31,7 @@ import {
   registerCloudUser, 
   loginCloudUser, 
   uploadCloudSaveWithAntiFraud,
-  fetchCloudSave,
-  getSupabaseSqlSetupScript
+  fetchCloudSave
 } from '../utils/supabaseClient';
 
 interface WelcomeModalProps {
@@ -64,21 +63,12 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({ engine, onClose }) =
     return true;
   });
 
-  const [copiedSql, setCopiedSql] = useState<boolean>(false);
-
   const [educationalErrors, setEducationalErrors] = useState<boolean>(() => {
     if (typeof window !== 'undefined') {
       return localStorage.getItem('terrascript_educational_errors') !== 'false';
     }
     return true;
   });
-
-  const handleCopySql = () => {
-    const sql = getSupabaseSqlSetupScript();
-    navigator.clipboard.writeText(sql);
-    setCopiedSql(true);
-    setTimeout(() => setCopiedSql(false), 2500);
-  };
 
   // Validation & Loading States
   const [isCheckingName, setIsCheckingName] = useState<boolean>(false);
@@ -485,36 +475,9 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({ engine, onClose }) =
 
                 {/* Status Messages */}
                 {authError && (
-                  <div className="space-y-2">
-                    <div className="p-2.5 bg-[#ef4444]/15 border border-[#ef4444] text-[#ef4444] text-xs font-pixel-body flex items-start gap-2">
-                      <XCircle className="w-4 h-4 shrink-0 mt-0.5" />
-                      <span>{authError}</span>
-                    </div>
-
-                    {(authError.includes('tabela') || authError.includes('SQL') || authError.includes('Supabase') || authError.includes('RLS')) && (
-                      <div className="p-3 bg-[#161718] border border-[#23252a] rounded space-y-2">
-                        <div className="text-[11px] text-[#8a8f98] font-pixel-body">
-                          💡 Seu banco Supabase precisa das tabelas criadas. Copie o script SQL abaixo e cole no <strong className="text-white">SQL Editor</strong> do seu Supabase Dashboard (<span className="text-[#38bdf8]">app.supabase.com</span>):
-                        </div>
-                        <button
-                          type="button"
-                          onClick={handleCopySql}
-                          className="w-full py-1.5 px-3 bg-[#10b981]/20 hover:bg-[#10b981]/30 text-[#10b981] border border-[#10b981]/40 rounded font-pixel-mono text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer"
-                        >
-                          {copiedSql ? (
-                            <>
-                              <CheckCircle2 className="w-3.5 h-3.5 text-[#10b981]" />
-                              <span>Script SQL Copiado para a Área de Transferência!</span>
-                            </>
-                          ) : (
-                            <>
-                              <Copy className="w-3.5 h-3.5" />
-                              <span>Copiar Script SQL de Setup do Supabase</span>
-                            </>
-                          )}
-                        </button>
-                      </div>
-                    )}
+                  <div className="p-2.5 bg-[#ef4444]/15 border border-[#ef4444] text-[#ef4444] text-xs font-pixel-body flex items-start gap-2">
+                    <XCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                    <span>{authError}</span>
                   </div>
                 )}
 
