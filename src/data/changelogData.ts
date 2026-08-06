@@ -8,10 +8,23 @@ export interface ChangelogRelease {
 
 export const CHANGELOG_HISTORY: ChangelogRelease[] = [
   {
+    version: 'v2.8.0',
+    date: '2026-08-06',
+    title: 'Novo Sistema e Menu de Conquistas (Achievements Engine & UI)',
+    isCurrent: true,
+    changes: [
+      'Novo Menu de Conquistas (Achievements UI): Substituição e expansão da antiga estrutura rígida de Marcos (Milestones) por um Menu de Conquistas completo, dinâmico e expansível.',
+      'Desbloqueios de Interface e Mecânicas: Conquistas divididas em categorias estratégicas (Interface, Mecânicas de Jogo, Estatísticas de Progresso e Ações Especiais/Segredos).',
+      'Indícios de Progressão e Metas Claras: Listagem não-linear com barras de progresso visual, recompensas de desbloqueio de UI e dicas de conquistas a serem alcançadas.',
+      'Sincronização com Garantia Zero Bugs (Migração Transparente): Compatibilidade total com saves anteriores através de migração automática dos antigos PlayerMilestones para a nova matriz de conquistas sem perda de progresso ou quebra de chave HMAC.',
+      'Notificações Toast de Conquista Desbloqueada: Efeito sonoro retro e notificação visual imediata ao completar qualquer conquista durante o gameplay.'
+    ]
+  },
+  {
     version: 'v2.7.2',
     date: '2026-08-06',
     title: 'Escalonamento de Experiência de Prestígio 50+',
-    isCurrent: true,
+    isCurrent: false,
     changes: [
       'Aumento da Curva de XP de Prestígio (Nível 50+): A quantidade de pontos de experiência necessários para avançar a partir do Nível 50 passa a contar com um escalonamento exponencial mais rigoroso (fator de escala progressivo a cada nível acima do 50).',
       'Atualização na documentação do Guia farm.prestige e Bloco de Prestígio refletindo a nova curva de experiência de níveis altos.'

@@ -14,20 +14,33 @@ import {
   Terminal, 
   Bot, 
   Maximize2,
-  BookOpen
+  BookOpen,
+  Trophy,
+  Sparkles
 } from 'lucide-react';
 import { GameEngine } from '../engine/GameEngine';
 import { TechBranch, TechNode } from '../types/game';
 import { PixelResourceIcon } from './PixelResourceIcon';
+import { audioManager } from '../utils/audioManager';
 
 interface TechTreeModalProps {
   engine: GameEngine;
   onOpenGuideForTech?: (techId: string) => void;
+  onOpenAchievements?: () => void;
 }
 
-export const TechTreeModal: React.FC<TechTreeModalProps> = ({ engine, onOpenGuideForTech }) => {
+export const TechTreeModal: React.FC<TechTreeModalProps> = ({ 
+  engine, 
+  onOpenGuideForTech,
+  onOpenAchievements 
+}) => {
   const techTree = engine.getTechTree();
   const resources = engine.getResources();
+  const achievements = engine.getAchievements();
+
+  const unlockedAchCount = achievements.filter(a => a.unlocked).length;
+  const totalAchCount = achievements.length;
+  const achPercent = Math.round((unlockedAchCount / Math.max(1, totalAchCount)) * 100);
 
   const handleUnlock = (node: TechNode) => {
     const success = engine.unlockTech(node.id);
@@ -168,8 +181,8 @@ export const TechTreeModal: React.FC<TechTreeModalProps> = ({ engine, onOpenGuid
   return (
     <div className="flex-1 bg-[#08090a] p-6 overflow-y-auto font-pixel-body">
       <div className="max-w-6xl mx-auto space-y-6">
-        {/* Header Title */}
-        <div className="flex items-center justify-between border-b-2 border-[#23252a] pb-4">
+        {/* Header Title & Conquistas Access Banner */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b-2 border-[#23252a] pb-4 gap-4">
           <div>
             <h1 className="text-sm font-pixel-header text-[#ffffff] flex items-center gap-2">
               <FlaskConical className="w-5 h-5 text-[#22c55e]" />
@@ -179,6 +192,43 @@ export const TechTreeModal: React.FC<TechTreeModalProps> = ({ engine, onOpenGuid
               O compilador da sua fazenda. Invista recursos agrícolas para liberar sintaxes de programação, métodos de API, sensores de terreno e expansão de memória da grade.
             </p>
           </div>
+
+          {/* Direct Conquistas Access Banner Widget */}
+          {onOpenAchievements && (
+            <div 
+              onClick={() => {
+                audioManager.playClick();
+                onOpenAchievements();
+              }}
+              className="bg-[#0f1011] pixel-box-amber border-2 border-[#facc15]/80 p-3 hover:bg-[#161718] transition-all cursor-pointer flex items-center justify-between gap-4 shrink-0 group shadow-md"
+              title="Clique para abrir a Central de Conquistas & Desbloqueios"
+            >
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 bg-[#facc15]/15 text-[#facc15] border border-[#facc15]/40 rounded-xs group-hover:scale-105 transition-transform">
+                  <Trophy className="w-5 h-5 text-[#facc15]" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2 font-pixel-header text-xs text-white">
+                    <span>Central de Conquistas</span>
+                    <span className="pixel-badge bg-[#facc15] text-[#0f172a] font-bold text-[10px]">
+                      {unlockedAchCount}/{totalAchCount}
+                    </span>
+                  </div>
+                  <div className="w-32 bg-[#08090a] h-1.5 rounded overflow-hidden mt-1.5 border border-[#23252a]">
+                    <div 
+                      className="bg-[#facc15] h-full transition-all duration-300" 
+                      style={{ width: `${achPercent}%` }} 
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-1 text-[11px] font-pixel-mono text-[#facc15] font-bold group-hover:translate-x-1 transition-transform">
+                <span>Ver Conquistas</span>
+                <Trophy className="w-3.5 h-3.5 text-[#facc15]" />
+              </div>
+            </div>
+          )}
         </div>
 
         {/* 4 Branches Grid */}

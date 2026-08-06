@@ -30,6 +30,28 @@ export interface PlayerMilestones {
   apiReferenceUnlocked: boolean;     // Has unlocked API Reference bar by expanding land for the first time
 }
 
+export type AchievementCategory = 'UI_UNLOCK' | 'MECHANIC' | 'STATS' | 'SPECIAL';
+
+export interface Achievement {
+  id: string;
+  title: string;
+  description: string;
+  category: AchievementCategory;
+  icon: string;
+  unlocked: boolean;
+  unlockedAt?: string;
+  rewardText?: string;
+  hint?: string;
+  secret?: boolean;
+  claimed?: boolean;
+  expReward?: number;
+  progress?: {
+    current: number;
+    max: number;
+    unit?: string;
+  };
+}
+
 export type Direction = 'NORTH' | 'EAST' | 'SOUTH' | 'WEST';
 
 export interface ResourceMap {

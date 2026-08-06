@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Sparkles, BookOpen, X } from 'lucide-react';
+import { Sparkles, BookOpen, X, Trophy } from 'lucide-react';
 import { VirtualFS } from './engine/virtualFs';
 import { GameEngine } from './engine/GameEngine';
 import { TechNode } from './types/game';
@@ -16,6 +16,8 @@ import { WelcomeModal } from './components/WelcomeModal';
 import { QuickStartModal } from './components/QuickStartModal';
 import { PrestigeBar } from './components/PrestigeBar';
 import { LeaderboardModal } from './components/LeaderboardModal';
+import { AchievementsModal } from './components/AchievementsModal';
+import { PixelGiftIcon } from './components/PixelGiftIcon';
 import { audioManager } from './utils/audioManager';
 import { uploadCloudSaveWithAntiFraud } from './utils/supabaseClient';
 
@@ -28,6 +30,7 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<'workspace' | 'research' | 'agents' | 'tutorial'>('workspace');
   const [isSaveModalOpen, setIsSaveModalOpen] = useState<boolean>(false);
   const [isLeaderboardOpen, setIsLeaderboardOpen] = useState<boolean>(false);
+  const [isAchievementsOpen, setIsAchievementsOpen] = useState<boolean>(false);
   const [isWelcomeModalOpen, setIsWelcomeModalOpen] = useState<boolean>(() => {
     if (typeof window !== 'undefined') {
       const welcomeSeen = localStorage.getItem('terrascript_welcome_seen') === 'true';
@@ -214,6 +217,7 @@ export default function App() {
         onOpenSaveManager={() => setIsSaveModalOpen(true)}
         onOpenWelcome={() => setIsWelcomeModalOpen(true)}
         onOpenLeaderboard={() => setIsLeaderboardOpen(true)}
+        onOpenAchievements={() => setIsAchievementsOpen(true)}
       />
 
       {/* Prestige Progress Bar (v2.1.0 - Progressive Disclosure) */}
@@ -266,6 +270,7 @@ export default function App() {
               setSelectedGuideDocId(techId);
               setActiveTab('tutorial');
             }}
+            onOpenAchievements={() => setIsAchievementsOpen(true)}
           />
         )}
 
@@ -331,11 +336,26 @@ export default function App() {
         />
       )}
 
+      {/* Achievements Modal (v2.8.0) */}
+      {isAchievementsOpen && (
+        <AchievementsModal
+          engine={engine}
+          onClose={() => {
+            setIsAchievementsOpen(false);
+            setRenderTick(t => t + 1);
+          }}
+        />
+      )}
+
       {/* Unlock / Milestone Toast Notification */}
       {toastNotification && (
         <div className="fixed bottom-14 right-6 z-50 max-w-sm bg-[#08090a] pixel-box-amber border-2 border-[#facc15] shadow-[0_0_25px_rgba(250,204,21,0.25)] p-4 text-white animate-in slide-in-from-bottom-5 duration-300 flex items-start gap-3 font-pixel-body">
-          <div className="p-2 bg-[#facc15]/20 text-[#facc15] rounded shrink-0">
-            <Sparkles className="w-5 h-5 text-[#facc15]" />
+          <div className="p-2 bg-[#facc15]/20 text-[#facc15] rounded shrink-0 flex items-center justify-center">
+            {toastNotification.type === 'milestone' ? (
+              <PixelGiftIcon className="w-5 h-5" size={20} />
+            ) : (
+              <Sparkles className="w-5 h-5 text-[#facc15]" />
+            )}
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between gap-2">
@@ -344,7 +364,7 @@ export default function App() {
               </span>
               <button 
                 onClick={() => setToastNotification(null)} 
-                className="text-[#8a8f98] hover:text-white p-0.5 rounded hover:bg-[#161718] transition-all"
+                className="text-[#8a8f98] hover:text-white p-0.5 rounded hover:bg-[#161718] transition-all cursor-pointer"
                 title="Fechar notificação"
               >
                 <X className="w-4 h-4" />
@@ -365,6 +385,18 @@ export default function App() {
               >
                 <BookOpen className="w-3.5 h-3.5" />
                 <span>Ver no Guia de API ➔</span>
+              </button>
+            )}
+            {toastNotification.type === 'milestone' && (
+              <button
+                onClick={() => {
+                  setIsAchievementsOpen(true);
+                  setToastNotification(null);
+                }}
+                className="mt-2.5 px-3 py-1.5 pixel-btn-amber text-[#0f172a] text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm active:scale-95 cursor-pointer font-pixel-mono"
+              >
+                <Trophy className="w-3.5 h-3.5" />
+                <span>Ver Conquistas ➔</span>
               </button>
             )}
           </div>

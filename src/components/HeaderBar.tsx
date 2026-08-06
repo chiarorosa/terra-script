@@ -18,7 +18,8 @@ import {
   VolumeX,
   Music,
   User,
-  Trophy
+  Trophy,
+  Award
 } from 'lucide-react';
 import { GameLogo } from './GameLogo';
 import { GameEngine } from '../engine/GameEngine';
@@ -39,6 +40,7 @@ interface HeaderBarProps {
   onOpenSaveManager?: () => void;
   onOpenWelcome?: () => void;
   onOpenLeaderboard?: () => void;
+  onOpenAchievements?: () => void;
 }
 
 export const HeaderBar: React.FC<HeaderBarProps> = ({ 
@@ -47,7 +49,8 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
   setActiveTab, 
   onOpenSaveManager, 
   onOpenWelcome, 
-  onOpenLeaderboard 
+  onOpenLeaderboard,
+  onOpenAchievements 
 }) => {
   const resources = engine.getResources();
   const mode = engine.getMode();
@@ -161,7 +164,7 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
             className="flex items-center gap-1.5 px-3.5 py-1.5 pixel-btn text-xs font-bold transition-all text-[#facc15] hover:text-[#ffffff] hover:bg-[#facc15]/20 bg-[#facc15]/10 border border-[#facc15]/30 cursor-pointer"
             title="Abrir Leaderboard Global de Automatizadores"
           >
-            <Trophy className="w-4 h-4 text-[#facc15]" />
+            <Award className="w-4 h-4 text-[#facc15]" />
             Rank
           </button>
         )}

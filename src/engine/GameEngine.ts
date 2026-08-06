@@ -12,8 +12,10 @@ import {
   TileState,
   PrestigeState,
   PlayerMilestones,
+  Achievement,
   createDefaultAgentStats
 } from '../types/game';
+import { getInitialAchievements } from '../data/achievementsData';
 
 export function getRequiredPrestigePointsForLevel(level: number): number {
   if (level >= 100) return Infinity;
@@ -136,6 +138,8 @@ export class GameEngine {
     prestigeUnlocked: false,
     apiReferenceUnlocked: false
   };
+
+  private achievements: Achievement[] = getInitialAchievements();
 
   private listeners: Array<() => void> = [];
 
@@ -262,6 +266,7 @@ export class GameEngine {
         resources: this.resources,
         prestige: this.prestige,
         milestones: this.milestones,
+        achievements: this.achievements.map(a => ({ id: a.id, unlocked: a.unlocked, unlockedAt: a.unlockedAt, claimed: Boolean(a.claimed), progress: a.progress })),
         techTree: this.techTree.map(n => ({ id: n.id, unlocked: n.unlocked })),
         currentTick: this.currentTick,
         totalActions: this.totalActionsPerformed,
@@ -378,8 +383,23 @@ export class GameEngine {
             apiReferenceUnlocked: Boolean(parsed.milestones.apiReferenceUnlocked)
           };
         }
+
+        // Restore Achievements from saved state if present
+        if (Array.isArray(parsed.achievements)) {
+          parsed.achievements.forEach((savedAch: any) => {
+            const ach = this.achievements.find(a => a.id === savedAch.id);
+            if (ach) {
+              if (typeof savedAch.unlocked === 'boolean') ach.unlocked = savedAch.unlocked;
+              if (typeof savedAch.claimed === 'boolean') ach.claimed = savedAch.claimed;
+              if (savedAch.unlockedAt) ach.unlockedAt = savedAch.unlockedAt;
+              if (savedAch.progress) ach.progress = { ...ach.progress, ...savedAch.progress };
+            }
+          });
+        }
+
         this.checkPrestigeMilestone();
         this.checkApiReferenceMilestone();
+        this.evaluateAchievements();
 
         // 6. Sync Agents & World Change Trigger
         this.syncAgentsWithTechTree();
@@ -849,6 +869,8 @@ export class GameEngine {
     }
 
     if (!anyAction) this.idleTicks++;
+
+    this.evaluateAchievements();
 
     if (this.currentTick % 10 === 0) {
       this.saveEngineState();
@@ -1512,6 +1534,209 @@ export class GameEngine {
     return { ...this.milestones };
   }
 
+  public getAchievements(): Achievement[] {
+    return [...this.achievements];
+  }
+
+  public getAchievement(id: string): Achievement | undefined {
+    return this.achievements.find(a => a.id === id);
+  }
+
+  public isAchievementUnlocked(id: string): boolean {
+    const ach = this.getAchievement(id);
+    return Boolean(ach && ach.unlocked);
+  }
+
+  public claimAchievementReward(id: string): boolean {
+    const ach = this.achievements.find(a => a.id === id);
+    if (!ach || !ach.unlocked || ach.claimed) {
+      return false;
+    }
+
+    ach.claimed = true;
+    const xpAmount = ach.expReward || 100;
+    this.addPrestigePoints(xpAmount);
+
+    this.addLog(
+      this.primaryAgentId,
+      'system',
+      `RECOMPENSA DE CONQUISTA COLETADA: +${xpAmount} XP de Prestígio por [${ach.title}]!`
+    );
+
+    this.saveEngineState();
+    this.notify();
+    return true;
+  }
+
+  public claimAllAchievementRewards(): number {
+    let totalClaimedXP = 0;
+    const unclaimed = this.achievements.filter(a => a.unlocked && !a.claimed);
+    if (unclaimed.length === 0) return 0;
+
+    unclaimed.forEach(ach => {
+      ach.claimed = true;
+      const xp = ach.expReward || 100;
+      totalClaimedXP += xp;
+    });
+
+    if (totalClaimedXP > 0) {
+      this.addPrestigePoints(totalClaimedXP);
+      this.addLog(
+        this.primaryAgentId,
+        'system',
+        `RECOMPENSAS DE CONQUISTAS COLETADAS: +${totalClaimedXP} XP de Prestígio total em ${unclaimed.length} conquistas!`
+      );
+      this.saveEngineState();
+      this.notify();
+    }
+    return totalClaimedXP;
+  }
+
+  public unlockAchievement(id: string, notifyUser: boolean = true): boolean {
+    const ach = this.achievements.find(a => a.id === id);
+    if (!ach || ach.unlocked) return false;
+
+    ach.unlocked = true;
+    ach.unlockedAt = new Date().toISOString();
+
+    // Synchronize legacy milestones for maximum zero-bug UI compatibility
+    if (id === 'ui_first_code') {
+      this.milestones.firstExecutionDone = true;
+      this.milestones.createFileUnlocked = true;
+      this.milestones.quickStartProminentDone = true;
+    } else if (id === 'ui_land_expand') {
+      this.milestones.apiReferenceUnlocked = true;
+    } else if (id === 'ui_prestige_level') {
+      this.milestones.prestigeUnlocked = true;
+    }
+
+    this.latestMilestoneUnlocked = {
+      title: `Conquista: ${ach.title}`,
+      description: ach.rewardText ? `${ach.description} (${ach.rewardText})` : ach.description
+    };
+
+    this.addLog(1, 'system', `CONQUISTA DESBLOQUEADA: [${ach.title}] - ${ach.rewardText || ach.description}`);
+    if (notifyUser) {
+      audioManager.playLevelUp();
+    }
+    this.saveEngineState();
+    this.notify();
+    return true;
+  }
+
+  public evaluateAchievements() {
+    let changed = false;
+
+    // 1. ui_first_code
+    if (this.milestones.firstExecutionDone) {
+      if (this.unlockAchievement('ui_first_code', false)) changed = true;
+    }
+
+    // 2. ui_land_expand
+    if (this.width > 1 || this.height > 1 || this.isTechUnlocked('SCALE_2')) {
+      if (this.unlockAchievement('ui_land_expand', false)) changed = true;
+    }
+
+    // 3. ui_prestige_level
+    if (this.prestige.level >= 2 || this.prestige.worldChangeUnlocked) {
+      if (this.unlockAchievement('ui_prestige_level', false)) changed = true;
+    }
+
+    // 4. ui_fleet_tab
+    if (this.isTechUnlocked('SCALE_5') || this.agents.length >= 2) {
+      if (this.unlockAchievement('ui_fleet_tab', false)) changed = true;
+    }
+
+    // 5. mech_first_harvest
+    const totalHarvested = this.agents.reduce((acc, a) => acc + (a.stats?.harvestedCount || 0), 0);
+    if (totalHarvested > 0 || this.resources.fiber > 20 || this.resources.wood > 0) {
+      if (this.unlockAchievement('mech_first_harvest', false)) changed = true;
+    }
+
+    // 6. mech_irrigation
+    const totalWatered = this.agents.reduce((acc, a) => acc + (a.stats?.wateredCount || 0), 0);
+    const achIrrigation = this.achievements.find(a => a.id === 'mech_irrigation');
+    if (achIrrigation && !achIrrigation.unlocked) {
+      achIrrigation.progress = { current: totalWatered, max: 10, unit: 'solos regados' };
+      if (totalWatered >= 10) {
+        if (this.unlockAchievement('mech_irrigation', false)) changed = true;
+      }
+    }
+
+    // 7. mech_tilled_field
+    const totalTilled = this.agents.reduce((acc, a) => acc + (a.stats?.tilledCount || 0), 0);
+    const achTilled = this.achievements.find(a => a.id === 'mech_tilled_field');
+    if (achTilled && !achTilled.unlocked) {
+      achTilled.progress = { current: totalTilled, max: 15, unit: 'solos arados' };
+      if (totalTilled >= 15) {
+        if (this.unlockAchievement('mech_tilled_field', false)) changed = true;
+      }
+    }
+
+    // 8. mech_tech_pioneer
+    const unlockedTechCount = this.techTree.filter(t => t.unlocked).length;
+    const achTech = this.achievements.find(a => a.id === 'mech_tech_pioneer');
+    if (achTech && !achTech.unlocked) {
+      achTech.progress = { current: unlockedTechCount, max: 3, unit: 'tecnologias' };
+      if (unlockedTechCount >= 3) {
+        if (this.unlockAchievement('mech_tech_pioneer', false)) changed = true;
+      }
+    }
+
+    // 9. stat_fiber_100
+    const fiberVal = this.resources.fiber;
+    const achFiber = this.achievements.find(a => a.id === 'stat_fiber_100');
+    if (achFiber && !achFiber.unlocked) {
+      achFiber.progress = { current: fiberVal, max: 100, unit: 'Fibras' };
+      if (fiberVal >= 100) {
+        if (this.unlockAchievement('stat_fiber_100', false)) changed = true;
+      }
+    }
+
+    // 10. stat_wood_250
+    const woodVal = this.resources.wood;
+    const achWood = this.achievements.find(a => a.id === 'stat_wood_250');
+    if (achWood && !achWood.unlocked) {
+      achWood.progress = { current: woodVal, max: 250, unit: 'Madeiras' };
+      if (woodVal >= 250) {
+        if (this.unlockAchievement('stat_wood_250', false)) changed = true;
+      }
+    }
+
+    // 11. stat_steps_500
+    const totalSteps = this.agents.reduce((acc, a) => acc + (a.stats?.stepsCount || 0), 0);
+    const achSteps = this.achievements.find(a => a.id === 'stat_steps_500');
+    if (achSteps && !achSteps.unlocked) {
+      achSteps.progress = { current: totalSteps, max: 500, unit: 'passos' };
+      if (totalSteps >= 500) {
+        if (this.unlockAchievement('stat_steps_500', false)) changed = true;
+      }
+    }
+
+    // 12. stat_actions_1000
+    const achActions = this.achievements.find(a => a.id === 'stat_actions_1000');
+    if (achActions && !achActions.unlocked) {
+      achActions.progress = { current: this.totalActionsPerformed, max: 1000, unit: 'ações' };
+      if (this.totalActionsPerformed >= 1000) {
+        if (this.unlockAchievement('stat_actions_1000', false)) changed = true;
+      }
+    }
+
+    // 13. stat_prestige_10
+    const achPrestige = this.achievements.find(a => a.id === 'stat_prestige_10');
+    if (achPrestige) {
+      achPrestige.progress = { current: this.prestige.level, max: 10, unit: 'Nível' };
+      if (!achPrestige.unlocked && this.prestige.level >= 10) {
+        if (this.unlockAchievement('stat_prestige_10', false)) changed = true;
+      }
+    }
+
+    if (changed) {
+      this.saveEngineState();
+      this.notify();
+    }
+  }
+
   public markQuickStartSeen() {
     if (!this.milestones.quickStartSeen) {
       this.milestones.quickStartSeen = true;
@@ -1676,6 +1901,7 @@ export class GameEngine {
       resources: { ...this.resources },
       prestige: { ...this.prestige },
       milestones: { ...this.milestones },
+      achievements: this.achievements.map(a => ({ id: a.id, unlocked: a.unlocked, unlockedAt: a.unlockedAt, claimed: Boolean(a.claimed), progress: a.progress })),
       techTree: this.techTree.map(n => ({ id: n.id, unlocked: n.unlocked })),
       agents: this.agents.map(a => ({ id: a.id, stats: a.stats, assignedFile: a.assignedFile })),
       primaryAgentId: this.primaryAgentId,
