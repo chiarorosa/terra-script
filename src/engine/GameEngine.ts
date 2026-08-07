@@ -1973,6 +1973,41 @@ export class GameEngine {
       }
     }
 
+    // 14. Combo Multiplier Achievements
+    const currentCombo = this.getComboMultiplier();
+
+    const achCombo4 = this.achievements.find(a => a.id === 'combo_mult_4');
+    if (achCombo4) {
+      achCombo4.progress = { current: Math.min(4, Math.round(currentCombo * 100) / 100), max: 4, unit: 'x Combo' };
+      if (!achCombo4.unlocked && currentCombo >= 4.0) {
+        if (this.unlockAchievement('combo_mult_4', false)) changed = true;
+      }
+    }
+
+    const achCombo7 = this.achievements.find(a => a.id === 'combo_mult_7');
+    if (achCombo7) {
+      achCombo7.progress = { current: Math.min(7, Math.round(currentCombo * 100) / 100), max: 7, unit: 'x Combo' };
+      if (!achCombo7.unlocked && currentCombo >= 7.0) {
+        if (this.unlockAchievement('combo_mult_7', false)) changed = true;
+      }
+    }
+
+    const achCombo10 = this.achievements.find(a => a.id === 'combo_mult_10');
+    if (achCombo10) {
+      achCombo10.progress = { current: Math.min(10, Math.round(currentCombo * 100) / 100), max: 10, unit: 'x Combo' };
+      if (!achCombo10.unlocked && currentCombo >= 10.0) {
+        if (this.unlockAchievement('combo_mult_10', false)) changed = true;
+      }
+    }
+
+    const achCombo20 = this.achievements.find(a => a.id === 'combo_mult_20');
+    if (achCombo20) {
+      achCombo20.progress = { current: Math.min(20, Math.round(currentCombo * 100) / 100), max: 20, unit: 'x Combo' };
+      if (!achCombo20.unlocked && currentCombo >= 20.0) {
+        if (this.unlockAchievement('combo_mult_20', false)) changed = true;
+      }
+    }
+
     if (changed) {
       this.saveEngineState();
       this.notify();

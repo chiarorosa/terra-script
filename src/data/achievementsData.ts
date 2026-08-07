@@ -171,6 +171,56 @@ export function getInitialAchievements(): Achievement[] {
       rewardText: 'Insígnia de Engenheiro Senior de Software.',
       hint: 'Escreva rotinas seguras e sem erros nos loops de execução.',
       progress: { current: 0, max: 200, unit: 'ticks sem erros' }
+    },
+
+    // 5. COMBOS
+    {
+      id: 'combo_mult_4',
+      title: 'Mestre do Combo IV',
+      description: 'Alcançou um multiplicador de Combo de 4.0x em colheitas sequenciais encadeadas.',
+      category: 'MECHANIC',
+      icon: 'Flame',
+      unlocked: false,
+      expReward: 250000,
+      rewardText: 'Mestre do Combo IV (+250K EXP)',
+      hint: 'Alcançe Prestígio 25+ e colha os terrenos na sequência sorteada até 4.0x.',
+      progress: { current: 1, max: 4, unit: 'x Combo' }
+    },
+    {
+      id: 'combo_mult_7',
+      title: 'Mestre do Combo VII',
+      description: 'Alcançou um multiplicador de Combo de 7.0x em colheitas sequenciais encadeadas.',
+      category: 'MECHANIC',
+      icon: 'Flame',
+      unlocked: false,
+      expReward: 1000000,
+      rewardText: 'Mestre do Combo VII (+1M EXP)',
+      hint: 'Mantenha a sequência de combo sem falhas até o multiplicador de 7.0x.',
+      progress: { current: 1, max: 7, unit: 'x Combo' }
+    },
+    {
+      id: 'combo_mult_10',
+      title: 'Mestre do Combo X',
+      description: 'Alcançou um multiplicador de Combo de 10.0x em colheitas sequenciais encadeadas.',
+      category: 'MECHANIC',
+      icon: 'Flame',
+      unlocked: false,
+      expReward: 2000000,
+      rewardText: 'Mestre do Combo X (+2M EXP)',
+      hint: 'Encadeie colheitas sem erros até atingir o multiplicador de 10.0x.',
+      progress: { current: 1, max: 10, unit: 'x Combo' }
+    },
+    {
+      id: 'combo_mult_20',
+      title: 'Mestre do Combo XX',
+      description: 'Alcançou um multiplicador de Combo de 20.0x em colheitas sequenciais encadeadas.',
+      category: 'MECHANIC',
+      icon: 'Flame',
+      unlocked: false,
+      expReward: 5000000,
+      rewardText: 'Mestre do Combo XX (+5M EXP)',
+      hint: 'Construa uma rota perfeita de automação para atingir o multiplicador de 20.0x.',
+      progress: { current: 1, max: 20, unit: 'x Combo' }
     }
   ];
 }

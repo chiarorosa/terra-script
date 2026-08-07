@@ -34,6 +34,10 @@ interface AchievementsModalProps {
 }
 
 const formatXP = (amount: number): string => {
+  if (amount >= 1000000) {
+    const m = amount / 1000000;
+    return Number.isInteger(m) ? `${m}M` : `${m.toFixed(1)}M`;
+  }
   if (amount >= 1000) {
     const k = amount / 1000;
     return Number.isInteger(k) ? `${k}K` : `${k.toFixed(1)}K`;

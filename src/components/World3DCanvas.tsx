@@ -1862,14 +1862,6 @@ export const World3DCanvas: React.FC<World3DCanvasProps> = ({ engine }) => {
                 {inspectedTile.ground}{engine.prestige.level >= 50 ? ` [${inspectedTile.soilQuality ?? 0}]` : ''}
               </span>
             </div>
-            {engine.prestige.level >= 50 && (
-              <div className="flex justify-between">
-                <span className="text-slate-400">Qualidade do Solo:</span>
-                <span className={`font-semibold ${(inspectedTile.soilQuality ?? 0) === 0 ? 'text-red-400 font-bold' : 'text-emerald-400'}`}>
-                  {inspectedTile.soilQuality ?? 0}%
-                </span>
-              </div>
-            )}
             <div className="flex justify-between">
               <span className="text-slate-400">Cultura:</span>
               <span className={`font-semibold ${

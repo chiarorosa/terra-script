@@ -1,4 +1,4 @@
-export const GAME_ENGINE_VERSION = '2.9.3';
+export const GAME_ENGINE_VERSION = '2.9.4';
 
 /**
  * Compares two semver strings (e.g. "2.8.0" vs "2.8.1" or "v2.8.0").

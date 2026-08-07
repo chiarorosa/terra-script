@@ -8,10 +8,19 @@ export interface ChangelogRelease {
 
 export const CHANGELOG_HISTORY: ChangelogRelease[] = [
   {
+    version: 'v2.9.4',
+    date: '2026-08-07',
+    title: 'Novas Conquistas de Multiplicador de Combo',
+    isCurrent: true,
+    changes: [
+      'Novas Conquistas de Combo: Adicionadas 4 novas conquistas de alta pontuação na Central de Conquistas para jogadores que atingem multiplicadores de Combo de 4.0x (+250 mil EXP), 7.0x (+1 milhão EXP), 10.0x (+2 milhões EXP) e 20.0x (+5 milhões EXP).'
+    ]
+  },
+  {
     version: 'v2.9.3',
     date: '2026-08-07',
     title: 'Aprimoramento do Leitor de Sequências e Combos',
-    isCurrent: true,
+    isCurrent: false,
     changes: [
       'Execução Precisa do Sistema de Combos: Correção na avaliação dos métodos de leitura de índice de combo e multiplicador em Python e JavaScript, garantindo o retorno direto de valores numéricos e comparações de estado precisas em automações de robôs.'
     ]
