@@ -101,9 +101,27 @@ farm.plant("WILD_FIBER");
 
 export class VirtualFS {
   private files: Map<string, VirtualFile> = new Map();
+  private listeners: Set<() => void> = new Set();
 
   constructor() {
     this.loadFromStorage();
+  }
+
+  public subscribe(listener: () => void): () => void {
+    this.listeners.add(listener);
+    return () => {
+      this.listeners.delete(listener);
+    };
+  }
+
+  private notifyListeners(): void {
+    this.listeners.forEach(fn => {
+      try {
+        fn();
+      } catch (e) {
+        console.error('Error in VFS listener:', e);
+      }
+    });
   }
 
   private loadFromStorage() {
@@ -113,10 +131,24 @@ export class VirtualFS {
         const parsed: VirtualFile[] = JSON.parse(stored);
         if (Array.isArray(parsed) && parsed.length > 0) {
           parsed.forEach(f => {
-            let path = f.path;
-            let name = f.name;
+            let path = f.path || '';
+            let name = f.name || path;
             let folder = f.folder;
             let readOnly = f.readOnly;
+
+            // Fix/sanitize language if corrupted
+            const validLang: 'python' | 'javascript' = (f.language === 'python' || f.language === 'javascript')
+              ? f.language
+              : (path.endsWith('.js') ? 'javascript' : 'python');
+
+            // Sanitize paths from old broken imports with comunidad/
+            if (path.startsWith('fazenda/comunidade/')) {
+              path = path.replace('fazenda/comunidade/', 'fazenda/');
+              name = path.split('/').pop() || name;
+            } else if (path.startsWith('comunidade/')) {
+              path = path.replace('comunidade/', 'fazenda/');
+              name = path.split('/').pop() || name;
+            }
 
             // Migrate legacy flat paths
             if (!path.startsWith('guia/') && !path.startsWith('fazenda/')) {
@@ -147,7 +179,8 @@ export class VirtualFS {
               path,
               name: name || path,
               folder: folder || (path.startsWith('guia/') ? 'guia' : 'fazenda'),
-              readOnly: readOnly ?? path.startsWith('guia/')
+              readOnly: readOnly ?? path.startsWith('guia/'),
+              language: validLang
             });
           });
 
@@ -174,6 +207,7 @@ export class VirtualFS {
     try {
       const arr = Array.from(this.files.values());
       localStorage.setItem(VFS_STORAGE_KEY, JSON.stringify(arr));
+      this.notifyListeners();
     } catch (e) {
       console.error('Failed to save VFS to storage:', e);
     }
@@ -278,6 +312,7 @@ export class VirtualFS {
     };
 
     this.files.delete(file.path);
+    this.files.set(newPath, renamedFile);
     this.saveToStorage();
 
     return renamedFile;
@@ -337,6 +372,18 @@ export class VirtualFS {
         let folder = f.folder;
         let readOnly = f.readOnly;
 
+        const validLang: 'python' | 'javascript' = (f.language === 'python' || f.language === 'javascript')
+          ? f.language
+          : (path.endsWith('.js') ? 'javascript' : 'python');
+
+        if (path.startsWith('fazenda/comunidade/')) {
+          path = path.replace('fazenda/comunidade/', 'fazenda/');
+          name = path.split('/').pop() || name;
+        } else if (path.startsWith('comunidade/')) {
+          path = path.replace('comunidade/', 'fazenda/');
+          name = path.split('/').pop() || name;
+        }
+
         if (!path.startsWith('guia/') && !path.startsWith('fazenda/')) {
           const isDefault = ['main.py', 'main.js', 'regar.py', 'regar.js', 'plantar.py', 'plantar.js'].includes(path);
           folder = isDefault ? 'guia' : 'fazenda';
@@ -350,7 +397,7 @@ export class VirtualFS {
           name: name || path,
           folder: folder || (path.startsWith('guia/') ? 'guia' : 'fazenda'),
           readOnly: readOnly ?? path.startsWith('guia/'),
-          language: f.language || (path.endsWith('.js') ? 'javascript' : 'python'),
+          language: validLang,
           content: f.content,
           isEntrypoint: !!f.isEntrypoint
         });

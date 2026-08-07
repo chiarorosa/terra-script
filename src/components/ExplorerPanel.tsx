@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { 
   Folder, 
   FolderOpen,
@@ -75,6 +75,17 @@ export const ExplorerPanel: React.FC<ExplorerPanelProps> = ({
   };
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Synchronize files list dynamically whenever VFS changes
+  useEffect(() => {
+    setFiles(vfs.getFiles());
+    const unsubscribe = vfs.subscribe(() => {
+      setFiles(vfs.getFiles());
+    });
+    return () => {
+      unsubscribe();
+    };
+  }, [vfs, activeFilePath]);
 
   const refreshFiles = () => {
     setFiles(vfs.getFiles());
@@ -197,12 +208,6 @@ export const ExplorerPanel: React.FC<ExplorerPanelProps> = ({
   );
 
   const visibleFiles = files.filter(file => {
-    // Check first execution milestone filter if active
-    if (!milestones.firstExecutionDone) {
-      if (!(file.path.endsWith('main.py') || file.path.endsWith('main.js'))) {
-        return false;
-      }
-    }
     // Extension filter
     const idx = file.path.lastIndexOf('.');
     const ext = idx !== -1 ? file.path.substring(idx) : '';

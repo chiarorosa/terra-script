@@ -197,12 +197,14 @@ export const SaveManagerModal: React.FC<SaveManagerModalProps> = ({
   // 4. Import Community Script into Local VirtualFS
   const handleImportCommunityScript = (script: CommunityScript) => {
     const ext = script.language === 'python' ? '.py' : '.js';
-    const cleanTitle = script.title.toLowerCase().replace(/[^a-z0-9]/g, '_');
-    const path = `comunidade/${cleanTitle}${ext}`;
+    let cleanTitle = script.title.toLowerCase().replace(/[^a-z0-9_]/g, '_').replace(/_+/g, '_').replace(/^_+|_+$/g, '');
+    if (!cleanTitle) cleanTitle = 'script_comunidade';
 
-    vfs.createFile(path, script.code, script.language);
-    showFeedback('success', `Script "${script.title}" importado para 'src/${path}'!`);
-    if (onFileImported) onFileImported(path);
+    const filename = `${cleanTitle}${ext}`;
+    const importedFile = vfs.importScriptFromDisk(filename, script.code);
+
+    showFeedback('success', `Script "${script.title}" importado com sucesso para 'fazenda/${importedFile.name}'!`);
+    if (onFileImported) onFileImported(importedFile.path);
   };
 
   // Reset Everything to Factory Defaults (Full Fresh Start)

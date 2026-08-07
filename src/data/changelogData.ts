@@ -8,10 +8,22 @@ export interface ChangelogRelease {
 
 export const CHANGELOG_HISTORY: ChangelogRelease[] = [
   {
+    version: 'v2.8.4',
+    date: '2026-08-07',
+    title: 'Correção na Importação de Scripts da Comunidade',
+    isCurrent: true,
+    changes: [
+      'Importação Perfeita e Reativa: Corrigido o fluxo para que scripts da comunidade importados apareçam instantaneamente no explorador e abram no editor sem necessidade de recarregar a página (reload).',
+      'Correção no Explorador de Arquivos: Corrigido o bug onde renomear um script fazia com que ele sumisse do explorador por falta de atualização no mapa do sistema de arquivos virtual.',
+      'Sincronização e Reparo Automático: Implementada sanitização de arquivos legados para corrigir automaticamente scripts que tenham sido importados com nomes ou configurações incorretas.',
+      'Sincronização da Engine de Jogo: Atualização do cliente para a versão v2.8.4 do TerraScript.'
+    ]
+  },
+  {
     version: 'v2.8.3',
     date: '2026-08-07',
     title: 'Ajuste de Interface: Centralização do Reset Total na Aba Nuvem',
-    isCurrent: true,
+    isCurrent: false,
     changes: [
       'Remoção do Botão Duplicado de Reset Total: A funcionalidade "Começar do Zero" foi removida da aba de Saves Locais para evitar redundância na interface, permanecendo exclusivamente na aba de Saves na Nuvem.',
       'Sincronização da Engine de Jogo: Atualização do cliente para a versão v2.8.3 do TerraScript.'
