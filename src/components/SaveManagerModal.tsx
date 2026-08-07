@@ -16,7 +16,9 @@ import {
   RefreshCw,
   Sparkles,
   User,
-  Globe
+  Globe,
+  Ticket,
+  Gift
 } from 'lucide-react';
 import { GameEngine } from '../engine/GameEngine';
 import { VirtualFS } from '../engine/virtualFs';
@@ -30,6 +32,7 @@ import {
   listAllCloudSaves, 
   publishCommunityScript, 
   fetchCommunityScripts, 
+  redeemCode,
   CloudSaveData, 
   CommunityScript 
 } from '../utils/supabaseClient';
@@ -55,6 +58,10 @@ export const SaveManagerModal: React.FC<SaveManagerModalProps> = ({
   const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [showResetModal, setShowResetModal] = useState<boolean>(false);
   const [resetConfirmInput, setResetConfirmInput] = useState<string>('');
+
+  // Redeem Code state
+  const [redeemInput, setRedeemInput] = useState<string>('');
+  const [isRedeeming, setIsRedeeming] = useState<boolean>(false);
 
   // Cloud Saves state
   const [cloudSaves, setCloudSaves] = useState<CloudSaveData[]>([]);
@@ -198,16 +205,10 @@ export const SaveManagerModal: React.FC<SaveManagerModalProps> = ({
     if (onFileImported) onFileImported(path);
   };
 
-  // Reset Everything to Factory Defaults
+  // Reset Everything to Factory Defaults (Full Fresh Start)
   const handleResetGame = () => {
     if (typeof window !== 'undefined') {
-      localStorage.removeItem('terrascript_welcome_seen');
-      localStorage.removeItem('terrascript_programmer_name');
-      localStorage.removeItem('terrascript_programmer_avatar');
-      localStorage.removeItem('terrascript_onboarding_tip_dismissed');
-      localStorage.removeItem('terrascript_ui_style');
-      localStorage.removeItem('terrascript_follow_agent');
-      localStorage.removeItem('terrascript_bottom_panel_expanded');
+      localStorage.clear();
     }
     engine.resetEverything(vfs);
     const ep = vfs.getEntrypoint();
@@ -218,6 +219,60 @@ export const SaveManagerModal: React.FC<SaveManagerModalProps> = ({
     onClose();
     if (onResetGame) {
       onResetGame();
+    }
+    if (typeof window !== 'undefined') {
+      window.location.reload();
+    }
+  };
+
+  // Redeem Promo / Gift Code
+  const handleRedeemCode = async () => {
+    if (!redeemInput.trim()) {
+      showFeedback('error', 'Informe um código para resgatar.');
+      return;
+    }
+
+    setIsRedeeming(true);
+    const res = await redeemCode(redeemInput.trim(), programmerName);
+    setIsRedeeming(false);
+
+    if (res.success) {
+      const rewardSummary: string[] = [];
+
+      if (res.reward) {
+        if (typeof res.reward.prestige_xp === 'number' && res.reward.prestige_xp > 0) {
+          engine.addPrestigePoints(res.reward.prestige_xp);
+          rewardSummary.push(`+${res.reward.prestige_xp.toLocaleString('pt-BR')} XP de Prestígio`);
+        }
+
+        if (res.reward.resources && typeof res.reward.resources === 'object') {
+          Object.entries(res.reward.resources).forEach(([key, val]) => {
+            const amount = Number(val);
+            if (amount > 0) {
+              engine.addResource(key as any, amount);
+              const translatedName = 
+                key === 'fiber' ? 'Fibras' :
+                key === 'wood' ? 'Madeiras' :
+                key === 'fruits' ? 'Frutas' :
+                key === 'roots' ? 'Raízes' :
+                key === 'energy' ? 'Energia' :
+                key === 'biomass' ? 'Biomassa' :
+                key === 'crystals' ? 'Cristais' :
+                key === 'catalyst' ? 'Catalisador' : key;
+              rewardSummary.push(`+${amount.toLocaleString('pt-BR')} ${translatedName}`);
+            }
+          });
+        }
+      }
+
+      const fullMsg = rewardSummary.length > 0
+        ? `${res.message} Recebido: ${rewardSummary.join(', ')}.`
+        : res.message;
+
+      showFeedback('success', fullMsg);
+      setRedeemInput('');
+    } else {
+      showFeedback('error', res.message);
     }
   };
 
@@ -433,38 +488,6 @@ export const SaveManagerModal: React.FC<SaveManagerModalProps> = ({
                   </div>
                 </div>
               </div>
-
-              {/* Danger Zone - Reset Game from Scratch */}
-              <div className="bg-[#161718] border border-[#eb5757]/30 rounded-[12px] p-4 space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Trash2 className="w-4 h-4 text-[#eb5757]" />
-                    <h3 className="text-xs font-medium text-[#eb5757] uppercase tracking-wider">
-                      Começar do Zero (Reset Total)
-                    </h3>
-                  </div>
-                  <span className="text-[10px] font-mono text-[#eb5757] bg-[#eb5757]/10 px-2 py-0.5 rounded-[4px] border border-[#eb5757]/30">
-                    Irreversível
-                  </span>
-                </div>
-
-                <p className="text-xs text-[#8a8f98] leading-relaxed font-sans">
-                  Deseja reiniciar toda a simulação do zero? Esta ação apagará permanentemente o terreno 3D, todos os recursos acumulados e restaurará os scripts padrão.
-                </p>
-
-                <div className="pt-1">
-                  <button
-                    onClick={() => {
-                      setResetConfirmInput('');
-                      setShowResetModal(true);
-                    }}
-                    className="flex items-center justify-center gap-2 px-4 py-2.5 bg-[#eb5757]/10 hover:bg-[#eb5757]/20 border border-[#eb5757]/30 text-[#eb5757] rounded-[6px] text-xs font-medium transition-all active:scale-98 cursor-pointer"
-                  >
-                    <RotateCcw className="w-4 h-4 text-[#eb5757]" />
-                    Começar do Zero (Resetar Tudo)
-                  </button>
-                </div>
-              </div>
             </div>
           )}
 
@@ -495,6 +518,44 @@ export const SaveManagerModal: React.FC<SaveManagerModalProps> = ({
                   <CloudUpload className="w-4 h-4" />
                   {isSavingCloud ? 'Sincronizando...' : 'Salvar Progresso Atual na Nuvem'}
                 </button>
+              </div>
+
+              {/* Redeem Code Section */}
+              <div className="bg-[#161718] border border-[#a855f7]/30 rounded-xl p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xs font-bold text-[#a855f7] uppercase tracking-wider flex items-center gap-2">
+                    <Ticket className="w-4 h-4 text-[#a855f7]" />
+                    Resgatar Código Promocional (Redeem Code)
+                  </h4>
+                  <span className="text-[10px] font-mono text-[#a855f7] bg-[#a855f7]/10 px-2 py-0.5 rounded border border-[#a855f7]/30">
+                    Recompensas & Bônus
+                  </span>
+                </div>
+
+                <p className="text-xs text-[#8a8f98] font-sans">
+                  Possui um código de presente do evento ou comunidade? Digite o código abaixo para receber recursos ou experiência no jogo.
+                </p>
+
+                <div className="flex items-center gap-2 pt-1">
+                  <input
+                    type="text"
+                    value={redeemInput}
+                    onChange={(e) => setRedeemInput(e.target.value.toUpperCase())}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') handleRedeemCode();
+                    }}
+                    placeholder="EX: TERRA1K"
+                    className="flex-1 px-3 py-2 bg-[#08090a] border border-[#23252a] focus:border-[#a855f7] text-white text-xs font-mono rounded-lg outline-none uppercase placeholder:normal-case placeholder:text-[#52525b]"
+                  />
+                  <button
+                    onClick={handleRedeemCode}
+                    disabled={isRedeeming || !redeemInput.trim()}
+                    className="flex items-center gap-1.5 px-4 py-2 bg-[#a855f7] hover:bg-[#9333ea] text-white rounded-lg text-xs font-bold transition-all disabled:opacity-50 cursor-pointer shadow-md active:scale-95 shrink-0"
+                  >
+                    <Gift className="w-4 h-4" />
+                    {isRedeeming ? 'Resgatando...' : 'Resgatar Código'}
+                  </button>
+                </div>
               </div>
 
               {/* List of Cloud Saves */}
@@ -545,6 +606,38 @@ export const SaveManagerModal: React.FC<SaveManagerModalProps> = ({
                     ))}
                   </div>
                 )}
+              </div>
+
+              {/* Danger Zone: Reset Game to Zero */}
+              <div className="bg-[#161718] border border-[#eb5757]/30 rounded-xl p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Trash2 className="w-4 h-4 text-[#eb5757]" />
+                    <h4 className="text-xs font-bold text-[#eb5757] uppercase tracking-wider">
+                      Zona de Perigo (Reset Total)
+                    </h4>
+                  </div>
+                  <span className="text-[10px] font-mono text-[#eb5757] bg-[#eb5757]/10 px-2 py-0.5 rounded border border-[#eb5757]/30">
+                    Irreversível
+                  </span>
+                </div>
+
+                <p className="text-xs text-[#8a8f98] leading-relaxed font-sans">
+                  Deseja reiniciar toda a simulação do zero? Esta ação apagará permanentemente o terreno 3D, todos os recursos acumulados, limpa o armazenamento local para um Fresh Start e restaura os scripts padrão.
+                </p>
+
+                <div className="pt-1">
+                  <button
+                    onClick={() => {
+                      setResetConfirmInput('');
+                      setShowResetModal(true);
+                    }}
+                    className="flex items-center justify-center gap-2 px-4 py-2.5 bg-[#eb5757]/10 hover:bg-[#eb5757]/20 border border-[#eb5757]/30 text-[#eb5757] rounded-lg text-xs font-bold transition-all active:scale-98 cursor-pointer"
+                  >
+                    <RotateCcw className="w-4 h-4 text-[#eb5757]" />
+                    Começar do Zero (Resetar Tudo)
+                  </button>
+                </div>
               </div>
             </div>
           )}

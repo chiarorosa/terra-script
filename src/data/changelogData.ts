@@ -8,14 +8,35 @@ export interface ChangelogRelease {
 
 export const CHANGELOG_HISTORY: ChangelogRelease[] = [
   {
+    version: 'v2.8.3',
+    date: '2026-08-07',
+    title: 'Ajuste de Interface: Centralização do Reset Total na Aba Nuvem',
+    isCurrent: true,
+    changes: [
+      'Remoção do Botão Duplicado de Reset Total: A funcionalidade "Começar do Zero" foi removida da aba de Saves Locais para evitar redundância na interface, permanecendo exclusivamente na aba de Saves na Nuvem.',
+      'Sincronização da Engine de Jogo: Atualização do cliente para a versão v2.8.3 do TerraScript.'
+    ]
+  },
+  {
+    version: 'v2.8.2',
+    date: '2026-08-07',
+    title: 'Sistema de Resgate de Códigos (Redeem Codes) & Reorganização do Menu da Nuvem',
+    isCurrent: false,
+    changes: [
+      'Sistema de Resgate de Códigos Promocionais (Redeem Codes): Implementada a funcionalidade para resgate de códigos de presentes na aba de Saves na Nuvem, permitindo que os jogadores recebam pacotes de recursos e experiência de prestígio.',
+      'Mapeamento Unificado de Reinício do Jogo: A opção "Começar do Zero" (Reset Total) foi movida para o menu da Nuvem e aprimorada para realizar um reinício completo e limpo de todas as informações salvas no navegador.',
+      'Atualização da Engine de Jogo: Sincronização automática para a nova versão v2.8.2 do motor do TerraScript.'
+    ]
+  },
+  {
     version: 'v2.8.1',
     date: '2026-08-07',
     title: 'Sincronização Obrigatória de Versão da Engine (Auto Engine Reload & Safe Cloud Saves)',
-    isCurrent: true,
+    isCurrent: false,
     changes: [
-      'Controle de Versão Local vs. Online: Adicionada a constante GAME_ENGINE_VERSION no núcleo do jogo e integração com a tabela terrascript_config no Supabase.',
-      'Proteção e Bloqueio de Saves Incompatíveis: Caso o jogador esteja rodando uma versão do cliente inferior/diferente da versão atual do servidor, os uploads de progresso na nuvem são bloqueados para proteger os dados.',
-      'Recarregamento em Segundo Plano sem Quebrar Jogabilidade Offline: O processo de verificação roda periodicamente em segundo plano. Se houver conexão com a internet e a versão do servidor for mais recente, o jogo recarrega a página automaticamente para puxar os novos arquivos. Se estiver offline, o jogador continua jogando normalmente sem travamentos.',
+      'Controle e Sincronização de Versão: Sincronização automática entre o cliente local do jogo e o servidor online para garantir que todos estejam executando o motor do jogo atualizado.',
+      'Proteção e Bloqueio de Saves Incompatíveis: Caso o jogador esteja rodando uma versão do cliente desatualizada em relação ao servidor, o salvamento na nuvem é interrompido para proteger a integridade dos dados de progresso.',
+      'Recarregamento em Segundo Plano sem Quebrar Jogabilidade Offline: O processo de verificação roda de forma transparente em segundo plano. Se houver conexão com a internet e uma nova versão estiver disponível, o navegador atualiza automaticamente. Em modo offline, o jogador continua jogando normalmente.',
       'Rebalanciamento de XP do Bloco de Prestígio: Ajuste do Valor Base do Upload de Frutas (80 XP), Energia (200 XP) e Biomassa (350 XP), e introdução de uma 2ª curva de experiência acima do Nível 70 (+15% de XP por nível).'
     ]
   },
@@ -28,7 +49,7 @@ export const CHANGELOG_HISTORY: ChangelogRelease[] = [
       'Novo Menu de Conquistas (Achievements UI): Substituição e expansão da antiga estrutura rígida de Marcos (Milestones) por um Menu de Conquistas completo, dinâmico e expansível.',
       'Desbloqueios de Interface e Mecânicas: Conquistas divididas em categorias estratégicas (Interface, Mecânicas de Jogo, Estatísticas de Progresso e Ações Especiais/Segredos).',
       'Indícios de Progressão e Metas Claras: Listagem não-linear com barras de progresso visual, recompensas de desbloqueio de UI e dicas de conquistas a serem alcançadas.',
-      'Sincronização com Garantia Zero Bugs (Migração Transparente): Compatibilidade total com saves anteriores através de migração automática dos antigos PlayerMilestones para a nova matriz de conquistas sem perda de progresso ou quebra de chave HMAC.',
+      'Sincronização com Garantia Zero Bugs (Migração Transparente): Compatibilidade total com dados de versões anteriores, convertendo automaticamente o progresso histórico para a nova matriz de conquistas sem perda de dados.',
       'Notificações Toast de Conquista Desbloqueada: Efeito sonoro retro e notificação visual imediata ao completar qualquer conquista durante o gameplay.'
     ]
   },
@@ -78,7 +99,7 @@ export const CHANGELOG_HISTORY: ChangelogRelease[] = [
   {
     version: 'v2.6.1',
     date: '2026-08-04',
-    title: 'Mecanismo de Pastas no Explorador (/guia e /fazenda), Filtro Discreto de Extensões & Guardrails de DevTools',
+    title: 'Mecanismo de Pastas no Explorador (/guia e /fazenda), Filtro Discreto de Extensões & Sistema de Integridade',
     isCurrent: false,
     changes: [
       'Estrutura de Pastas no Explorador de Arquivos (/guia e /fazenda): Organização do workspace em duas pastas principais com suporte a clique para maximizar e minimizar o conteúdo. Sugestão enviada por @jeronimofeijo.',
@@ -86,7 +107,7 @@ export const CHANGELOG_HISTORY: ChangelogRelease[] = [
       'Diretório /fazenda (Espaço do Jogador): Todos os novos arquivos criados ou importados são salvos automaticamente em /fazenda, com suporte completo a criação, renomeação, exclusão e alteração de arquivo principal.',
       'Escopo do Botão Restaurar Arquivos: O botão de restauração do explorador agora restaura exclusivamente os arquivos da pasta /guia, preservando todos os scripts criados pelo jogador na pasta /fazenda.',
       'Barra de Filtro Discreto de Extensões: Localizada no pé do Explorador de Arquivos, permite alternar a exibição de linguagens (.PY, .JS, etc.) sem a necessidade de excluir scripts do jogo.',
-      'Sistema de Guardrails de DevTools & Integridade: Proteção contra automação sintética não autorizada via console ou DevTools do navegador, garantindo a integridade dos testes do jogo.'
+      'Sistema de Integridade do Jogo: Proteções internas para garantir a estabilidade do ambiente e a integridade do progresso.'
     ]
   },
   {
@@ -135,11 +156,11 @@ export const CHANGELOG_HISTORY: ChangelogRelease[] = [
   {
     version: 'v2.4.1',
     date: '2026-07-31',
-    title: 'Atualização de Guardrails, Atalho do Editor & Barra de Recursos Progressiva',
+    title: 'Sincronização da Árvore de Pesquisas, Atalho do Editor & Barra de Recursos Progressiva',
     isCurrent: false,
     changes: [
-      'Sincronização de Guardrails de Execução: Os interpretadores nativos (Pyodide Python WASM e JavaScript Sandbox) agora aplicam verificações de segurança via AST para garantir que tanto recursos da linguagem (if/else, loops, funções, variáveis) quanto comandos de API estejam bloqueados até a respectiva pesquisa na Árvore de Tecnologias.',
-      'Diretriz de Manutenção na Documentação: Adicionada nota arquitetural na documentação do sistema (techApiMap.ts) para revisão obrigatória dos guardrails em futuras expansões da Árvore de Pesquisas.',
+      'Sincronização do Executador de Código: Verificações no ambiente de execução garantem que comandos e métodos fiquem bloqueados de acordo com as pesquisas ativas na Árvore de Tecnologias.',
+      'Aprimoramento da Documentação Técnica: Atualização dos guias técnicos internos e exemplos para acompanhar as pesquisas.',
       'Execução via Atalho Ctrl/Cmd + Enter: O atalho de teclado executa o arquivo aberto sem inserir quebras de linha no código.',
       'Exibição Progressiva da Barra de Recursos: Recursos e moedas agora aparecem na barra superior no exato instante em que a tecnologia associada é liberada na Árvore de Pesquisas.'
     ]
@@ -231,7 +252,7 @@ export const CHANGELOG_HISTORY: ChangelogRelease[] = [
   {
     version: 'v2.0.5S',
     date: '2026-07-28',
-    title: 'Correção de Persistência de Umidade & Guardrails Anti-Exploit',
+    title: 'Correção de Persistência de Umidade & Validações de Árvore',
     isCurrent: false,
     changes: [
       'Adicionado botão "Limpar Console" dedicado na barra de ferramentas e no cabeçalho do painel inferior para limpar logs de saída rapidamente.',
@@ -311,7 +332,7 @@ export const CHANGELOG_HISTORY: ChangelogRelease[] = [
     title: 'Intérprete Python Otimizado e Suporte Multi-Drone',
     changes: [
       'Suporte expandido a operadores lógicos (and, or, not) e expressões aritméticas compostas no intérprete ScriptRunner.',
-      'Suporte a varredura e inteligência multi-drone individualizada via variável DRONE_ID.',
+      'Suporte a varredura e inteligência multi-drone individualizada via identificador de agente DRONE_ID.',
       'Inclusão do script modelo `fazenda_multi_drone.py` no sistema de arquivos virtual.'
     ]
   },
@@ -320,7 +341,7 @@ export const CHANGELOG_HISTORY: ChangelogRelease[] = [
     date: '2026-07-26',
     title: 'Sistema de Salvamento e Assinatura de Integridade',
     changes: [
-      'Exportação e importação de saves com validação HMAC-SHA256 para prevenir corrupções de estado.',
+      'Exportação e importação de saves com verificação de assinatura de integridade para prevenir corrupções de estado.',
       'Suporte a gerenciamento de arquivos de save em lote na interface.'
     ]
   },

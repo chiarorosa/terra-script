@@ -773,6 +773,116 @@ export async function fetchCommunityScripts(): Promise<{ success: boolean; scrip
   }
 }
 
+export interface RedeemCodeResult {
+  success: boolean;
+  message: string;
+  reward?: {
+    prestige_xp?: number;
+    resources?: Record<string, number>;
+  };
+}
+
+/**
+ * Resgata um código promocional/gift no Supabase 'terrascript_redeem_codes'
+ */
+export async function redeemCode(
+  rawCode: string,
+  playerName: string
+): Promise<RedeemCodeResult> {
+  try {
+    const code = (rawCode || '').trim().toUpperCase();
+    if (!code) {
+      return { success: false, message: 'Informe um código válido.' };
+    }
+
+    if (!playerName || playerName === 'Dev Master' || playerName === 'Programador Anônimo') {
+      return { success: false, message: 'É necessário registrar um nome de programador para resgatar códigos.' };
+    }
+
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      return { success: false, message: 'Sem conexão com a internet para resgatar o código.' };
+    }
+
+    // 1. Fetch code from terrascript_redeem_codes
+    const { data: codeData, error: codeError } = await supabase
+      .from('terrascript_redeem_codes')
+      .select('*')
+      .eq('code', code)
+      .eq('active', true)
+      .maybeSingle();
+
+    if (codeError || !codeData) {
+      return { success: false, message: 'Código inválido, inativo ou não encontrado.' };
+    }
+
+    // 2. Check Expiration Date
+    if (codeData.expires_at) {
+      const expiresAt = new Date(codeData.expires_at).getTime();
+      if (Date.now() > expiresAt) {
+        return { success: false, message: 'Este código promocional expirou.' };
+      }
+    }
+
+    // 3. Check if player has already redeemed this code
+    const { data: redemption } = await supabase
+      .from('terrascript_code_redemptions')
+      .select('id')
+      .eq('code', code)
+      .eq('player_name', playerName)
+      .maybeSingle();
+
+    if (redemption) {
+      return { success: false, message: 'Você já resgatou este código anteriormente.' };
+    }
+
+    // 4. Check max_uses limit if configured
+    if (codeData.max_uses && codeData.max_uses > 0) {
+      const { count } = await supabase
+        .from('terrascript_code_redemptions')
+        .select('id', { count: 'exact', head: true })
+        .eq('code', code);
+
+      if (count !== null && count >= codeData.max_uses) {
+        return { success: false, message: 'Este código atingiu o limite máximo de resgates.' };
+      }
+    }
+
+    // 5. Register redemption
+    const { error: insertError } = await supabase
+      .from('terrascript_code_redemptions')
+      .insert({
+        code: code,
+        player_name: playerName,
+        redeemed_at: new Date().toISOString()
+      });
+
+    if (insertError) {
+      if (insertError.code === '23505') {
+        return { success: false, message: 'Você já resgatou este código anteriormente.' };
+      }
+      return { success: false, message: `Erro ao registrar resgate: ${insertError.message}` };
+    }
+
+    // Parse reward JSON if stored as string or object
+    let rewardObj = codeData.reward;
+    if (typeof rewardObj === 'string') {
+      try {
+        rewardObj = JSON.parse(rewardObj);
+      } catch (e) {
+        // Fallback
+      }
+    }
+
+    return {
+      success: true,
+      message: codeData.description ? `Código resgatado! ${codeData.description}` : 'Código resgatado com sucesso!',
+      reward: rewardObj
+    };
+  } catch (err: any) {
+    return { success: false, message: err?.message || 'Erro inesperado ao resgatar código.' };
+  }
+}
+
 /**
  * SQL Schema script to easily setup tables in Supabase Dashboard
  */

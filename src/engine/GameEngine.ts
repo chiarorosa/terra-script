@@ -1336,6 +1336,15 @@ export class GameEngine {
     return true;
   }
 
+  public addResource(res: keyof ResourceMap, amount: number) {
+    if (amount <= 0 || !Number.isFinite(amount)) return;
+    if (this.resources[res] !== undefined) {
+      this.resources[res] = Math.min(1000000000, (this.resources[res] || 0) + amount);
+      this.saveEngineState();
+      this.notify();
+    }
+  }
+
   // ==========================================
   // PRESTIGE & WORLD CHANGE SYSTEM
   // ==========================================
