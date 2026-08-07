@@ -115,6 +115,13 @@ export class PyodideManager {
         const ag = getAg();
         return engine.offerPrestigeResource(agentId, ag?.x ?? 0, ag?.y ?? 0, resource || 'fiber', amount || 1);
       },
+      farm_get_combo_index: (x?: number, y?: number) => {
+        const ag = getAg();
+        const targetX = typeof x === 'number' ? x : (ag?.x ?? 0);
+        const targetY = typeof y === 'number' ? y : (ag?.y ?? 0);
+        return engine.getComboIndex(targetX, targetY);
+      },
+      farm_get_combo_multiplier: () => engine.getComboMultiplier(),
       world_clear: () => {
         engine.clearWorld();
         return true;
@@ -271,6 +278,20 @@ def _create_py_step_generator(code_str, _jsBridge):
             return _jsBridge.farm_swap(str(dir))
         def prestige(self, resource="fiber", amount=1):
             return _jsBridge.farm_prestige(str(resource), int(amount))
+        def get_combo_index(self, x=None, y=None):
+            if x is not None and y is not None:
+                return _jsBridge.farm_get_combo_index(int(x), int(y))
+            return _jsBridge.farm_get_combo_index()
+        def getComboIndex(self, x=None, y=None):
+            if x is not None and y is not None:
+                return _jsBridge.farm_get_combo_index(int(x), int(y))
+            return _jsBridge.farm_get_combo_index()
+        def get_combo_multiplier(self):
+            return _jsBridge.farm_get_combo_multiplier()
+        def get_combo(self, x=None, y=None):
+            if x is not None and y is not None:
+                return _jsBridge.farm_get_combo_index(int(x), int(y))
+            return _jsBridge.farm_get_combo_index()
         def clear(self):
             return _jsBridge.world_clear()
 

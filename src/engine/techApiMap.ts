@@ -1139,6 +1139,67 @@ export const API_CATALOG: ApiItem[] = [
       '3. Consulte os métodos individuais world.width(), world.height(), world.move() e sys.send() na barra lateral.'
     ],
     expectedOutput: 'Aumento de dimensão da matriz e execução paralela com múltiplos agentes.'
+  },
+  {
+    id: 'farm_get_combo_index',
+    namespace: 'farm',
+    methodName: 'get_combo_index',
+    displayText: 'farm.get_combo_index(x?, y?)',
+    signature: 'farm.get_combo_index(x?: number, y?: number): number | false',
+    pythonSnippet: 'indice = farm.get_combo_index()\nif indice is not False:\n    print("Índice de combo:", indice)',
+    jsSnippet: 'const indice = farm.get_combo_index();\nif (indice !== false) {\n    console.log("Índice de combo:", indice);\n}',
+    description: 'Retorna o índice numérico de combo do bloco atual ou das coordenadas especificadas (0, 1, 2...). Retorna False caso o bloco não tenha índice.',
+    techId: 'SYS_2',
+    category: 'Comandos da Fazenda',
+    docDetail: 'SISTEMA DE COMBOS (MUDANÇA DO MUNDO - PRESTÍGIO NV 25+):\n\n1. FUNCIONAMENTO DO COMBO:\n• Atingindo o Nível 25 de Prestígio, a Mudança do Mundo ativa os índices de combo nos terrenos.\n• O bloco (0,0) SEMPRE possui o índice 0 de combo.\n• Ao colher o bloco (0,0), a engine sorteia o próximo bloco alvo e atribui o próximo índice incremental (1, 2, 3...).\n• Cada colheita correta no bloco alvo aumenta o multiplicador de combo em +0,25x.\n\n2. LEITURA DE ÍNDICE COM A API:\n• farm.get_combo_index() ou farm.get_combo_index(x, y):\n  - Retorna o valor numérico do índice (ex: 0 para o bloco (0,0), 1 para o próximo alvo, etc.).\n  - Retorna False se o bloco examinado não possuir índice de combo no momento.\n\n3. RESET DO COMBO:\n• O combo zera para o valor base de 1,0x caso ocorra uma colheita fora de ordem, toque adicional no bloco (0,0) ou quando um Upload no Bloco de Prestígio for concluído.',
+    exampleCode: 'indice = farm.get_combo_index()\nif indice is not False:\n    print("Bloco possui índice de combo:", indice)',
+    parameters: [
+      {
+        name: 'x',
+        type: 'number (opcional)',
+        description: 'Coordenada X do bloco. Se omitida, utiliza a posição X atual do agente.',
+        required: false
+      },
+      {
+        name: 'y',
+        type: 'number (opcional)',
+        description: 'Coordenada Y do bloco. Se omitida, utiliza a posição Y atual do agente.',
+        required: false
+      }
+    ],
+    returns: {
+      type: 'number | false',
+      description: 'Retorna o número do índice do combo (ex: 0, 1, 2...) ou False se não tiver índice.'
+    },
+    usabilityNotes: [
+      '1. O método funciona tanto sem parâmetros (checa a célula atual do robô) quanto passando coordenadas x, y específicas.',
+      '2. Note que 0 é um retorno numérico válido (referente ao bloco (0,0)). Para verificar se existe índice em Python, compare: if indice is not False:. Em JavaScript: if (indice !== false).'
+    ],
+    expectedOutput: 'Retorna 0, 1, 2... ou False.'
+  },
+  {
+    id: 'mech_combos_system',
+    namespace: 'mechanics',
+    methodName: 'Sistema de Combos (Prestígio Nv 25+)',
+    displayText: 'Mudança do Mundo: Sistema de Combos & Multiplicadores',
+    signature: 'Mecânica Global de Combos e Multiplicação de XP no Upload',
+    pythonSnippet: '# Rastreio de combo em Python\nmultiplicador = farm.get_combo_multiplier()\nprint("Multiplicador de combo ativo:", multiplicador)',
+    jsSnippet: '// Rastreio de combo em JS\nconst multiplicador = farm.get_combo_multiplier();\nconsole.log("Multiplicador de combo ativo:", multiplicador);',
+    description: 'Mecânica ativada automaticamente a partir do Nível 25 de Prestígio que multiplica os ganhos de XP ao colher blocos na sequência correta.',
+    techId: 'SYS_1',
+    category: 'Mecânicas de Jogo',
+    docDetail: 'MECÂNICA DA MUDANÇA DO MUNDO - COMBOS (PRESTÍGIO 25+):\n\n1. ATIVAÇÃO AUTOMÁTICA:\n• Ao alcançar o Nível 25 de Prestígio, os blocos da fazenda recebem os índices do Sistema de Combos.\n\n2. REGRAS DA SEQUÊNCIA DE COMBOS:\n• Ponto de Partida: O combo sempre inicia no Bloco (0,0) (índice 0).\n• Valor Base: O multiplicador começa em 1.0x.\n• Geração de Alvo: Ao colher o bloco (0,0), a engine sorteia aleatoriamente um bloco da grade como o próximo alvo com índice incremental (índice 1).\n• Incremento: Colher o bloco alvo sorteado aumenta o multiplicador em +0.25x (1.25x, 1.50x, 1.75x...) e gera o próximo alvo (índice 2, 3...).\n• Limite Máximo de Passos: O limite de combos é sempre igual ao (Total de Terrenos - 1).\n\n3. COMO O COMBO ZERA (RESET):\n• Colheita Fora de Ordem: Se qualquer agente colher um bloco que não seja o próximo índice sorteado, o combo zera e volta para 1.0x.\n• Reinício no Bloco (0,0): Colher o bloco (0,0) novamente zera o combo e inicia uma nova sequência.\n• Upload de Prestígio: Realizar o comando farm.prestige() multiplica todos os pontos pelo combo acumulado e, em seguida, zera o combo.\n\n4. MÉTODOS ASSOCIADOS DA API:\n• farm.get_combo_index(x?, y?): Retorna o índice do bloco (0, 1, 2...) ou False.\n• farm.get_combo_multiplier(): Retorna o valor numérico atual do multiplicador.',
+    exampleCode: 'mult = farm.get_combo_multiplier()\nprint("Multiplicador ativo:", mult)',
+    parameters: [],
+    returns: {
+      type: 'conceito',
+      description: 'Mecânica do Sistema de Combos e otimização de XP de Prestígio.'
+    },
+    usabilityNotes: [
+      '1. Seguir a sequência de combo é opcional: caso você prefira não seguir, as colheitas entregam o valor padrão (FLAT 1.0x).',
+      '2. Guarde o Upload para quando tiver acumulado um alto multiplicador de combo para obter enormes bônus de XP de uma só vez!'
+    ],
+    expectedOutput: 'Multiplicação de XP no Upload e otimização da rota agrícola.'
   }
 ];
 

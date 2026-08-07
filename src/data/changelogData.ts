@@ -8,10 +8,25 @@ export interface ChangelogRelease {
 
 export const CHANGELOG_HISTORY: ChangelogRelease[] = [
   {
+    version: 'v2.9.0',
+    date: '2026-08-07',
+    title: 'Mudança do Mundo: Sistema de Combos & Multiplicadores de Prestígio',
+    isCurrent: true,
+    changes: [
+      'Mudança de Mundo 1 - Sistema de Combos (Prestígio Nível 25+): Ao atingir o Nível 25 de Prestígio, a dinâmica dos terrenos evolui com a introdução de índices numéricos de combo nos blocos do terreno.',
+      'Mecânica de Ordem de Colheita: A sequência de combo é iniciada ao colher o bloco (0,0) (índice 0). A engine do jogo sorteia automaticamente o próximo bloco alvo com índice incremental.',
+      'Multiplicador de Upload no Bloco de Prestígio: Cada colheita bem-sucedida no bloco alvo eleva o multiplicador em +0,25x (1,25x, 1,50x, etc.). Ao realizar o Upload de Recursos no Bloco de Prestígio, todo o XP ganho é multiplicado pelo combo acumulado.',
+      'Rastreamento e Reset do Combo: Colheitas fora de ordem, toque adicional no bloco (0,0) ou a conclusão do Upload no Bloco de Prestígio zeram o multiplicador de volta ao valor base de 1,0x.',
+      'Limite Proporcional da Grade: O número máximo de passos de combo é definido de forma proporcional ao tamanho do terreno (Total de Terrenos - 1).',
+      'Novos Métodos da API farm: Disponibilizadas as funções farm.get_combo_index() e farm.get_combo_multiplier() nas linguagens Python e JavaScript para consulta do índice do bloco e multiplicador ativo.',
+      'Sincronização da Engine de Jogo: Atualização do motor TerraScript para a versão v2.9.0.'
+    ]
+  },
+  {
     version: 'v2.8.4',
     date: '2026-08-07',
     title: 'Correção na Importação de Scripts da Comunidade',
-    isCurrent: true,
+    isCurrent: false,
     changes: [
       'Importação Perfeita e Reativa: Corrigido o fluxo para que scripts da comunidade importados apareçam instantaneamente no explorador e abram no editor sem necessidade de recarregar a página (reload).',
       'Correção no Explorador de Arquivos: Corrigido o bug onde renomear um script fazia com que ele sumisse do explorador por falta de atualização no mapa do sistema de arquivos virtual.',

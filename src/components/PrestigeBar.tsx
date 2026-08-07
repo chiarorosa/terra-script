@@ -12,6 +12,8 @@ export const PrestigeBar: React.FC<PrestigeBarProps> = ({ engine }) => {
 
   const prestige = engine.getPrestige();
   const reqPoints = engine.getRequiredPrestigePoints();
+  const comboMultiplier = engine.getComboMultiplier();
+  const isComboUnlocked = prestige.level >= 25;
   const progressPercent = prestige.level >= 100 
     ? 100 
     : Math.min(100, Math.max(0, (prestige.points / reqPoints) * 100));
@@ -36,6 +38,14 @@ export const PrestigeBar: React.FC<PrestigeBarProps> = ({ engine }) => {
         <span className="text-[#ffffff] font-pixel-mono text-base font-bold">{prestige.level}</span>
         <span className="text-xs text-[#fef08a]/80 font-mono">/100</span>
       </div>
+
+      {/* Active Combo Multiplier Badge (if Prestige >= 25) */}
+      {isComboUnlocked && (
+        <div className="flex items-center gap-1.5 px-2.5 py-1 pixel-box bg-[#1e1b4b] border border-[#6366f1] text-[#e0e7ff] text-xs font-pixel-mono shrink-0">
+          <span className="text-[#a5b4fc] font-bold">COMBO</span>
+          <span className="text-[#facc15] font-bold text-sm">{comboMultiplier.toFixed(2)}x</span>
+        </div>
+      )}
 
       {/* Prestige Progress Bar Container */}
       <div className="flex-1 relative h-6 pixel-box bg-[#08090a] overflow-hidden flex items-center px-1 group cursor-pointer">
@@ -89,6 +99,7 @@ export const PrestigeBar: React.FC<PrestigeBarProps> = ({ engine }) => {
 
             {/* List of World Changes */}
             <div className="space-y-2">
+              {/* World Change 1: Bloco de Prestígio */}
               <div className={`p-2.5 pixel-box transition-all ${
                 prestige.worldChangeUnlocked 
                   ? 'bg-[#161718]' 
@@ -112,11 +123,42 @@ export const PrestigeBar: React.FC<PrestigeBarProps> = ({ engine }) => {
                   </span>
                 </div>
                 
-                {/* Intriguing description */}
                 <p className="text-[11px] text-[#8a8f98] leading-relaxed font-pixel-body italic">
                   {prestige.worldChangeUnlocked 
                     ? '"Uma ressonância antiga despertou no ecossistema. Um ponto de convergência reluzente manifestou-se na terra."' 
                     : '"Transformação latente. Os pilares primordiais do conhecimento buscam equilíbrio para alterar a realidade do mundo."'
+                  }
+                </p>
+              </div>
+
+              {/* World Change 2: Sistema de Combos */}
+              <div className={`p-2.5 pixel-box transition-all ${
+                isComboUnlocked 
+                  ? 'bg-[#161718]' 
+                  : 'bg-[#08090a] opacity-75'
+              }`}>
+                <div className="flex items-center justify-between mb-1">
+                  <span className="font-pixel-body text-xs text-[#ffffff] flex items-center gap-1.5">
+                    {isComboUnlocked ? (
+                      <CheckCircle2 className="w-3.5 h-3.5 text-[#22c55e]" />
+                    ) : (
+                      <Lock className="w-3.5 h-3.5 text-[#8a8f98]" />
+                    )}
+                    Índices de Combo
+                  </span>
+                  <span className={`text-[10px] font-pixel-mono px-1.5 py-0.2 pixel-badge ${
+                    isComboUnlocked 
+                      ? 'bg-[#6366f1] text-[#ffffff]' 
+                      : 'bg-[#23252a] text-[#8a8f98]'
+                  }`}>
+                    {isComboUnlocked ? `Ativo (${comboMultiplier.toFixed(2)}x)` : 'Requer Prestígio 25'}
+                  </span>
+                </div>
+                
+                <p className="text-[11px] text-[#8a8f98] leading-relaxed font-pixel-body italic">
+                  {isComboUnlocked 
+                    ? '"A ordem harmônica da colheita ressoa através da matriz. Siga os índices marcados nos terrenos para multiplicar seus ganhos."' 
+                    : '"Sequenciamento bloqueado. Alcance o Nível 25 de Prestígio para que os índices ordinais de colheita apareçam nos blocos."'
                   }
                 </p>
               </div>

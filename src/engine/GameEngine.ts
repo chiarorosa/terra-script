@@ -135,6 +135,13 @@ export class GameEngine {
     totalPoints: 0,
     worldChangeUnlocked: false
   };
+  // Combo World Change System (Prestige level >= 25)
+  private comboMultiplier: number = 1.0;
+  private comboChainActive: boolean = false;
+  private comboStep: number = 0;
+  private targetComboTile: { x: number; y: number } | null = null;
+  private targetComboIndex: number | null = null;
+  private visitedComboTiles: Set<string> = new Set();
   private logs: ConsoleLog[] = [];
   private breakpoints: Map<string, Set<number>> = new Map();
   private vfs: VirtualFS;
@@ -941,6 +948,77 @@ export class GameEngine {
     return t.crop !== 'NONE' && t.growth >= 100;
   }
 
+  // =========================================================================
+  // WORLD CHANGE 1: COMBOS SYSTEM (PRESTIGE LEVEL 25+)
+  // =========================================================================
+  public getComboIndex(x: number, y: number): number | false {
+    if (this.prestige.level < 25) return false;
+    // Block (0,0) is always combo index 0
+    if (x === 0 && y === 0) return 0;
+    // Target block gets the current incremental target index
+    if (this.targetComboTile && this.targetComboTile.x === x && this.targetComboTile.y === y) {
+      return this.targetComboIndex !== null ? this.targetComboIndex : false;
+    }
+    return false;
+  }
+
+  public getComboMultiplier(): number {
+    return this.prestige.level >= 25 ? this.comboMultiplier : 1.0;
+  }
+
+  public resetComboState(): void {
+    this.comboMultiplier = 1.0;
+    this.comboChainActive = false;
+    this.comboStep = 0;
+    this.targetComboTile = null;
+    this.targetComboIndex = null;
+    this.visitedComboTiles.clear();
+  }
+
+  private generateNextComboTarget(): boolean {
+    const maxSteps = (this.width * this.height) - 1;
+    if (this.comboStep >= maxSteps || maxSteps <= 0) {
+      this.targetComboTile = null;
+      this.targetComboIndex = null;
+      return false;
+    }
+
+    const candidates: Array<{ x: number; y: number }> = [];
+    for (let cx = 0; cx < this.width; cx++) {
+      for (let cy = 0; cy < this.height; cy++) {
+        if (cx === 0 && cy === 0) continue; // Exclude (0,0)
+        const tile = this.getTile(cx, cy);
+        if (tile.ground === 'PRESTIGE' || tile.crop === 'PRESTIGE') continue; // Exclude Prestige block
+        const key = `${cx},${cy}`;
+        if (this.visitedComboTiles.has(key)) continue; // Exclude visited tiles in current chain
+        candidates.push({ x: cx, y: cy });
+      }
+    }
+
+    if (candidates.length === 0) {
+      // Fallback: any tile in grid except (0,0) and Prestige
+      for (let cx = 0; cx < this.width; cx++) {
+        for (let cy = 0; cy < this.height; cy++) {
+          if (cx === 0 && cy === 0) continue;
+          const tile = this.getTile(cx, cy);
+          if (tile.ground === 'PRESTIGE' || tile.crop === 'PRESTIGE') continue;
+          candidates.push({ x: cx, y: cy });
+        }
+      }
+    }
+
+    if (candidates.length === 0) {
+      this.targetComboTile = null;
+      this.targetComboIndex = null;
+      return false;
+    }
+
+    const picked = candidates[Math.floor(Math.random() * candidates.length)];
+    this.targetComboTile = picked;
+    this.targetComboIndex = this.comboStep + 1;
+    return true;
+  }
+
   public harvestTile(agentId: number, x: number, y: number): boolean {
     const t = this.getTile(x, y);
     if (t.crop === 'PRESTIGE' || t.ground === 'PRESTIGE') {
@@ -1000,6 +1078,60 @@ export class GameEngine {
     if (t.moisture <= 0.25 && t.ground === 'IRRIGATED') {
       t.ground = 'NATURAL';
     }
+
+    // =========================================================================
+    // COMBO SYSTEM EVALUATION (WORLD CHANGE AT PRESTIGE LEVEL >= 25)
+    // =========================================================================
+    if (this.prestige.level >= 25) {
+      if (x === 0 && y === 0) {
+        // Harvesting (0,0) starts or resets the combo sequence
+        this.resetComboState();
+        this.comboChainActive = true;
+        this.comboStep = 0;
+        this.visitedComboTiles.add('0,0');
+        const generated = this.generateNextComboTarget();
+        if (generated && this.targetComboTile) {
+          this.addLog(
+            agentId,
+            'action',
+            `🔥 [Combo Engine] Sequência de combo iniciada em (0,0)! Próximo bloco alvo: (${this.targetComboTile.x},${this.targetComboTile.y}) [Índice ${this.targetComboIndex}]`
+          );
+        }
+      } else if (this.comboChainActive) {
+        if (this.targetComboTile && x === this.targetComboTile.x && y === this.targetComboTile.y) {
+          // Hit the correct target block!
+          this.comboMultiplier = Math.round((this.comboMultiplier + 0.25) * 100) / 100;
+          this.comboStep++;
+          this.visitedComboTiles.add(`${x},${y}`);
+          const maxSteps = (this.width * this.height) - 1;
+
+          if (this.comboStep < maxSteps && this.generateNextComboTarget()) {
+            this.addLog(
+              agentId,
+              'action',
+              `⚡ [Combo Multiplier] Combo +0.25x! Multiplicador atual: ${this.comboMultiplier.toFixed(2)}x. Próximo alvo: (${this.targetComboTile!.x},${this.targetComboTile!.y}) [Índice ${this.targetComboIndex}]`
+            );
+          } else {
+            this.targetComboTile = null;
+            this.targetComboIndex = null;
+            this.addLog(
+              agentId,
+              'action',
+              `🏆 [Combo Engine] Combo MÁXIMO atingido (${this.comboMultiplier.toFixed(2)}x)! Multiplicador fixado até o próximo Upload de Prestígio.`
+            );
+          }
+        } else {
+          // Harvested out of order -> Combo resets to base 1.0x!
+          this.resetComboState();
+          this.addLog(
+            agentId,
+            'action',
+            `❌ [Combo Reset] Colheita fora de ordem no bloco (${x},${y})! O multiplicador de combo foi zerado para 1.0x.`
+          );
+        }
+      }
+    }
+
     this.saveEngineState();
     return true;
   }
@@ -1496,14 +1628,20 @@ export class GameEngine {
 
     const baseRate = rates[key] || 1;
     const mult = getPrestigeResourceMultiplier(this.prestige.level, key);
-    const ptsGained = amount * baseRate * mult;
+    const comboMult = this.getComboMultiplier();
+    const ptsGained = Math.round(amount * baseRate * mult * comboMult);
     this.addPrestigePoints(ptsGained);
 
     this.totalActionsPerformed++;
     const ag = this.getAgent(agentId);
     if (ag) ag.actionMessage = `Prestige +${ptsGained} XP (${amount}x ${key})`;
     const isAttenuated = mult < 1.0;
-    this.addLog(agentId, 'action', `Upload de Prestígio: ${amount}x ${key} transmitidos para a rede (+${ptsGained} XP de Prestígio${isAttenuated ? ' [Atenuado: 50%]' : ''})!`);
+    const comboInfo = comboMult > 1.0 ? ` [Combo ${comboMult.toFixed(2)}x]` : '';
+    this.addLog(agentId, 'action', `Upload de Prestígio: ${amount}x ${key} transmitidos para a rede (+${ptsGained} XP de Prestígio${isAttenuated ? ' [Atenuado: 50%]' : ''}${comboInfo})!`);
+
+    if (this.prestige.level >= 25) {
+      this.resetComboState();
+    }
 
     this.saveEngineState();
     this.notify();
@@ -1932,7 +2070,14 @@ export class GameEngine {
         tiles: tilesArray
       },
       resources: { ...this.resources },
-      prestige: { ...this.prestige },
+      prestige: {
+        ...this.prestige,
+        comboMultiplier: this.comboMultiplier,
+        comboChainActive: this.comboChainActive,
+        comboStep: this.comboStep,
+        targetComboTile: this.targetComboTile,
+        targetComboIndex: this.targetComboIndex
+      },
       milestones: { ...this.milestones },
       achievements: this.achievements.map(a => ({ id: a.id, unlocked: a.unlocked, unlockedAt: a.unlockedAt, claimed: Boolean(a.claimed), progress: a.progress })),
       techTree: this.techTree.map(n => ({ id: n.id, unlocked: n.unlocked })),
@@ -1966,6 +2111,21 @@ export class GameEngine {
           totalPoints: typeof saveObj.prestige.totalPoints === 'number' ? Math.max(0, saveObj.prestige.totalPoints) : 0,
           worldChangeUnlocked: Boolean(saveObj.prestige.worldChangeUnlocked)
         };
+        if (typeof saveObj.prestige.comboMultiplier === 'number') {
+          this.comboMultiplier = saveObj.prestige.comboMultiplier;
+        }
+        if (typeof saveObj.prestige.comboChainActive === 'boolean') {
+          this.comboChainActive = saveObj.prestige.comboChainActive;
+        }
+        if (typeof saveObj.prestige.comboStep === 'number') {
+          this.comboStep = saveObj.prestige.comboStep;
+        }
+        if (saveObj.prestige.targetComboTile && typeof saveObj.prestige.targetComboTile.x === 'number') {
+          this.targetComboTile = saveObj.prestige.targetComboTile;
+        }
+        if (typeof saveObj.prestige.targetComboIndex === 'number') {
+          this.targetComboIndex = saveObj.prestige.targetComboIndex;
+        }
       } else if (typeof saveObj.prestige_level === 'number') {
         this.prestige.level = Math.max(1, Math.min(100, saveObj.prestige_level));
       }

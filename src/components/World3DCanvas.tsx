@@ -1754,6 +1754,17 @@ export const World3DCanvas: React.FC<World3DCanvasProps> = ({ engine }) => {
                 <span className="font-semibold text-rose-400">Nível {inspectedTile.grade}</span>
               </div>
             )}
+            {engine.getPrestige().level >= 25 && (() => {
+              const comboIdx = engine.getComboIndex(inspectedTile.x, inspectedTile.y);
+              return (
+                <div className="flex justify-between border-t border-[#23252a] pt-1 mt-1">
+                  <span className="text-indigo-400 font-bold">Índice de Combo:</span>
+                  <span className={`font-bold ${comboIdx !== false ? 'text-amber-300 animate-pulse' : 'text-slate-500'}`}>
+                    {comboIdx !== false ? `#${comboIdx}` : 'Nenhum'}
+                  </span>
+                </div>
+              );
+            })()}
           </div>
         </div>
       )}

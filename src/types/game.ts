@@ -19,6 +19,11 @@ export interface PrestigeState {
   points: number; // current level XP
   totalPoints: number; // cumulative total XP
   worldChangeUnlocked: boolean; // whether World Change has been triggered
+  comboMultiplier?: number;
+  comboChainActive?: boolean;
+  comboStep?: number;
+  targetComboTile?: { x: number; y: number } | null;
+  targetComboIndex?: number | null;
 }
 
 export interface PlayerMilestones {
