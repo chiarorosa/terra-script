@@ -233,12 +233,14 @@ export class JavaScriptSandbox {
         const ag = getAg();
         return engine.tillTile(agentId, ag?.x ?? 0, ag?.y ?? 0);
       },
-      swap: (dir = 'RIGHT') => {
-        if (!engine.isTechUnlocked('AGRO_7')) {
-          throw new Error("Recurso 'Trocar Terrenos (Swap)' está bloqueado! Pesquise AGRO_7 na Árvore de Pesquisa.");
-        }
+      fertilize: () => {
         const ag = getAg();
-        return engine.swapTiles(agentId, ag?.x ?? 0, ag?.y ?? 0, dir);
+        return engine.fertilizeTile(agentId, ag?.x ?? 0, ag?.y ?? 0);
+      },
+      soil: () => {
+        checkSys2();
+        const ag = getAg();
+        return engine.getSoilQuality(ag?.x ?? 0, ag?.y ?? 0);
       },
       prestige: (resource = 'fiber', amount = 1) => {
         const ag = getAg();
@@ -288,6 +290,15 @@ export class JavaScriptSandbox {
         checkSys2();
         const ag = getAg();
         return engine.getTile(ag?.x ?? 0, ag?.y ?? 0).ground;
+      },
+      soil: () => {
+        checkSys2();
+        const ag = getAg();
+        return engine.getSoilQuality(ag?.x ?? 0, ag?.y ?? 0);
+      },
+      fertilize: () => {
+        const ag = getAg();
+        return engine.fertilizeTile(agentId, ag?.x ?? 0, ag?.y ?? 0);
       },
       entity: () => {
         checkSys2();

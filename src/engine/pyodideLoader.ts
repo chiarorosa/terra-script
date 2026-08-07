@@ -104,12 +104,13 @@ export class PyodideManager {
         const ag = getAg();
         return engine.tillTile(agentId, ag?.x ?? 0, ag?.y ?? 0);
       },
-      farm_swap: (dir: string) => {
-        if (!engine.isTechUnlocked('AGRO_7')) {
-          throw new Error("Recurso 'Swap' bloqueado!");
-        }
+      farm_fertilize: () => {
         const ag = getAg();
-        return engine.swapTiles(agentId, ag?.x ?? 0, ag?.y ?? 0, dir || 'RIGHT');
+        return engine.fertilizeTile(agentId, ag?.x ?? 0, ag?.y ?? 0);
+      },
+      farm_soil: () => {
+        const ag = getAg();
+        return engine.getSoilQuality(ag?.x ?? 0, ag?.y ?? 0);
       },
       farm_prestige: (resource: string, amount: number) => {
         const ag = getAg();
@@ -135,6 +136,14 @@ export class PyodideManager {
       world_ground: () => {
         const ag = getAg();
         return engine.getTile(ag?.x ?? 0, ag?.y ?? 0).ground;
+      },
+      world_soil: () => {
+        const ag = getAg();
+        return engine.getSoilQuality(ag?.x ?? 0, ag?.y ?? 0);
+      },
+      world_fertilize: () => {
+        const ag = getAg();
+        return engine.fertilizeTile(agentId, ag?.x ?? 0, ag?.y ?? 0);
       },
       world_entity: () => {
         const ag = getAg();
@@ -274,8 +283,10 @@ def _create_py_step_generator(code_str, _jsBridge):
             return _jsBridge.farm_water()
         def till(self):
             return _jsBridge.farm_till()
-        def swap(self, dir="RIGHT"):
-            return _jsBridge.farm_swap(str(dir))
+        def fertilize(self):
+            return _jsBridge.farm_fertilize()
+        def soil(self):
+            return _jsBridge.farm_soil()
         def prestige(self, resource="fiber", amount=1):
             return _jsBridge.farm_prestige(str(resource), int(amount))
         def get_combo_index(self, x=None, y=None):
@@ -312,6 +323,10 @@ def _create_py_step_generator(code_str, _jsBridge):
             return _jsBridge.world_height()
         def ground(self):
             return _jsBridge.world_ground()
+        def soil(self):
+            return _jsBridge.world_soil()
+        def fertilize(self):
+            return _jsBridge.world_fertilize()
         def entity(self):
             return _jsBridge.world_entity()
         def crop(self):
@@ -483,13 +498,6 @@ def _create_py_step_generator(code_str, _jsBridge):
         const ag = getAg();
         return engine.tillTile(agentId, ag?.x ?? 0, ag?.y ?? 0);
       },
-      farm_swap: (dir: string) => {
-        if (!engine.isTechUnlocked('AGRO_7')) {
-          throw new Error("Recurso 'Trocar Terrenos (Swap)' está bloqueado! Pesquise AGRO_7 na Árvore de Pesquisa.");
-        }
-        const ag = getAg();
-        return engine.swapTiles(agentId, ag?.x ?? 0, ag?.y ?? 0, dir || 'RIGHT');
-      },
       farm_prestige: (resource: string, amount: number) => {
         const ag = getAg();
         return engine.offerPrestigeResource(agentId, ag?.x ?? 0, ag?.y ?? 0, resource || 'fiber', amount || 1);
@@ -603,8 +611,10 @@ def _exec_isolated_py(code_str, _jsBridge):
             return _jsBridge.farm_water()
         def till(self):
             return _jsBridge.farm_till()
-        def swap(self, dir="RIGHT"):
-            return _jsBridge.farm_swap(str(dir))
+        def fertilize(self):
+            return _jsBridge.farm_fertilize()
+        def soil(self):
+            return _jsBridge.farm_soil()
         def prestige(self, resource="fiber", amount=1):
             return _jsBridge.farm_prestige(str(resource), int(amount))
         def clear(self):
@@ -627,6 +637,10 @@ def _exec_isolated_py(code_str, _jsBridge):
             return _jsBridge.world_height()
         def ground(self):
             return _jsBridge.world_ground()
+        def soil(self):
+            return _jsBridge.world_soil()
+        def fertilize(self):
+            return _jsBridge.world_fertilize()
         def entity(self):
             return _jsBridge.world_entity()
         def crop(self):

@@ -10,15 +10,20 @@ export const CHANGELOG_HISTORY: ChangelogRelease[] = [
   {
     version: 'v2.9.0',
     date: '2026-08-07',
-    title: 'Mudança do Mundo: Sistema de Combos & Multiplicadores de Prestígio',
+    title: 'Mudança do Mundo: Combos, Maturação Agronômica & Adubagem do Solo',
     isCurrent: true,
     changes: [
+      'Nova Mecânica da Cultura Graduada (GRADED_PLANT): Ao atingir 100% de crescimento, a planta continua evoluindo sua nota agronômica. Se mantida com umidade igual ou superior a 75%, ela consome 15% de umidade a cada 5 ticks para subir +1 Nota (até a Nota Máxima 9), permitindo ao jogador/robô cultivar safras de altíssimo rendimento.',
+      'Ajuste da API Agrícola: Remoção completa do comando de troca (swap) da API, simplificando o ecossistema de comandos agrícolas para focar em planejamento de irrigação e colheita.',
       'Mudança de Mundo 1 - Sistema de Combos (Prestígio Nível 25+): Ao atingir o Nível 25 de Prestígio, a dinâmica dos terrenos evolui com a introdução de índices numéricos de combo nos blocos do terreno.',
       'Mecânica de Ordem de Colheita: A sequência de combo é iniciada ao colher o bloco (0,0) (índice 0). A engine do jogo sorteia automaticamente o próximo bloco alvo com índice incremental.',
       'Multiplicador de Upload no Bloco de Prestígio: Cada colheita bem-sucedida no bloco alvo eleva o multiplicador em +0,25x (1,25x, 1,50x, etc.). Ao realizar o Upload de Recursos no Bloco de Prestígio, todo o XP ganho é multiplicado pelo combo acumulado.',
       'Rastreamento e Reset do Combo: Colheitas fora de ordem, toque adicional no bloco (0,0) ou a conclusão do Upload no Bloco de Prestígio zeram o multiplicador de volta ao valor base de 1,0x.',
-      'Limite Proporcional da Grade: O número máximo de passos de combo é definido de forma proporcional ao tamanho do terreno (Total de Terrenos - 1).',
-      'Novos Métodos da API farm: Disponibilizadas as funções farm.get_combo_index() e farm.get_combo_multiplier() nas linguagens Python e JavaScript para consulta do índice do bloco e multiplicador ativo.',
+      'Novos Métodos de Combo: Disponibilizadas as funções farm.get_combo_index() e farm.get_combo_multiplier() nas linguagens Python e JavaScript.',
+      'Mudança de Mundo 2 - Adubagem e Qualidade do Solo (Prestígio Nível 50+): Ao alcançar o Nível 50 de Prestígio, a qualidade do solo afeta o rendimento e o crescimento de todas as safras.',
+      'Qualidade do Solo [z] & Colheita: A qualidade do solo do bloco cai 20% a cada colheita realizada, reduzindo o retorno de recursos colhidos proporcionalmente.',
+      'Restrição de Crescimento & Regeneração: Blocos com qualidade do solo em zero impedem o crescimento de plantas. A cada 5 ticks sem colher, o solo regenera 5% de sua qualidade naturalmente.',
+      'Comando de Adubagem e Leitura de Solo: O comando farm.fertilize() permite adubar blocos zerados, restaurando sua qualidade para 100%. A qualidade pode ser lida via farm.soil().',
       'Sincronização da Engine de Jogo: Atualização do motor TerraScript para a versão v2.9.0.'
     ]
   },

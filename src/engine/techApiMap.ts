@@ -419,7 +419,7 @@ export const API_CATALOG: ApiItem[] = [
     description: 'Planta culturas graduadas que recebem notas numéricas de 1 a 9.',
     techId: 'AGRO_7',
     category: 'Comandos da Fazenda',
-    docDetail: 'Permite exercitar algoritmos de ordenação (ex: Bubble Sort). Troque os blocos com farm.swap() até alinhar a fileira em ordem crescente para bônus massivo de Biomassa.',
+    docDetail: 'Planta culturas de alta precisão agronômica que recebem notas numéricas de 1 a 9 (lidas com world.measure()).\n\nSISTEMA DE MATURAÇÃO DE NOTAS:\n• Ao atingir 100% de crescimento, enquanto mantida com Umidade >= 75% (0.75), a planta consome 15% de umidade a cada 5 ticks para subir +1 Nota (ex: de Nota 3 para 4).\n• Ao manter o solo irrigado (com farm.water()), o jogador/robô pode cultivar a planta até a Nota Máxima 9.\n• Rende Biomassa igual a (Nota x 2) na colheita.',
     exampleCode: 'farm.plant("GRADED_PLANT")',
     parameters: [
       {
@@ -438,37 +438,6 @@ export const API_CATALOG: ApiItem[] = [
       'Mede-se a nota da planta atual com world.measure().'
     ],
     expectedOutput: 'Planta Graduada com nota atribuída.'
-  },
-  {
-    id: 'farm_swap',
-    namespace: 'farm',
-    methodName: 'swap',
-    displayText: 'farm.swap("RIGHT")',
-    signature: 'farm.swap(direction: string): boolean',
-    pythonSnippet: 'farm.swap("RIGHT")',
-    jsSnippet: 'farm.swap("RIGHT")',
-    description: 'Troca a planta atual com o lote vizinho na direção especificada.',
-    techId: 'AGRO_7',
-    category: 'Comandos da Fazenda',
-    docDetail: 'Comando fundamental para ordenação de lavouras. Permite mover culturas para esquerda, direita, cima ou baixo sem precisar recalcular todo o solo.',
-    exampleCode: 'if world.measure() > neighbor_val:\n    farm.swap("RIGHT")',
-    parameters: [
-      {
-        name: 'direction',
-        type: 'string',
-        description: 'Direção do lote vizinho a ser trocado.',
-        required: true,
-        allowedValues: ['"RIGHT"', '"LEFT"', '"FORWARD"', '"BACKWARD"', '"NORTH"', '"SOUTH"', '"WEST"', '"EAST"']
-      }
-    ],
-    returns: {
-      type: 'boolean',
-      description: 'Retorna true se a troca foi executada.'
-    },
-    usabilityNotes: [
-      'Utilize em laços de troca para implementar algoritmos de ordenação por comparação.'
-    ],
-    expectedOutput: 'Plantas entre as duas células vizinhas trocadas de posição.'
   },
   {
     id: 'farm_prestige',
@@ -1038,7 +1007,7 @@ export const API_CATALOG: ApiItem[] = [
     description: 'Guia completo de maturação (0% a 100%), taxas base por tick, multiplicadores de umidade, exigências de solo e rendimentos das culturas.',
     techId: 'AGRO_1',
     category: 'Mecânicas de Jogo',
-    docDetail: 'Passo a Passo do Sistema Agrícola e Maturação:\n\n1. CICLO DE CRESCIMENTO (% DE MATURAÇÃO):\n• Toda semente inicia com 0% de crescimento (ou 30% em brotos selvagens espontâneos).\n• A cada tick da simulação, a planta acumula uma % de crescimento até atingir exatamente 100% (Maturação Completa).\n• Apenas quando a planta atinge 100%, o sensor farm.can_harvest() retorna true e farm.harvest() colhe o recurso. Tentativas de colheita antes dos 100% falham sem conceder itens.\n\n2. TAXAS BASE E EXIGÊNCIAS POR ESPÉCIE (% POR TICK):\n• Fibra Selvagem (WILD_FIBER): +5% por tick. Cresce em qualquer solo. Rende +1 Fibra.\n• Arbusto de Madeira (WOODY_BUSH): +3% por tick. Cresce em qualquer solo. Rende +1 Madeira.\n• Raízes Cultivadas (CULTIVATED_ROOT): +4% por tick EXCLUSIVAMENTE em Solo Arado (TILLED). Em solo Natural ou Irrigado, taxa = 0% (crescimento congelado!). Rende +2 Raízes.\n• Árvores Nobres (TREE): +2% por tick sem vizinho / +1% com vizinho. Exige EXCLUSIVAMENTE Solo Arado (TILLED). Rende +5 Madeiras sem vizinhos ou apenas +1 com vizinho (igual ao Arbusto WOODY_BUSH, Padrão Xadrez recomendado).\n• Colônia de Frutas (FRUIT_COLONY): +2% por tick. Exige Umidade >= 75% (0.75). Rende +4 Frutas base +2 por colônia vizinha madura (até 12 Frutas por bloco em grade 3x3!).\n• Flor de Energia (ENERGY_FLOWER): +2% por tick. Exige Umidade >= 75% (0.75). Oscila energia entre 10 e 90. Rende de +1 a +9 Energias ao colher no pico lido com world.measure().\n• Planta Graduada (GRADED_PLANT): +2% por tick. Exige Umidade >= 75%. Possui notas de 1 a 9 lidas com world.measure(). Ordene com farm.swap() para bônus de Biomassa.\n\n3. MULTIPLICADOR DE UMIDADE NO CRESCIMENTO:\n• Umidade 0.5 (50%): Velocidade padrão 1.0x.\n• Umidade > 0.5: Acelera até +60% (em 100% de umidade, velocidade = 1.6x!).\n• Umidade < 0.5: Desacelera o crescimento.\n• Umidade <= 0.25: O crescimento para totalmente (0%).\n• Atenção: Frutas, Flores e Graduadas PARAM de crescer se a umidade for menor que 75% (0.75)!\n\n4. MÉTODOS DA API E LEITURA DE ENTIDADES:\n• Use world.entity() para consultar qual planta está no bloco.\n• Use world.measure() (Pesquisa SYS_3) para ler valores de energia e notas graduadas.',
+    docDetail: 'Passo a Passo do Sistema Agrícola e Maturação:\n\n1. CICLO DE CRESCIMENTO (% DE MATURAÇÃO):\n• Toda semente inicia com 0% de crescimento (ou 30% em brotos selvagens espontâneos).\n• A cada tick da simulação, a planta acumula uma % de crescimento até atingir exatamente 100% (Maturação Completa).\n• Apenas quando a planta atinge 100%, o sensor farm.can_harvest() retorna true e farm.harvest() colhe o recurso. Tentativas de colheita antes dos 100% falham sem conceder itens.\n\n2. TAXAS BASE E EXIGÊNCIAS POR ESPÉCIE (% POR TICK):\n• Fibra Selvagem (WILD_FIBER): +5% por tick. Cresce em qualquer solo. Rende +1 Fibra.\n• Arbusto de Madeira (WOODY_BUSH): +3% por tick. Cresce em qualquer solo. Rende +1 Madeira.\n• Raízes Cultivadas (CULTIVATED_ROOT): +4% por tick EXCLUSIVAMENTE em Solo Arado (TILLED). Em solo Natural ou Irrigado, taxa = 0% (crescimento congelado!). Rende +2 Raízes.\n• Árvores Nobres (TREE): +2% por tick sem vizinho / +1% com vizinho. Exige EXCLUSIVAMENTE Solo Arado (TILLED). Rende +5 Madeiras sem vizinhos ou apenas +1 com vizinho (igual ao Arbusto WOODY_BUSH, Padrão Xadrez recomendado).\n• Colônia de Frutas (FRUIT_COLONY): +2% por tick. Exige Umidade >= 75% (0.75). Rende +4 Frutas base +2 por colônia vizinha madura (até 12 Frutas por bloco em grade 3x3!).\n• Flor de Energia (ENERGY_FLOWER): +2% por tick. Exige Umidade >= 75% (0.75). Oscila energia entre 10 e 90. Rende de +1 a +9 Energias ao colher no pico lido com world.measure().\n• Planta Graduada (GRADED_PLANT): +2% por tick. Exige Umidade >= 75%. Possui notas de 1 a 9 lidas com world.measure(). Ao atingir 100% de crescimento, se mantida com Umidade >= 75%, consome 15% de umidade a cada 5 ticks para subir +1 Nota (até o máximo de Nota 9). Rende Biomassa igual a (Nota x 2).\n\n3. MULTIPLICADOR DE UMIDADE NO CRESCIMENTO:\n• Umidade 0.5 (50%): Velocidade padrão 1.0x.\n• Umidade > 0.5: Acelera até +60% (em 100% de umidade, velocidade = 1.6x!).\n• Umidade < 0.5: Desacelera o crescimento.\n• Umidade <= 0.25: O crescimento para totalmente (0%).\n• Atenção: Frutas, Flores e Graduadas PARAM de crescer se a umidade for menor que 75% (0.75)!\n\n4. MÉTODOS DA API E LEITURA DE ENTIDADES:\n• Use world.entity() para consultar qual planta está no bloco.\n• Use world.measure() (Pesquisa SYS_3) para ler valores de energia e notas graduadas.',
     exampleCode: 'if farm.can_harvest():\n    if world.entity() == "ENERGY_FLOWER":\n        if world.measure() >= 70:\n            farm.harvest()\n    else:\n        farm.harvest()',
     parameters: [],
     returns: {

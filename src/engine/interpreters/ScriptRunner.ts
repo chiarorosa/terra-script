@@ -1514,16 +1514,6 @@ export class ScriptRunner {
         return this.engine.offerPrestigeResource(ctx.agentId, agent.x, agent.y, resourceArg, amountArg);
       }
     }
-    if (expr.includes('farm.swap(')) {
-      if (!this.engine.isTechUnlocked('AGRO_7')) {
-        throw new Error("Recurso 'Trocar Terrenos (Swap)' está bloqueado! Pesquise AGRO_7 na Árvore de Pesquisa.");
-      }
-      const rawArg = expr.match(/farm\.swap\((.*?)\)/)?.[1]?.trim();
-      const evaluated = rawArg ? this.evalExpression(rawArg, ctx) : 'RIGHT';
-      const dirArg = evaluated !== undefined && evaluated !== null ? String(evaluated) : 'RIGHT';
-      ctx.actionsPerformedInRun++;
-      return this.engine.swapTiles(ctx.agentId, agent.x, agent.y, dirArg);
-    }
     if (expr.includes('farm.get_companion()')) {
       return this.engine.getCompanionRequest(agent.x, agent.y);
     }
@@ -1606,6 +1596,23 @@ export class ScriptRunner {
       }
       return this.engine.getTile(agent.x, agent.y).crop;
     }
+    if (expr.includes('farm.fertilize()') || expr.includes('world.fertilize()')) {
+      ctx.actionsPerformedInRun++;
+      return this.engine.fertilizeTile(ctx.agentId, agent.x, agent.y);
+    }
+
+    if (
+      expr.includes('world.soil()') ||
+      expr.includes('world.get_soil()') ||
+      expr.includes('farm.soil()') ||
+      expr.includes('farm.get_soil()')
+    ) {
+      if (!this.engine.isTechUnlocked('SYS_2')) {
+        throw new Error("Recurso 'Sensores Básicos & Coordenadas' está bloqueado! Pesquise SYS_2 na Árvore de Pesquisa.");
+      }
+      return this.engine.getSoilQuality(agent.x, agent.y);
+    }
+
     if (
       expr.includes('world.moisture()') ||
       expr.includes('world.get_moisture()')

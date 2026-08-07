@@ -85,6 +85,9 @@ export interface TileState {
   growth: number; // 0 to 100%
   moisture: number; // 0.0 to 1.0
   grade?: number; // 1 to 9 for GRADED_PLANT
+  gradeProgressTicks?: number; // Ticks counter for GRADED_PLANT grade maturation
+  soilQuality?: number; // 0 to 100 for World Change 2 Fertilization
+  noHarvestTicks?: number; // Ticks counter without harvesting for soil regeneration
   energyValue?: number; // 1 to 100 for ENERGY_FLOWER
   companionRequest?: CompanionRequest;
   isMazeWall?: boolean;

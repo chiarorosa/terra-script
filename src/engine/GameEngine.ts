@@ -79,7 +79,7 @@ export const INITIAL_TECH_TREE: TechNode[] = [
   { id: 'AGRO_4', branch: 'AGRONOMY', name: 'Árvores e Madeira Nobre', description: 'Plante árvores. Evite árvores adjacentes para acelerar o crescimento.', tier: 3, cost: { wood: 150, roots: 60 }, unlocked: false, requires: ['AGRO_3'] },
   { id: 'AGRO_5', branch: 'AGRONOMY', name: 'Colônias de Frutas', description: 'Plantações de frutas conectadas geram recompensas multiplicadas.', tier: 4, cost: { wood: 300, roots: 150 }, unlocked: false, requires: ['AGRO_4'] },
   { id: 'AGRO_6', branch: 'AGRONOMY', name: 'Flores de Energia', description: 'Meça o nível de energia das flores com measure() e colha no pico.', tier: 5, cost: { roots: 1000, fruits: 200 }, unlocked: false, requires: ['AGRO_5'] },
-  { id: 'AGRO_7', branch: 'AGRONOMY', name: 'Culturas Graduadas', description: 'Plante culturas graduadas e ordene fileiras com swap() para biomassa.', tier: 6, cost: { energy: 2000, fruits: 1000 }, unlocked: false, requires: ['AGRO_6'] },
+  { id: 'AGRO_7', branch: 'AGRONOMY', name: 'Culturas Graduadas', description: 'Plante culturas graduadas de alta qualidade (notas 1 a 9) para colher grande quantidade de biomassa.', tier: 6, cost: { energy: 2000, fruits: 1000 }, unlocked: false, requires: ['AGRO_6'] },
   { id: 'AGRO_8', branch: 'AGRONOMY', name: 'SEGREDO', description: 'Conteúdo ultrassecreto em desenvolvimento. Instigação para futuras expansões.', tier: 10, cost: { energy: 9999, crystals: 42 }, unlocked: false, requires: ['AGRO_7'] },
 
   // SYSTEMS BRANCH
@@ -359,6 +359,8 @@ export class GameEngine {
                 growth: typeof t.growth === 'number' && Number.isFinite(t.growth) ? t.growth : 0,
                 moisture: typeof t.moisture === 'number' && Number.isFinite(t.moisture) ? Math.max(0, Math.min(1.5, t.moisture)) : 0.75,
                 grade: typeof t.grade === 'number' ? t.grade : getWeightedRandomGrade(),
+                soilQuality: typeof t.soilQuality === 'number' ? t.soilQuality : 100,
+                noHarvestTicks: typeof t.noHarvestTicks === 'number' ? t.noHarvestTicks : 0,
                 energyValue: typeof t.energyValue === 'number' ? t.energyValue : Math.floor(Math.random() * 80) + 20
               });
             }
@@ -480,6 +482,8 @@ export class GameEngine {
             growth: (c === 0 && r === 0) ? 100 : 0,
             moisture: 0.75,
             grade: getWeightedRandomGrade(),
+            soilQuality: 100,
+            noHarvestTicks: 0,
             energyValue: Math.floor(Math.random() * 80) + 20
           });
         }
@@ -590,6 +594,8 @@ export class GameEngine {
           growth: 0,
           moisture: 0.75,
           grade: getWeightedRandomGrade(),
+          soilQuality: 100,
+          noHarvestTicks: 0,
           energyValue: Math.floor(Math.random() * 80) + 20
         });
       }
@@ -748,6 +754,11 @@ export class GameEngine {
           tile.ground = 'IRRIGATED';
         }
       } else if (tile.crop !== 'NONE' && tile.growth < 100) {
+        // World Change 2 (Nível 50+): NENHUMA cultura cresce com qualidade do solo em ZERO
+        if (this.prestige.level >= 50 && (tile.soilQuality ?? 100) <= 0) {
+          return;
+        }
+
         // Rule A: No crop grows if moisture <= 0.25
         if (tile.moisture <= 0.25) {
           return;
@@ -800,6 +811,19 @@ export class GameEngine {
 
         // Crops consume moisture as they grow
         tile.moisture = Math.max(0, Math.round((tile.moisture - 0.003) * 1000) / 1000);
+      } else if (tile.crop === 'GRADED_PLANT' && tile.growth >= 100) {
+        // Maturation of Grade for GRADED_PLANT when growth reaches 100%:
+        // Consumes 15% moisture every 5 ticks to advance +1 Grade (up to max Grade 9)
+        if ((tile.grade || 1) < 9 && tile.moisture >= 0.75) {
+          tile.gradeProgressTicks = (tile.gradeProgressTicks || 0) + 1;
+          if (tile.gradeProgressTicks >= 5) {
+            tile.gradeProgressTicks = 0;
+            tile.grade = Math.min(9, (tile.grade || 1) + 1);
+            tile.moisture = Math.max(0, Math.round((tile.moisture - 0.15) * 1000) / 1000);
+          }
+        } else {
+          tile.gradeProgressTicks = 0;
+        }
       } else if (tile.crop === 'NONE' && tile.moisture > 0.5) {
         // Unplanted moist soil slowly evaporates
         tile.moisture = Math.max(0, Math.round((tile.moisture - 0.001) * 1000) / 1000);
@@ -808,6 +832,17 @@ export class GameEngine {
       // Revert IRRIGATED ground to NATURAL when moisture drops to 25% or below
       if (tile.moisture <= 0.25 && tile.ground === 'IRRIGATED') {
         tile.ground = 'NATURAL';
+      }
+
+      // World Change 2 (Nível 50+): Regeneração Natural do Solo (+5% a cada 5 ticks sem colher)
+      if (this.prestige.level >= 50) {
+        tile.noHarvestTicks = (tile.noHarvestTicks || 0) + 1;
+        if (tile.noHarvestTicks >= 5) {
+          tile.noHarvestTicks = 0;
+          if ((tile.soilQuality ?? 100) < 100) {
+            tile.soilQuality = Math.min(100, (tile.soilQuality ?? 100) + 5);
+          }
+        }
       }
       
       // Auto-grow wild fiber on any unplanted ground periodically (excluding soaked soil) - Increased spawn rate
@@ -936,9 +971,15 @@ export class GameEngine {
     let tile = this.tiles.get(key);
     if (!tile) {
       tile = {
-        x, y, ground: 'NATURAL', crop: 'NONE', growth: 0, moisture: 0.75
+        x, y, ground: 'NATURAL', crop: 'NONE', growth: 0, moisture: 0.75, soilQuality: 100, noHarvestTicks: 0
       };
       this.tiles.set(key, tile);
+    }
+    if (typeof tile.soilQuality !== 'number') {
+      tile.soilQuality = 100;
+    }
+    if (typeof tile.noHarvestTicks !== 'number') {
+      tile.noHarvestTicks = 0;
     }
     return tile;
   }
@@ -1019,6 +1060,40 @@ export class GameEngine {
     return true;
   }
 
+  // =========================================================================
+  // WORLD CHANGE 2: FERTILIZATION & SOIL QUALITY (PRESTIGE LEVEL >= 50)
+  // =========================================================================
+  public getSoilQuality(x: number, y: number): number {
+    const t = this.getTile(x, y);
+    return typeof t.soilQuality === 'number' ? t.soilQuality : 100;
+  }
+
+  public fertilizeTile(agentId: number, x: number, y: number): boolean {
+    if (this.prestige.level < 50) {
+      this.addLog(agentId, 'stderr', `🚨 Guardrail de Progresso: Adubagem (fertilize) é uma Mudança do Mundo liberada a partir do Nível 50 de Prestígio!`);
+      return false;
+    }
+
+    const t = this.getTile(x, y);
+    const currentSoil = typeof t.soilQuality === 'number' ? t.soilQuality : 100;
+    if (currentSoil > 0) {
+      this.addLog(agentId, 'stderr', `🚨 O comando farm.fertilize() só pode ser usado em blocos com qualidade de solo em 0! (Atual: ${currentSoil})`);
+      return false;
+    }
+
+    t.soilQuality = 100;
+    t.noHarvestTicks = 0;
+    this.totalActionsPerformed++;
+    const ag = this.getAgent(agentId);
+    if (ag) {
+      if (!ag.stats) ag.stats = createDefaultAgentStats();
+      ag.actionMessage = `Fertilized tile at (${x},${y})`;
+    }
+    audioManager.playPlant();
+    this.saveEngineState();
+    return true;
+  }
+
   public harvestTile(agentId: number, x: number, y: number): boolean {
     const t = this.getTile(x, y);
     if (t.crop === 'PRESTIGE' || t.ground === 'PRESTIGE') {
@@ -1038,45 +1113,70 @@ export class GameEngine {
     }
 
     let yieldAmt = 1;
+    const applySoilYieldMultiplier = (baseAmt: number): number => {
+      if (baseAmt <= 1) return baseAmt;
+      if (this.prestige.level >= 50) {
+        const soil = typeof t.soilQuality === 'number' ? t.soilQuality : 100;
+        return Math.max(1, Math.floor(baseAmt * (soil / 100)));
+      }
+      return baseAmt;
+    };
+
     if (t.crop === 'WILD_FIBER') {
-      this.resources.fiber += yieldAmt;
-      if (ag) ag.stats.harvestedResources.fiber += yieldAmt;
+      const finalAmt = applySoilYieldMultiplier(1);
+      this.resources.fiber += finalAmt;
+      if (ag) ag.stats.harvestedResources.fiber += finalAmt;
     } else if (t.crop === 'WOODY_BUSH') {
-      this.resources.wood += yieldAmt;
-      if (ag) ag.stats.harvestedResources.wood += yieldAmt;
+      const finalAmt = applySoilYieldMultiplier(1);
+      this.resources.wood += finalAmt;
+      if (ag) ag.stats.harvestedResources.wood += finalAmt;
     } else if (t.crop === 'TREE') {
-      const bonus = this.hasAdjacentCrop(x, y, 'TREE') ? 1 : 5;
+      const base = this.hasAdjacentCrop(x, y, 'TREE') ? 1 : 5;
+      const bonus = applySoilYieldMultiplier(base);
       this.resources.wood += bonus;
       if (ag) ag.stats.harvestedResources.wood += bonus;
     } else if (t.crop === 'CULTIVATED_ROOT') {
-      this.resources.roots += 2;
-      if (ag) ag.stats.harvestedResources.roots += 2;
+      const bonus = applySoilYieldMultiplier(2);
+      this.resources.roots += bonus;
+      if (ag) ag.stats.harvestedResources.roots += bonus;
     } else if (t.crop === 'FRUIT_COLONY') {
       // Sinergia de bloco: 4 frutas base + 2 por colônia vizinha madura (até 12 frutas por lote)
       const adjCount = this.countAdjacentMatureCrops(x, y, 'FRUIT_COLONY');
-      const fruitBonus = 4 + (adjCount * 2);
+      const base = 4 + (adjCount * 2);
+      const fruitBonus = applySoilYieldMultiplier(base);
       this.resources.fruits += fruitBonus;
       if (ag) ag.stats.harvestedResources.fruits += fruitBonus;
     } else if (t.crop === 'ENERGY_FLOWER') {
-      const bonus = Math.max(1, Math.floor((t.energyValue || 50) / 10));
+      const base = Math.max(1, Math.floor((t.energyValue || 50) / 10));
+      const bonus = applySoilYieldMultiplier(base);
       this.resources.energy += bonus;
       if (ag) ag.stats.harvestedResources.energy += bonus;
     } else if (t.crop === 'GRADED_PLANT') {
-      const bioBonus = (t.grade || 1) * 2;
+      const base = (t.grade || 1) * 2;
+      const bioBonus = applySoilYieldMultiplier(base);
       this.resources.biomass += bioBonus;
       if (ag) ag.stats.harvestedResources.biomass += bioBonus;
     } else if (t.crop === 'MAZE_CORE') {
-      this.resources.crystals += 5;
-      if (ag) ag.stats.harvestedResources.crystals += 5;
+      const base = 5;
+      const bonus = applySoilYieldMultiplier(base);
+      this.resources.crystals += bonus;
+      if (ag) ag.stats.harvestedResources.crystals += bonus;
       this.addLog(agentId, 'system', 'MAZE CORE HARVESTED! +5 Crystals');
     }
 
     t.crop = 'NONE';
     t.growth = 0;
+    t.gradeProgressTicks = 0;
     // Consome 0.25 (25%) de umidade ao colher
     t.moisture = Math.max(0, Math.round((t.moisture - 0.25) * 1000) / 1000);
     if (t.moisture <= 0.25 && t.ground === 'IRRIGATED') {
       t.ground = 'NATURAL';
+    }
+
+    // World Change 2 (Nível 50+): Cada colheita reduz 20% da qualidade do solo no bloco e reseta o contador de ticks sem colheita
+    if (this.prestige.level >= 50) {
+      t.soilQuality = Math.max(0, (typeof t.soilQuality === 'number' ? t.soilQuality : 100) - 20);
+      t.noHarvestTicks = 0;
     }
 
     // =========================================================================
@@ -1256,6 +1356,7 @@ export class GameEngine {
     t.growth = 0;
     if (crop === 'GRADED_PLANT') {
       t.grade = getWeightedRandomGrade();
+      t.gradeProgressTicks = 0;
     }
     audioManager.playPlant();
     if (ag) {
@@ -1282,41 +1383,6 @@ export class GameEngine {
       return 'WEST';
     }
     return 'EAST';
-  }
-
-  public swapTiles(agentId: number, x: number, y: number, dirStr: string): boolean {
-    if (!this.isTechUnlocked('AGRO_7')) {
-      this.addLog(agentId, 'stderr', `🚨 Guardrail de Progresso: farm.swap() requer o desbloqueio de Culturas Graduadas (AGRO_7)!`);
-      return false;
-    }
-
-    const dir = this.normalizeDirection(dirStr);
-    let targetX = x;
-    let targetY = y;
-    if (dir === 'EAST') targetX = (x + 1) % this.width;
-    else if (dir === 'WEST') targetX = (x - 1 + this.width) % this.width;
-    else if (dir === 'NORTH') targetY = (y + 1) % this.height;
-    else if (dir === 'SOUTH') targetY = (y - 1 + this.height) % this.height;
-
-    const t1 = this.getTile(x, y);
-    const t2 = this.getTile(targetX, targetY);
-
-    if (t1.ground === 'PRESTIGE' || t1.crop === 'PRESTIGE' || t2.ground === 'PRESTIGE' || t2.crop === 'PRESTIGE') {
-      this.addLog(agentId, 'stderr', `🚨 O Bloco de Prestígio Dourado é fixo e não pode ser trocado de lugar!`);
-      return false;
-    }
-
-    // Swap crops and grades
-    const tempCrop = t1.crop;
-    const tempGrade = t1.grade;
-    t1.crop = t2.crop;
-    t1.grade = t2.grade;
-    t2.crop = tempCrop;
-    t2.grade = tempGrade;
-
-    this.totalActionsPerformed++;
-    this.saveEngineState();
-    return true;
   }
 
   public getCompanionRequest(x: number, y: number): any {
