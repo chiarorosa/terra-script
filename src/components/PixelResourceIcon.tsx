@@ -97,6 +97,31 @@ export function PixelBiomassIcon({ className = "w-4 h-4" }: { className?: string
   );
 }
 
+export function PixelBoxIcon({ className = "w-4 h-4" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 16 16" className={className} shapeRendering="crispEdges" fill="none" xmlns="http://www.w3.org/2000/svg">
+      {/* Wooden Chest / Box Base */}
+      <rect x="2" y="3" width="12" height="11" fill="#78350f" />
+      {/* Wood Top Highlight */}
+      <rect x="3" y="4" width="10" height="2" fill="#b45309" />
+      <rect x="3" y="4" width="10" height="1" fill="#d97706" />
+      {/* Lid Seam */}
+      <rect x="2" y="6" width="12" height="1" fill="#451a03" />
+      {/* Wood Front Panel */}
+      <rect x="3" y="7" width="10" height="6" fill="#92400e" />
+      {/* Metal Corner Straps */}
+      <rect x="2" y="3" width="2" height="11" fill="#475569" />
+      <rect x="12" y="3" width="2" height="11" fill="#334155" />
+      <rect x="2" y="3" width="12" height="1" fill="#64748b" />
+      <rect x="2" y="13" width="12" height="1" fill="#1e293b" />
+      {/* Gold Latch */}
+      <rect x="7" y="6" width="2" height="3" fill="#fbbf24" />
+      <rect x="7" y="6" width="2" height="1" fill="#fef08a" />
+      <rect x="7" y="8" width="2" height="1" fill="#b45309" />
+    </svg>
+  );
+}
+
 export function PixelResourceIcon({ type, className = "w-4 h-4" }: { type: string; className?: string }) {
   switch (type) {
     case 'fiber': return <PixelFiberIcon className={className} />;

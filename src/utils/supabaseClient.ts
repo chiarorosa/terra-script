@@ -1,6 +1,7 @@
 /// <reference types="vite/client" />
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { computeSaveChecksum, verifySaveChecksum } from './cryptoUtils';
+import { GAME_ENGINE_VERSION, isVersionMismatch } from '../version';
 
 // Default Supabase Credentials supplied by the user
 const DEFAULT_SUPABASE_URL = "https://cabsokojrjidpvxcjrcj.supabase.co/rest/v1/";
@@ -98,6 +99,31 @@ export function calculateWealthScore(res: {
 
   const totalWeighted = f * 1 + w * 2 + r * 3 + fr * 4 + e * 5 + b * 8 + c * 15 + cr * 25;
   return Math.floor(totalWeighted);
+}
+
+/**
+ * Calculates the total sum of raw units of all resources in stock.
+ */
+export function calculateTotalStock(res: {
+  fiber?: number;
+  wood?: number;
+  roots?: number;
+  fruits?: number;
+  energy?: number;
+  biomass?: number;
+  catalyst?: number;
+  crystals?: number;
+}): number {
+  const f = Math.max(0, Number(res?.fiber) || 0);
+  const w = Math.max(0, Number(res?.wood) || 0);
+  const r = Math.max(0, Number(res?.roots) || 0);
+  const fr = Math.max(0, Number(res?.fruits) || 0);
+  const e = Math.max(0, Number(res?.energy) || 0);
+  const b = Math.max(0, Number(res?.biomass) || 0);
+  const c = Math.max(0, Number(res?.catalyst) || 0);
+  const cr = Math.max(0, Number(res?.crystals) || 0);
+
+  return f + w + r + fr + e + b + c + cr;
 }
 
 export interface CommunityScript {
@@ -301,6 +327,60 @@ export async function loginCloudUser(
 }
 
 /**
+ * Fetches the required game engine version from Supabase 'terrascript_config' table.
+ * If offline or query fails, returns { success: false, isOnline: false }.
+ */
+export async function fetchOnlineEngineVersion(): Promise<{
+  success: boolean;
+  isOnline: boolean;
+  version?: string;
+  message?: string;
+}> {
+  try {
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      return { success: false, isOnline: false, message: 'Dispositivo sem conexão de rede (Offline).' };
+    }
+
+    const { data, error } = await supabase
+      .from('terrascript_config')
+      .select('value')
+      .eq('key', 'game_engine_version')
+      .maybeSingle();
+
+    if (error) {
+      // Table may not exist yet or connection error - fail gracefully
+      return { success: false, isOnline: true, message: error.message };
+    }
+
+    if (data && data.value) {
+      return { success: true, isOnline: true, version: data.value };
+    }
+
+    return { success: false, isOnline: true, message: 'Chave "game_engine_version" não configurada no Supabase.' };
+  } catch (err: any) {
+    return { success: false, isOnline: false, message: err.message || 'Erro ao consultar versão remota.' };
+  }
+}
+
+/**
+ * Background version checker. If online and remote version is different,
+ * triggers reload to ensure client is running the latest engine build.
+ */
+export async function checkAndEnforceVersionMatch(): Promise<{ mismatch: boolean; remoteVersion?: string }> {
+  const versionCheck = await fetchOnlineEngineVersion();
+  if (versionCheck.success && versionCheck.version) {
+    if (isVersionMismatch(GAME_ENGINE_VERSION, versionCheck.version)) {
+      console.warn(`🚨 Versão da engine desatualizada (${GAME_ENGINE_VERSION} -> ${versionCheck.version}). Recarregando a página...`);
+      if (typeof window !== 'undefined') {
+        window.location.reload();
+      }
+      return { mismatch: true, remoteVersion: versionCheck.version };
+    }
+  }
+  return { mismatch: false, remoteVersion: versionCheck.version };
+}
+
+/**
  * Upload Cloud Save with Anti-Fraud Checks & Rate Limiting Verification
  */
 export async function uploadCloudSaveWithAntiFraud(
@@ -314,6 +394,26 @@ export async function uploadCloudSaveWithAntiFraud(
   try {
     if (!playerName || playerName === 'Dev Master' || playerName === 'Programador Anônimo') {
       return { success: false, message: 'É necessário registrar um nome único para sincronizar na nuvem.' };
+    }
+
+    // 0. Version Check: Prevent uploading saves from outdated client engines
+    const versionCheck = await fetchOnlineEngineVersion();
+    if (versionCheck.success && versionCheck.version) {
+      if (isVersionMismatch(GAME_ENGINE_VERSION, versionCheck.version)) {
+        console.warn(`🚨 [Versão Incompatível] Versão Local (${GAME_ENGINE_VERSION}) diferente da Versão do Servidor (${versionCheck.version}). O salvamento na nuvem foi bloqueado.`);
+        
+        // Force refresh to load updated web bundle
+        if (typeof window !== 'undefined') {
+          setTimeout(() => {
+            window.location.reload();
+          }, 1200);
+        }
+
+        return {
+          success: false,
+          message: `Sua versão local (${GAME_ENGINE_VERSION}) difere da versão do servidor (${versionCheck.version}). Salvamento bloqueado por segurança. Recarregando a página...`
+        };
+      }
     }
 
     // 1. HMAC Checksum verification of local save

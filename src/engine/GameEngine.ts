@@ -16,10 +16,18 @@ import {
   createDefaultAgentStats
 } from '../types/game';
 import { getInitialAchievements } from '../data/achievementsData';
+import { GAME_ENGINE_VERSION } from '../version';
+
+export { GAME_ENGINE_VERSION };
 
 export function getRequiredPrestigePointsForLevel(level: number): number {
   if (level >= 100) return Infinity;
   const base = 100 * Math.pow(level, 2.5) + 200 * level;
+  if (level > 70) {
+    const factor50to70 = Math.pow(1.08, 21);
+    const scaleFactor = factor50to70 * Math.pow(1.15, level - 70);
+    return Math.floor(base * scaleFactor);
+  }
   if (level >= 50) {
     const scaleFactor = Math.pow(1.08, level - 49);
     return Math.floor(base * scaleFactor);
@@ -34,6 +42,19 @@ export function getPrestigeResourceMultiplier(level: number, resourceKey: keyof 
   if (level > 50 && ['fiber', 'wood', 'roots'].includes(resourceKey)) return 0.5;
   if (level > 25 && resourceKey === 'fiber') return 0.5;
   return 1.0;
+}
+
+export function getWeightedRandomGrade(): number {
+  const rand = Math.random() * 100;
+  if (rand < 40) return 1;      // 40% - Super Comum (Nota 1)
+  if (rand < 52) return 2;      // 12% - Comum (Nota 2)
+  if (rand < 63) return 3;      // 11% - Comum (Nota 3)
+  if (rand < 73) return 4;      // 10% - Comum (Nota 4)
+  if (rand < 82) return 5;      // 9%  - Comum (Nota 5)
+  if (rand < 89) return 6;      // 7%  - Rara (Nota 6)
+  if (rand < 94) return 7;      // 5%  - Rara (Nota 7)
+  if (rand < 98) return 8;      // 4%  - Muito Rara (Nota 8)
+  return 9;                     // 2%  - Muito Rara (Nota 9)
 }
 import { ExecutionContext, ScriptRunner } from './interpreters/ScriptRunner';
 import { PyodideManager } from './pyodideLoader';
@@ -57,8 +78,8 @@ export const INITIAL_TECH_TREE: TechNode[] = [
   { id: 'AGRO_3', branch: 'AGRONOMY', name: 'Solo Arado e Raízes', description: 'Arare o solo e cultive raízes agrícolas.', tier: 2, cost: { fiber: 80, wood: 40 }, unlocked: false, requires: ['AGRO_2'] },
   { id: 'AGRO_4', branch: 'AGRONOMY', name: 'Árvores e Madeira Nobre', description: 'Plante árvores. Evite árvores adjacentes para acelerar o crescimento.', tier: 3, cost: { wood: 150, roots: 60 }, unlocked: false, requires: ['AGRO_3'] },
   { id: 'AGRO_5', branch: 'AGRONOMY', name: 'Colônias de Frutas', description: 'Plantações de frutas conectadas geram recompensas multiplicadas.', tier: 4, cost: { wood: 300, roots: 150 }, unlocked: false, requires: ['AGRO_4'] },
-  { id: 'AGRO_6', branch: 'AGRONOMY', name: 'Flores de Energia', description: 'Meça o nível de energia das flores com measure() e colha no pico.', tier: 5, cost: { roots: 300, fruits: 180 }, unlocked: false, requires: ['AGRO_5'] },
-  { id: 'AGRO_7', branch: 'AGRONOMY', name: 'Culturas Graduadas', description: 'Plante culturas graduadas e ordene fileiras com swap() para biomassa.', tier: 6, cost: { fruits: 450, energy: 250 }, unlocked: false, requires: ['AGRO_6'] },
+  { id: 'AGRO_6', branch: 'AGRONOMY', name: 'Flores de Energia', description: 'Meça o nível de energia das flores com measure() e colha no pico.', tier: 5, cost: { roots: 1000, fruits: 200 }, unlocked: false, requires: ['AGRO_5'] },
+  { id: 'AGRO_7', branch: 'AGRONOMY', name: 'Culturas Graduadas', description: 'Plante culturas graduadas e ordene fileiras com swap() para biomassa.', tier: 6, cost: { energy: 2000, fruits: 1000 }, unlocked: false, requires: ['AGRO_6'] },
   { id: 'AGRO_8', branch: 'AGRONOMY', name: 'SEGREDO', description: 'Conteúdo ultrassecreto em desenvolvimento. Instigação para futuras expansões.', tier: 10, cost: { energy: 9999, crystals: 42 }, unlocked: false, requires: ['AGRO_7'] },
 
   // SYSTEMS BRANCH
@@ -330,7 +351,7 @@ export class GameEngine {
                 crop: t.crop || 'NONE',
                 growth: typeof t.growth === 'number' && Number.isFinite(t.growth) ? t.growth : 0,
                 moisture: typeof t.moisture === 'number' && Number.isFinite(t.moisture) ? Math.max(0, Math.min(1.5, t.moisture)) : 0.75,
-                grade: typeof t.grade === 'number' ? t.grade : Math.floor(Math.random() * 9) + 1,
+                grade: typeof t.grade === 'number' ? t.grade : getWeightedRandomGrade(),
                 energyValue: typeof t.energyValue === 'number' ? t.energyValue : Math.floor(Math.random() * 80) + 20
               });
             }
@@ -451,7 +472,7 @@ export class GameEngine {
             crop: (c === 0 && r === 0) ? 'WILD_FIBER' : 'NONE',
             growth: (c === 0 && r === 0) ? 100 : 0,
             moisture: 0.75,
-            grade: Math.floor(Math.random() * 9) + 1,
+            grade: getWeightedRandomGrade(),
             energyValue: Math.floor(Math.random() * 80) + 20
           });
         }
@@ -561,7 +582,7 @@ export class GameEngine {
           crop: 'NONE',
           growth: 0,
           moisture: 0.75,
-          grade: Math.floor(Math.random() * 9) + 1,
+          grade: getWeightedRandomGrade(),
           energyValue: Math.floor(Math.random() * 80) + 20
         });
       }
@@ -1101,6 +1122,9 @@ export class GameEngine {
 
     t.crop = crop;
     t.growth = 0;
+    if (crop === 'GRADED_PLANT') {
+      t.grade = getWeightedRandomGrade();
+    }
     audioManager.playPlant();
     if (ag) {
       if (!ag.stats) ag.stats = createDefaultAgentStats();
@@ -1454,9 +1478,9 @@ export class GameEngine {
       fiber: 1,
       wood: 5,
       roots: 25,
-      fruits: 100,
-      energy: 500,
-      biomass: 2000,
+      fruits: 80,
+      energy: 200,
+      biomass: 350,
       catalyst: 0,
       crystals: 0
     };

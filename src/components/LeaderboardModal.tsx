@@ -17,9 +17,10 @@ import {
   fetchLeaderboard, 
   submitLeaderboardScore, 
   calculateWealthScore,
+  calculateTotalStock,
   LeaderboardEntry 
 } from '../utils/supabaseClient';
-import { PixelResourceIcon } from './PixelResourceIcon';
+import { PixelBoxIcon } from './PixelResourceIcon';
 
 interface LeaderboardModalProps {
   engine: GameEngine;
@@ -242,13 +243,24 @@ export const LeaderboardModal: React.FC<LeaderboardModalProps> = ({ engine, onCl
                     <span className="col-span-1">#</span>
                     <span className="col-span-4">Programador(a)</span>
                     <span className="col-span-3 text-right">Pontos Riqueza</span>
-                    <span className="col-span-4 text-right">Amostra Estoque</span>
+                    <span className="col-span-4 text-right">Total no Estoque</span>
                   </div>
                 )}
 
                 {leaderboard.map((entry, idx) => {
                   const computedWealth = entry.wealth_score || calculateWealthScore(entry);
                   const computedExp = entry.prestige_points || ((entry.prestige_level || 1) * 100);
+                  const totalStock = calculateTotalStock(entry);
+                  const typesCount = [
+                    entry.fiber,
+                    entry.wood,
+                    entry.roots,
+                    entry.fruits,
+                    entry.energy,
+                    entry.biomass,
+                    entry.catalyst,
+                    entry.crystals
+                  ].filter(v => (v || 0) > 0).length;
 
                   return (
                     <div key={entry.id || entry.player_name} className={`grid grid-cols-12 px-3 py-2 items-center rounded-lg border text-xs ${
@@ -280,11 +292,14 @@ export const LeaderboardModal: React.FC<LeaderboardModalProps> = ({ engine, onCl
                           <span className="col-span-3 text-right font-bold text-[#38bdf8]">
                             {computedWealth.toLocaleString()} pts
                           </span>
-                          <span className="col-span-4 text-right text-[11px] text-[#a1a1aa] font-mono truncate inline-flex items-center justify-end gap-2">
-                            <span className="inline-flex items-center gap-0.5"><PixelResourceIcon type="fiber" className="w-3 h-3" />{entry.fiber || 0}</span>
-                            <span className="inline-flex items-center gap-0.5"><PixelResourceIcon type="wood" className="w-3 h-3" />{entry.wood || 0}</span>
-                            <span className="inline-flex items-center gap-0.5"><PixelResourceIcon type="energy" className="w-3 h-3" />{entry.energy || 0}</span>
-                            {entry.crystals ? <span className="inline-flex items-center gap-0.5"><Sparkles className="w-3 h-3 text-cyan-400" />{entry.crystals}</span> : null}
+                          <span className="col-span-4 text-right text-xs text-[#cbd5e1] font-mono font-bold truncate inline-flex items-center justify-end gap-1.5">
+                            <PixelBoxIcon className="w-3.5 h-3.5 shrink-0" />
+                            <span>{totalStock.toLocaleString()} un.</span>
+                            {typesCount > 0 && (
+                              <span className="text-[10px] text-[#64748b] font-normal font-sans shrink-0">
+                                ({typesCount} {typesCount === 1 ? 'tipo' : 'tipos'})
+                              </span>
+                            )}
                           </span>
                         </>
                       )}

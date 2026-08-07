@@ -8,10 +8,22 @@ export interface ChangelogRelease {
 
 export const CHANGELOG_HISTORY: ChangelogRelease[] = [
   {
+    version: 'v2.8.1',
+    date: '2026-08-07',
+    title: 'Sincronização Obrigatória de Versão da Engine (Auto Engine Reload & Safe Cloud Saves)',
+    isCurrent: true,
+    changes: [
+      'Controle de Versão Local vs. Online: Adicionada a constante GAME_ENGINE_VERSION no núcleo do jogo e integração com a tabela terrascript_config no Supabase.',
+      'Proteção e Bloqueio de Saves Incompatíveis: Caso o jogador esteja rodando uma versão do cliente inferior/diferente da versão atual do servidor, os uploads de progresso na nuvem são bloqueados para proteger os dados.',
+      'Recarregamento em Segundo Plano sem Quebrar Jogabilidade Offline: O processo de verificação roda periodicamente em segundo plano. Se houver conexão com a internet e a versão do servidor for mais recente, o jogo recarrega a página automaticamente para puxar os novos arquivos. Se estiver offline, o jogador continua jogando normalmente sem travamentos.',
+      'Rebalanciamento de XP do Bloco de Prestígio: Ajuste do Valor Base do Upload de Frutas (80 XP), Energia (200 XP) e Biomassa (350 XP), e introdução de uma 2ª curva de experiência acima do Nível 70 (+15% de XP por nível).'
+    ]
+  },
+  {
     version: 'v2.8.0',
     date: '2026-08-06',
     title: 'Novo Sistema e Menu de Conquistas (Achievements Engine & UI)',
-    isCurrent: true,
+    isCurrent: false,
     changes: [
       'Novo Menu de Conquistas (Achievements UI): Substituição e expansão da antiga estrutura rígida de Marcos (Milestones) por um Menu de Conquistas completo, dinâmico e expansível.',
       'Desbloqueios de Interface e Mecânicas: Conquistas divididas em categorias estratégicas (Interface, Mecânicas de Jogo, Estatísticas de Progresso e Ações Especiais/Segredos).',

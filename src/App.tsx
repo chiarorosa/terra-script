@@ -19,7 +19,7 @@ import { LeaderboardModal } from './components/LeaderboardModal';
 import { AchievementsModal } from './components/AchievementsModal';
 import { PixelGiftIcon } from './components/PixelGiftIcon';
 import { audioManager } from './utils/audioManager';
-import { uploadCloudSaveWithAntiFraud } from './utils/supabaseClient';
+import { uploadCloudSaveWithAntiFraud, checkAndEnforceVersionMatch } from './utils/supabaseClient';
 
 export default function App() {
   const vfs = useMemo(() => new VirtualFS(), []);
@@ -69,9 +69,16 @@ export default function App() {
     };
   }, []);
 
-  // Automatic sync when internet connection is restored or periodically every 60s
+  // Automatic sync and version check when internet connection is restored or periodically (every 60s for sync / version check)
   useEffect(() => {
     const handleSync = async () => {
+      // 1. First check background version mismatch (forces reload if server has a new engine version)
+      const versionResult = await checkAndEnforceVersionMatch();
+      if (versionResult.mismatch) {
+        return; // Page is reloading
+      }
+
+      // 2. Perform background cloud save if player is registered
       const isMigrated = localStorage.getItem('terrascript_migrated') === 'true';
       const playerName = localStorage.getItem('terrascript_programmer_name');
       if (isMigrated && playerName && playerName !== 'Dev Master' && playerName !== 'Programador Anônimo') {
@@ -90,6 +97,9 @@ export default function App() {
       }
     };
 
+    // Initial check on mount
+    handleSync();
+
     const handleOnline = async () => {
       await handleSync();
       setToastNotification({
@@ -101,7 +111,7 @@ export default function App() {
     };
 
     window.addEventListener('online', handleOnline);
-    const syncInterval = setInterval(handleSync, 60000);
+    const syncInterval = setInterval(handleSync, 60000); // Check version & sync every 60 seconds
 
     return () => {
       window.removeEventListener('online', handleOnline);

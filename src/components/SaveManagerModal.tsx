@@ -530,7 +530,7 @@ export const SaveManagerModal: React.FC<SaveManagerModalProps> = ({
                         <div>
                           <span className="text-xs font-bold text-white block">{save.player_name}</span>
                           <span className="text-[11px] text-[#8a8f98] font-mono">
-                            Fibra: {save.fiber} | Prestígio: Lv.{save.prestige_level} | Atualizado: {new Date(save.updated_at || '').toLocaleDateString('pt-BR')}
+                            Fibra: {save.fiber} | Prestígio: Lv.{save.prestige_level} | Atualizado: {save.updated_at ? new Date(save.updated_at).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'N/A'}
                           </span>
                         </div>
 
