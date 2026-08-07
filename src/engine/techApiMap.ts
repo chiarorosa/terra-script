@@ -419,7 +419,7 @@ export const API_CATALOG: ApiItem[] = [
     description: 'Planta culturas graduadas que recebem notas numéricas de 1 a 9.',
     techId: 'AGRO_7',
     category: 'Comandos da Fazenda',
-    docDetail: 'Planta culturas de alta precisão agronômica que recebem notas numéricas de 1 a 9 (lidas com world.measure()).\n\nSISTEMA DE MATURAÇÃO DE NOTAS:\n• Ao atingir 100% de crescimento, enquanto mantida com Umidade >= 75% (0.75), a planta consome 15% de umidade a cada 5 ticks para subir +1 Nota (ex: de Nota 3 para 4).\n• Ao manter o solo irrigado (com farm.water()), o jogador/robô pode cultivar a planta até a Nota Máxima 9.\n• Rende Biomassa igual a (Nota x 2) na colheita.',
+    docDetail: 'Passo a Passo do Sistema de Planta Graduada (GRADED_PLANT):\n\n1. VISÃO GERAL & PLANTIO:\n• As plantas graduadas são safras de alta precisão que recebem notas numéricas de 1 a 9 ao serem semeadas.\n• Podem ser semeadas no bloco com o comando farm.plant("GRADED_PLANT").\n\n2. SISTEMA DE MATURAÇÃO DE NOTAS:\n• Ao atingir 100% de crescimento, enquanto mantida com Umidade >= 75% (0.75), a planta consome 15% de umidade a cada 5 ticks para subir +1 Nota (ex: da Nota 3 para Nota 4).\n• Ao manter o solo adequadamente irrigado (com farm.water()), o jogador/robô pode evoluir a planta até a Nota Máxima 9.\n• A nota atual pode ser lida a qualquer instante utilizando o sensor numérico world.measure().\n\n3. RENDIMENTO NA COLHEITA:\n• Ao colher uma GRADED_PLANT madura, ela concede unidades de Biomassa igual ao dobro da nota atual: Biomassa = (Nota x 2).',
     exampleCode: 'farm.plant("GRADED_PLANT")',
     parameters: [
       {
@@ -438,6 +438,30 @@ export const API_CATALOG: ApiItem[] = [
       'Mede-se a nota da planta atual com world.measure().'
     ],
     expectedOutput: 'Planta Graduada com nota atribuída.'
+  },
+  {
+    id: 'farm_fertilize',
+    namespace: 'farm',
+    methodName: 'fertilize',
+    displayText: 'farm.fertilize()',
+    signature: 'farm.fertilize(): boolean',
+    pythonSnippet: 'sucesso = farm.fertilize()',
+    jsSnippet: 'const sucesso = farm.fertilize();',
+    description: 'Aduba o solo do bloco atual onde o agente está posicionado, restaurando a Qualidade do Solo de 0% para 100% (Requer Prestígio Nível 50+).',
+    techId: 'SYS_1',
+    category: 'Comandos da Fazenda',
+    docDetail: 'Passo a Passo do Comando farm.fertilize() (Mudança do Mundo - Prestígio 50+):\n\n1. O QUE É O COMANDO DE ADUBAGEM?\n• A partir do Nível 50 de Prestígio, ativa-se o sistema de qualidade do solo. Todo bloco inicia com solo zerado [z] = 0 (no início do jogo ou após world.clear()).\n• Nenhuma planta cresce em solo com qualidade 0. Executar farm.fertilize() aplica adubo no bloco atual, restaurando a Qualidade do Solo para 100%.\n\n2. REGRAS E CONDIÇÕES DE USO:\n• Posição do Agente: O agente deve estar exatamente sobre o bloco que deseja adubar.\n• Solo em Zero: O comando só pode ser utilizado em blocos com Qualidade do Solo em zero (soil == 0). Tentar adubar um solo que já tem fertilidade (ex: 20% ou 80%) gera um alerta e não consome adubo.\n• Nível de Prestígio: Requer Nível 50 ou superior de Prestígio.\n\n3. CICLO DE VIDA DO SOLO:\n• Solo Zerado (0%): Impede o crescimento de safras e não se regenera sozinho. Exige farm.fertilize().\n• Solo Fertilizado (100%): Permite crescimento em velocidade máxima. Cada colheita reduz -20% da qualidade do solo.\n• Solo Parcial (1% a 99%): Se mantido sem colher por 20 ticks consecutivos, o solo regenera +5% de fertilidade naturalmente.',
+    exampleCode: 'if farm.soil() == 0:\n    if farm.fertilize():\n        print("Bloco adubado com sucesso!")',
+    parameters: [],
+    returns: {
+      type: 'boolean',
+      description: 'Retorna true se o solo estava em 0 e foi adubado com sucesso para 100%, ou false se falhou.'
+    },
+    usabilityNotes: [
+      '1. Combine o sensor farm.soil() com farm.fertilize() para garantir que você só aplique adubo em blocos zerados.',
+      '2. Em códigos de preparação de solo, execute farm.fertilize() antes de semear sementes nos blocos.'
+    ],
+    expectedOutput: 'Solo do bloco restaurado para 100% de qualidade.'
   },
   {
     id: 'farm_prestige',
@@ -751,6 +775,43 @@ export const API_CATALOG: ApiItem[] = [
     ],
     expectedOutput: 'Número (ex: 7 ou 82.5).'
   },
+  {
+    id: 'farm_soil',
+    namespace: 'farm',
+    methodName: 'soil',
+    displayText: 'farm.soil(x?, y?)',
+    signature: 'farm.soil(x?: number, y?: number): number',
+    pythonSnippet: 'qualidade = farm.soil()',
+    jsSnippet: 'const qualidade = farm.soil();',
+    description: 'Retorna o valor numérico da Qualidade do Solo (0 a 100) do bloco atual ou das coordenadas especificadas.',
+    techId: 'SYS_2',
+    category: 'Sensores do Mundo',
+    docDetail: 'Passo a Passo do Sensor de Qualidade do Solo (farm.soil / world.soil):\n\n1. LEITURA DA FERTILIDADE DO TERRENO:\n• O sensor retorna uma porcentagem inteira de 0 a 100 representando a qualidade do solo.\n• Pode ser chamado sem argumentos farm.soil() para inspecionar a célula atual do agente, ou informando as coordenadas farm.soil(x, y).\n\n2. VALORES E COMPORTAMENTO:\n• 0% ([z]): Solo esgotado. Nenhuma planta cresce e não ocorre regeneração natural. Requer aplicação de adubo com farm.fertilize().\n• 1% a 99%: Solo parcialmente fértil. O rendimento da colheita é proporcional à qualidade. Regenera +5% a cada 20 ticks sem colheita.\n• 100%: Fertilidade máxima com 100% de rendimento de safras.\n\n3. ALIASES E NESPACES:\n• Disponível tanto no namespace farm (farm.soil()) quanto no namespace world (world.soil() e world.get_soil()).',
+    exampleCode: 'qualidade = farm.soil()\nprint("Qualidade do solo:", qualidade)\nif qualidade == 0:\n    farm.fertilize()',
+    parameters: [
+      {
+        name: 'x',
+        type: 'number (opcional)',
+        description: 'Coordenada X do bloco. Se omitida, utiliza a posição X atual do agente.',
+        required: false
+      },
+      {
+        name: 'y',
+        type: 'number (opcional)',
+        description: 'Coordenada Y do bloco. Se omitida, utiliza a posição Y atual do agente.',
+        required: false
+      }
+    ],
+    returns: {
+      type: 'number',
+      description: 'Porcentagem de 0 a 100 representando a qualidade do solo.'
+    },
+    usabilityNotes: [
+      '1. Utilize em condicionais para decidir se o bloco precisa de farm.fertilize() ou se pode receber sementes.',
+      '2. Também pode ser chamado como world.soil() ou world.get_soil().'
+    ],
+    expectedOutput: 'Número inteiro entre 0 e 100.'
+  },
 
   // INVENTORY APIs
   {
@@ -1029,10 +1090,10 @@ export const API_CATALOG: ApiItem[] = [
     signature: 'Mecânica Evolutiva de Transformação do Terreno',
     pythonSnippet: '# Exemplo de verificação da estrutura gerada pela Mudança do Mundo\nif world.ground() == "PRESTIGE":\n    print("Encontrado o Bloco de Prestígio gerado pela Mudança do Mundo!")',
     jsSnippet: '// Exemplo de verificação da estrutura gerada pela Mudança do Mundo\nif (world.ground() === "PRESTIGE") {\n  console.log("Encontrado o Bloco de Prestígio gerado pela Mudança do Mundo!");\n}',
-    description: 'Entenda o conceito de Mudança do Mundo: transformações dinâmicas e reestruturações do ambiente acionadas por marcos tecnológicos.',
+    description: 'Entenda o conceito de Mudança do Mundo: transformações dinâmicas e reestruturações globais do ambiente acionadas por marcos tecnológicos e níveis de prestígio.',
     techId: 'AUTO_2',
     category: 'Mecânicas de Jogo',
-    docDetail: 'Passo a Passo da Mudança do Mundo no TerraScript:\n\n1. O QUE É A MUDANÇA DO MUNDO?\n• É um marco de transformação física e climática do planeta. Conforme você conclui fases da Árvore de Pesquisa (por exemplo, ao finalizar todas as 4 pesquisas essenciais de Nível 1: AUTO_2, AGRO_2, SYS_2, SCALE_2), o motor de simulação dispara um evento de reestruturação do terreno.\n\n2. O QUE ACONTECE QUANDO O MUNDO MUDA?\n• O mapa se reconfigura e novas estruturas aparecem no ambiente 3D.\n• A 1ª Mudança do Mundo gera o Bloco Dourado de Prestígio no centro da fazenda, um terminal central onde você troca suas safras agrícolas por Pontos de Prestígio.\n• Futuras Mudanças do Mundo introduzirão novas expansões de bioma e recursos inéditos.\n\n3. SEUS CÓDIGOS E RECURSOS ESTÃO SEGUROS!\n• Fique tranquilo! A Mudança do Mundo NÃO apaga nenhum arquivo de código do seu editor, não altera seu inventário de recursos, nem reseta suas pesquisas conquistadas. É uma evolução puramente cumulativa!\n\n4. COMO IDENTIFICAR E TIRAR PROVEITO:\n• Acompanhe as notificações no topo da tela e a barra de progresso do Guia ao concluir pesquisas.\n• O evento abre novos objetivos e desbloqueia o sistema de Prestígio no painel inferior e na API (farm.prestige()).',
+    docDetail: 'Passo a Passo das Mudanças do Mundo no TerraScript:\n\n1. O QUE SÃO AS MUDANÇAS DO MUNDO?\n• São marcos de transformação física, biológica e climática do planeta. Conforme você avança nas pesquisas e ascende nos Níveis de Prestígio, o motor de simulação altera o ecossistema global.\n\n2. MUDANÇAS DO MUNDO DISPONÍVEIS:\n• 1ª Mudança do Mundo (Dominar Pilares Nível 1): Manifestação do Bloco Dourado de Prestígio no centro da fazenda, permitindo trocar safras por XP com farm.prestige().\n• 2ª Mudança do Mundo (Prestígio Nível 25+): Ativação dos Índices de Combo nos terrenos, multiplicando ganhos de XP ao seguir a sequência de colheita.\n• 3ª Mudança do Mundo (Prestígio Nível 50+): Adubagem e Qualidade do Solo. Todos os blocos iniciam com solo zerado [z] = 0. Exige o uso do comando farm.fertilize() para ativar a fertilidade e permitir o crescimento de plantas.\n\n3. SEUS CÓDIGOS E RECURSOS ESTÃO SEGUROS!\n• Fique tranquilo! Nenhuma Mudança do Mundo apaga seus arquivos do editor, altera inventário ou reseta pesquisas conquistadas. É uma evolução puramente cumulativa!\n\n4. COMO ACOMPANHAR AS MUDANÇAS DO MUNDO:\n• Acesse o menu suspenso "Mudança do Mundo" no topo da interface ao lado do Nível de Prestígio para visualizar os fenômenos ativos e requisitos.',
     exampleCode: 'if world.ground() == "PRESTIGE":\n    farm.prestige("fiber", 50)',
     parameters: [],
     returns: {
@@ -1040,10 +1101,34 @@ export const API_CATALOG: ApiItem[] = [
       description: 'Compreensão dos marcos de evolução do planeta.'
     },
     usabilityNotes: [
-      '1. Acompanhe a barra de progresso no cabeçalho do Guia de API e na Árvore de Pesquisas para saber quais tecnologias faltam para disparar a próxima Mudança do Mundo.',
-      '2. Após a 1ª Mudança do Mundo, navegue até a célula metálica dourada do mapa para começar a depositar recursos com o comando farm.prestige().'
+      '1. Acompanhe a barra de progresso e o menu de Mudanças do Mundo para saber quais fenômenos estão latentes ou ativos.',
+      '2. Cada Mudança do Mundo introduz novos comandos e desafios de automação no seu código.'
     ],
-    expectedOutput: 'Transformação do mapa e surgimento de novas estruturas industriais.'
+    expectedOutput: 'Transformação do mapa e surgimento de novas mecânicas de ambiente.'
+  },
+  {
+    id: 'mech_soil_fertilize_world_change',
+    namespace: 'mechanics',
+    methodName: 'Adubagem e Qualidade do Solo (Prestígio Nv 50+)',
+    displayText: 'Mudança do Mundo: Adubagem & Qualidade do Solo',
+    signature: 'Mecânica Global de Desgaste, Fertilidade e Adubagem do Terreno',
+    pythonSnippet: '# Exemplo de rotina de fertilização e plantio\nif farm.soil() == 0:\n    farm.fertilize()\nfarm.plant("WILD_FIBER")',
+    jsSnippet: '// Exemplo de rotina de fertilização e plantio\nif (farm.soil() === 0) {\n  farm.fertilize();\n}\nfarm.plant("WILD_FIBER");',
+    description: 'Mecânica ativada no Nível 50 de Prestígio: blocos iniciam com solo zerado [z] = 0, exigindo o uso de farm.fertilize() para iniciar o cultivo e manter a produtividade da fazenda.',
+    techId: 'AGRO_1',
+    category: 'Mecânicas de Jogo',
+    docDetail: 'MECÂNICA DA MUDANÇA DO MUNDO - ADUBAGEM E QUALIDADE DO SOLO (PRESTÍGIO 50+):\n\n1. ATIVAÇÃO E REQUISITO DE PRESTÍGIO:\n• Ao atingir o Nível 50 de Prestígio, a 3ª Mudança do Mundo altera as propriedades de fertilidade de todos os terrenos do planeta.\n\n2. QUALIDADE INICIAL DO SOLO [z] = ZERO:\n• No início do jogo (ou ao executar world.clear()), o solo de todos os blocos começa zerado: Qualidade = 0% ([z]).\n• NENHUMA cultura consegue crescer enquanto a qualidade do solo estiver em zero (0%).\n• Um solo com qualidade zero NÃO se regenera sozinho.\n\n3. ADUBAGEM COM FARM.FERTILIZE():\n• Para ativar a fertilidade de um bloco zerado, execute o comando farm.fertilize() com o robô posicionado sobre a célula.\n• A fertilidade é restaurada instantaneamente para 100%.\n• O comando farm.fertilize() só aceita aplicação em blocos cujo solo esteja estritamente em zero (0%).\n\n4. DESGASTE E MULTIPLICADOR DE RENDIMENTO:\n• Cada colheita realizada no bloco reduz -20% de sua qualidade do solo (100% -> 80% -> 60% -> 40% -> 20% -> 0%).\n• A quantidade de recursos obtida em uma colheita é multiplicada proporcionalmente pela qualidade do solo do bloco no momento da colheita.\n\n5. REGENERAÇÃO NATURAL DO SOLO:\n• Se o solo possuir qualidade maior que 0 e menor que 100, a cada 20 ticks consecutivos sem colheitas o solo regenera +5% de fertilidade naturalmente (até o limite de 100%).\n• Dica Estratégica: Alterne o plantio entre diferentes canteiros para permitir que o solo se recupere sem gastar ações de fertilização.',
+    exampleCode: 'if farm.soil() == 0:\n    farm.fertilize()',
+    parameters: [],
+    returns: {
+      type: 'conceito',
+      description: 'Mecânica de fertilidade do solo, adubagem e otimização de safras.'
+    },
+    usabilityNotes: [
+      '1. Monitore a qualidade dos terrenos usando farm.soil() ou world.soil() antes de semear.',
+      '2. Utilize farm.fertilize() para reativar blocos zerados e manter a fazenda em produção máxima.'
+    ],
+    expectedOutput: 'Rendimento otimizado de safras e restauração de fertilidade do solo.'
   },
   {
     id: 'mech_prestige_block',

@@ -79,9 +79,6 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
     <header className="min-h-[56px] py-1.5 bg-[#0f1011] border-b-2 border-[#23252a] flex items-center justify-between px-3.5 text-[#d0d6e0] select-none shrink-0 z-20 font-pixel-body text-sm">
       {/* App Branding */}
       <div className="flex items-center gap-3">
-        <div className="w-9 h-9 bg-[#08090a] pixel-box flex items-center justify-center p-1 group hover:brightness-125 transition-all cursor-pointer">
-          <GameLogo className="w-7 h-7 pixelated" />
-        </div>
         <div>
           <div className="flex items-center gap-2">
             <span className="font-pixel-header text-sm tracking-tight text-[#ffffff]">TerraScript <span className="text-[#facc15]">3D</span></span>

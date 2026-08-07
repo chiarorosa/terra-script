@@ -335,6 +335,26 @@ export class JavaScriptSandbox {
         const ag = getAg();
         return engine.getCompanionRequest(ag?.x ?? 0, ag?.y ?? 0);
       },
+      get_combo_index: (x?: number, y?: number) => {
+        const ag = getAg();
+        const targetX = typeof x === 'number' ? x : (ag?.x ?? 0);
+        const targetY = typeof y === 'number' ? y : (ag?.y ?? 0);
+        return engine.getComboIndex(targetX, targetY);
+      },
+      getComboIndex: (x?: number, y?: number) => {
+        const ag = getAg();
+        const targetX = typeof x === 'number' ? x : (ag?.x ?? 0);
+        const targetY = typeof y === 'number' ? y : (ag?.y ?? 0);
+        return engine.getComboIndex(targetX, targetY);
+      },
+      get_combo_multiplier: () => engine.getComboMultiplier(),
+      getComboMultiplier: () => engine.getComboMultiplier(),
+      get_combo: (x?: number, y?: number) => {
+        const ag = getAg();
+        const targetX = typeof x === 'number' ? x : (ag?.x ?? 0);
+        const targetY = typeof y === 'number' ? y : (ag?.y ?? 0);
+        return engine.getComboIndex(targetX, targetY);
+      },
       clear: () => {
         engine.clearWorld();
         return true;

@@ -14,6 +14,7 @@ export const PrestigeBar: React.FC<PrestigeBarProps> = ({ engine }) => {
   const reqPoints = engine.getRequiredPrestigePoints();
   const comboMultiplier = engine.getComboMultiplier();
   const isComboUnlocked = prestige.level >= 25;
+  const isSoilUnlocked = prestige.level >= 50;
   const progressPercent = prestige.level >= 100 
     ? 100 
     : Math.min(100, Math.max(0, (prestige.points / reqPoints) * 100));
@@ -157,8 +158,40 @@ export const PrestigeBar: React.FC<PrestigeBarProps> = ({ engine }) => {
                 
                 <p className="text-[11px] text-[#8a8f98] leading-relaxed font-pixel-body italic">
                   {isComboUnlocked 
-                    ? '"A ordem harmônica da colheita ressoa através da matriz. Siga os índices marcados nos terrenos para multiplicar seus ganhos."' 
-                    : '"Sequenciamento bloqueado. Alcance o Nível 25 de Prestígio para que os índices ordinais de colheita apareçam nos blocos."'
+                    ? '"Padrões numéricos invisíveis começaram a pulsar sobre o solo. Colher na sequência sagrada amplifica a ressonância do ecossistema."' 
+                    : '"Harmonia oculta. A matriz do planeta aguarda maior sintonização espiritual para revelar as correntes de sequência dos terrenos."'
+                  }
+                </p>
+              </div>
+
+              {/* World Change 3: Adubagem e Qualidade do Solo */}
+              <div className={`p-2.5 pixel-box transition-all ${
+                isSoilUnlocked 
+                  ? 'bg-[#161718]' 
+                  : 'bg-[#08090a] opacity-75'
+              }`}>
+                <div className="flex items-center justify-between mb-1">
+                  <span className="font-pixel-body text-xs text-[#ffffff] flex items-center gap-1.5">
+                    {isSoilUnlocked ? (
+                      <CheckCircle2 className="w-3.5 h-3.5 text-[#22c55e]" />
+                    ) : (
+                      <Lock className="w-3.5 h-3.5 text-[#8a8f98]" />
+                    )}
+                    Adubagem & Qualidade do Solo
+                  </span>
+                  <span className={`text-[10px] font-pixel-mono px-1.5 py-0.2 pixel-badge ${
+                    isSoilUnlocked 
+                      ? 'bg-[#059669] text-[#ffffff]' 
+                      : 'bg-[#23252a] text-[#8a8f98]'
+                  }`}>
+                    {isSoilUnlocked ? 'Ativo' : 'Requer Prestígio 50'}
+                  </span>
+                </div>
+                
+                <p className="text-[11px] text-[#8a8f98] leading-relaxed font-pixel-body italic">
+                  {isSoilUnlocked 
+                    ? '"O solo ancestral começou a demonstrar cansaço vital. O ciclo da terra agora exige fertilidade e renovação constante para dar frutos."' 
+                    : '"Vitalidade adormecida. O solo permanece inalterado até que o planeta alcance um estado avançado de transmutação e maturidade."'
                   }
                 </p>
               </div>

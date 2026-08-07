@@ -359,7 +359,7 @@ export class GameEngine {
                 growth: typeof t.growth === 'number' && Number.isFinite(t.growth) ? t.growth : 0,
                 moisture: typeof t.moisture === 'number' && Number.isFinite(t.moisture) ? Math.max(0, Math.min(1.5, t.moisture)) : 0.75,
                 grade: typeof t.grade === 'number' ? t.grade : getWeightedRandomGrade(),
-                soilQuality: typeof t.soilQuality === 'number' ? t.soilQuality : 100,
+                soilQuality: typeof t.soilQuality === 'number' ? t.soilQuality : 0,
                 noHarvestTicks: typeof t.noHarvestTicks === 'number' ? t.noHarvestTicks : 0,
                 energyValue: typeof t.energyValue === 'number' ? t.energyValue : Math.floor(Math.random() * 80) + 20
               });
@@ -462,6 +462,7 @@ export class GameEngine {
   }
 
   public rebuildGrid(width: number, height: number, shouldSave: boolean = true, forceFreshTiles: boolean = false) {
+    this.resetComboState();
     this.width = width;
     this.height = height;
     const oldTiles = forceFreshTiles ? new Map() : new Map(this.tiles);
@@ -482,7 +483,7 @@ export class GameEngine {
             growth: (c === 0 && r === 0) ? 100 : 0,
             moisture: 0.75,
             grade: getWeightedRandomGrade(),
-            soilQuality: 100,
+            soilQuality: 0,
             noHarvestTicks: 0,
             energyValue: Math.floor(Math.random() * 80) + 20
           });
@@ -579,6 +580,7 @@ export class GameEngine {
   }
 
   public clearWorld() {
+    this.resetComboState();
     for (let r = 0; r < this.height; r++) {
       for (let c = 0; c < this.width; c++) {
         const key = `${c},${r}`;
@@ -594,7 +596,7 @@ export class GameEngine {
           growth: 0,
           moisture: 0.75,
           grade: getWeightedRandomGrade(),
-          soilQuality: 100,
+          soilQuality: 0,
           noHarvestTicks: 0,
           energyValue: Math.floor(Math.random() * 80) + 20
         });
@@ -610,6 +612,7 @@ export class GameEngine {
   }
 
   public resetEverything(vfs?: VirtualFS) {
+    this.resetComboState();
     this.mode = 'PAUSED';
     this.currentTick = 0;
     this.totalActionsPerformed = 0;
@@ -834,13 +837,14 @@ export class GameEngine {
         tile.ground = 'NATURAL';
       }
 
-      // World Change 2 (Nível 50+): Regeneração Natural do Solo (+5% a cada 5 ticks sem colher)
+      // World Change 2 (Nível 50+): Regeneração Natural do Solo (+5% a cada 20 ticks sem colher - apenas se solo > 0 e < 100)
       if (this.prestige.level >= 50) {
         tile.noHarvestTicks = (tile.noHarvestTicks || 0) + 1;
-        if (tile.noHarvestTicks >= 5) {
+        if (tile.noHarvestTicks >= 20) {
           tile.noHarvestTicks = 0;
-          if ((tile.soilQuality ?? 100) < 100) {
-            tile.soilQuality = Math.min(100, (tile.soilQuality ?? 100) + 5);
+          const currentSoil = tile.soilQuality ?? 0;
+          if (currentSoil > 0 && currentSoil < 100) {
+            tile.soilQuality = Math.min(100, currentSoil + 5);
           }
         }
       }
@@ -971,12 +975,12 @@ export class GameEngine {
     let tile = this.tiles.get(key);
     if (!tile) {
       tile = {
-        x, y, ground: 'NATURAL', crop: 'NONE', growth: 0, moisture: 0.75, soilQuality: 100, noHarvestTicks: 0
+        x, y, ground: 'NATURAL', crop: 'NONE', growth: 0, moisture: 0.75, soilQuality: 0, noHarvestTicks: 0
       };
       this.tiles.set(key, tile);
     }
     if (typeof tile.soilQuality !== 'number') {
-      tile.soilQuality = 100;
+      tile.soilQuality = 0;
     }
     if (typeof tile.noHarvestTicks !== 'number') {
       tile.noHarvestTicks = 0;
@@ -1014,6 +1018,7 @@ export class GameEngine {
     this.targetComboTile = null;
     this.targetComboIndex = null;
     this.visitedComboTiles.clear();
+    this.notify();
   }
 
   private generateNextComboTarget(): boolean {
@@ -1065,7 +1070,7 @@ export class GameEngine {
   // =========================================================================
   public getSoilQuality(x: number, y: number): number {
     const t = this.getTile(x, y);
-    return typeof t.soilQuality === 'number' ? t.soilQuality : 100;
+    return typeof t.soilQuality === 'number' ? t.soilQuality : 0;
   }
 
   public fertilizeTile(agentId: number, x: number, y: number): boolean {
@@ -1075,7 +1080,7 @@ export class GameEngine {
     }
 
     const t = this.getTile(x, y);
-    const currentSoil = typeof t.soilQuality === 'number' ? t.soilQuality : 100;
+    const currentSoil = typeof t.soilQuality === 'number' ? t.soilQuality : 0;
     if (currentSoil > 0) {
       this.addLog(agentId, 'stderr', `🚨 O comando farm.fertilize() só pode ser usado em blocos com qualidade de solo em 0! (Atual: ${currentSoil})`);
       return false;
@@ -1116,7 +1121,7 @@ export class GameEngine {
     const applySoilYieldMultiplier = (baseAmt: number): number => {
       if (baseAmt <= 1) return baseAmt;
       if (this.prestige.level >= 50) {
-        const soil = typeof t.soilQuality === 'number' ? t.soilQuality : 100;
+        const soil = typeof t.soilQuality === 'number' ? t.soilQuality : 0;
         return Math.max(1, Math.floor(baseAmt * (soil / 100)));
       }
       return baseAmt;
@@ -1175,7 +1180,7 @@ export class GameEngine {
 
     // World Change 2 (Nível 50+): Cada colheita reduz 20% da qualidade do solo no bloco e reseta o contador de ticks sem colheita
     if (this.prestige.level >= 50) {
-      t.soilQuality = Math.max(0, (typeof t.soilQuality === 'number' ? t.soilQuality : 100) - 20);
+      t.soilQuality = Math.max(0, (typeof t.soilQuality === 'number' ? t.soilQuality : 0) - 20);
       t.noHarvestTicks = 0;
     }
 

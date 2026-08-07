@@ -87,7 +87,7 @@ const DidacticDocDetailRenderer: React.FC<{ docDetail: string }> = ({ docDetail 
   const sections = docDetail.split('\n\n').filter(s => s.trim().length > 0);
 
   return (
-    <div className="space-y-3.5 font-pixel-body">
+    <div className="space-y-3.5 font-sans">
       {sections.map((sectionText, sIdx) => {
         const lines = sectionText.split('\n').filter(l => l.trim().length > 0);
         if (lines.length === 0) return null;
@@ -122,7 +122,7 @@ const DidacticDocDetailRenderer: React.FC<{ docDetail: string }> = ({ docDetail 
                           <AlertTriangle className="w-4 h-4 shrink-0 text-[#facc15]" />
                           <span>RECOMENDAÇÃO TÁTICA</span>
                         </div>
-                        <p className="leading-relaxed text-sm text-[#fef08a]">
+                        <p className="leading-relaxed text-sm text-[#fef08a] font-sans">
                           <RenderFormattedInlineText text={trimmed.replace(/^[•\s\d\.-]+/, '')} />
                         </p>
                       </div>
@@ -136,10 +136,10 @@ const DidacticDocDetailRenderer: React.FC<{ docDetail: string }> = ({ docDetail 
                     return (
                       <div key={lIdx} className="flex items-start gap-2.5 p-2.5 bg-[#141517] border border-[#23252a] rounded transition-all hover:border-[#22c55e]/30">
                         <span className="w-2 h-2 rounded-full bg-[#22c55e] mt-2 shrink-0" />
-                        <div className="flex-1 leading-relaxed text-[#d0d6e0] text-sm">
+                        <div className="flex-1 leading-relaxed text-[#e2e8f0] text-sm font-sans">
                           {titleMatch ? (
                             <>
-                              <strong className="font-pixel-mono text-[#ffffff] mr-1 text-sm">
+                              <strong className="font-pixel-mono text-[#ffffff] mr-1 text-sm font-semibold">
                                 <RenderFormattedInlineText text={titleMatch[1]} />:
                               </strong>
                               <RenderFormattedInlineText text={titleMatch[2]} />
@@ -161,7 +161,7 @@ const DidacticDocDetailRenderer: React.FC<{ docDetail: string }> = ({ docDetail 
                   }
 
                   return (
-                    <p key={lIdx} className="text-[#c0c6d0] text-sm leading-relaxed py-0.5">
+                    <p key={lIdx} className="text-[#e2e8f0] text-sm leading-relaxed font-sans py-0.5">
                       <RenderFormattedInlineText text={trimmed} />
                     </p>
                   );
@@ -186,7 +186,7 @@ const DidacticDocDetailRenderer: React.FC<{ docDetail: string }> = ({ docDetail 
               if (trimmed.startsWith('•') || trimmed.startsWith('-')) {
                 const cleanText = trimmed.replace(/^[•\-]\s*/, '');
                 return (
-                  <div key={lIdx} className="flex items-start gap-2 text-sm text-[#d0d6e0] leading-relaxed py-0.5">
+                  <div key={lIdx} className="flex items-start gap-2 text-sm text-[#e2e8f0] leading-relaxed font-sans py-0.5">
                     <span className="text-[#22c55e] font-bold shrink-0 mt-0.5">›</span>
                     <div><RenderFormattedInlineText text={cleanText} /></div>
                   </div>
@@ -194,7 +194,7 @@ const DidacticDocDetailRenderer: React.FC<{ docDetail: string }> = ({ docDetail 
               }
 
               return (
-                <p key={lIdx} className="text-sm text-[#d0d6e0] leading-relaxed font-sans">
+                <p key={lIdx} className="text-sm text-[#e2e8f0] leading-relaxed font-sans">
                   <RenderFormattedInlineText text={trimmed} />
                 </p>
               );

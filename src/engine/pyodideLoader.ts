@@ -617,6 +617,20 @@ def _exec_isolated_py(code_str, _jsBridge):
             return _jsBridge.farm_soil()
         def prestige(self, resource="fiber", amount=1):
             return _jsBridge.farm_prestige(str(resource), int(amount))
+        def get_combo_index(self, x=None, y=None):
+            if x is not None and y is not None:
+                return _jsBridge.farm_get_combo_index(int(x), int(y))
+            return _jsBridge.farm_get_combo_index()
+        def getComboIndex(self, x=None, y=None):
+            if x is not None and y is not None:
+                return _jsBridge.farm_get_combo_index(int(x), int(y))
+            return _jsBridge.farm_get_combo_index()
+        def get_combo_multiplier(self):
+            return _jsBridge.farm_get_combo_multiplier()
+        def get_combo(self, x=None, y=None):
+            if x is not None and y is not None:
+                return _jsBridge.farm_get_combo_index(int(x), int(y))
+            return _jsBridge.farm_get_combo_index()
         def clear(self):
             return _jsBridge.world_clear()
 
@@ -655,6 +669,20 @@ def _exec_isolated_py(code_str, _jsBridge):
             return _jsBridge.world_companion()
         def getCompanion(self):
             return _jsBridge.world_companion()
+        def get_combo_index(self, x=None, y=None):
+            if x is not None and y is not None:
+                return _jsBridge.farm_get_combo_index(int(x), int(y))
+            return _jsBridge.farm_get_combo_index()
+        def getComboIndex(self, x=None, y=None):
+            if x is not None and y is not None:
+                return _jsBridge.farm_get_combo_index(int(x), int(y))
+            return _jsBridge.farm_get_combo_index()
+        def get_combo_multiplier(self):
+            return _jsBridge.farm_get_combo_multiplier()
+        def get_combo(self, x=None, y=None):
+            if x is not None and y is not None:
+                return _jsBridge.farm_get_combo_index(int(x), int(y))
+            return _jsBridge.farm_get_combo_index()
         def clear(self):
             return _jsBridge.world_clear()
 

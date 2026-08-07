@@ -1260,6 +1260,7 @@ export class ScriptRunner {
 
     if (expr === 'true' || expr === 'True') return true;
     if (expr === 'false' || expr === 'False') return false;
+    if (expr === 'none' || expr === 'None' || expr === 'null' || expr === 'undefined') return null;
     if (!isNaN(Number(expr)) && expr.trim() !== '') return Number(expr);
     if ((expr.startsWith('"') && expr.endsWith('"')) || (expr.startsWith("'") && expr.endsWith("'"))) {
       return expr.slice(1, -1);
@@ -1381,6 +1382,14 @@ export class ScriptRunner {
     }
 
     // 4. Equality & Relational Comparisons
+    const isNotMatch = splitTopLevel(expr, ' is not ');
+    if (isNotMatch) {
+      return this.evalExpression(isNotMatch[0], ctx) !== this.evalExpression(isNotMatch[1], ctx);
+    }
+    const isMatch = splitTopLevel(expr, ' is ');
+    if (isMatch) {
+      return this.evalExpression(isMatch[0], ctx) === this.evalExpression(isMatch[1], ctx);
+    }
     const tripleEq = splitTopLevel(expr, '===');
     if (tripleEq) {
       return this.evalExpression(tripleEq[0], ctx) === this.evalExpression(tripleEq[1], ctx);
@@ -1516,6 +1525,45 @@ export class ScriptRunner {
     }
     if (expr.includes('farm.get_companion()')) {
       return this.engine.getCompanionRequest(agent.x, agent.y);
+    }
+    if (
+      expr.includes('farm.get_combo_index(') ||
+      expr.includes('farm.getComboIndex(') ||
+      expr.includes('farm.get_combo(') ||
+      expr.includes('farm.getCombo(') ||
+      expr.includes('world.get_combo_index(') ||
+      expr.includes('world.getComboIndex(') ||
+      expr.includes('world.get_combo(') ||
+      expr.includes('world.getCombo(')
+    ) {
+      const match = expr.match(/(?:farm|world)\.(?:get_combo_index|getComboIndex|get_combo|getCombo)\s*\((.*?)\)/);
+      if (match) {
+        const rawArgsStr = match[1].trim();
+        if (rawArgsStr) {
+          const rawArgs = splitCommaTopLevel(rawArgsStr);
+          if (rawArgs.length >= 2) {
+            const targetX = Number(this.evalExpression(rawArgs[0], ctx));
+            const targetY = Number(this.evalExpression(rawArgs[1], ctx));
+            return this.engine.getComboIndex(isNaN(targetX) ? agent.x : targetX, isNaN(targetY) ? agent.y : targetY);
+          } else if (rawArgs.length === 1 && rawArgs[0] !== '') {
+            const targetX = Number(this.evalExpression(rawArgs[0], ctx));
+            return this.engine.getComboIndex(isNaN(targetX) ? agent.x : targetX, agent.y);
+          }
+        }
+      }
+      return this.engine.getComboIndex(agent.x, agent.y);
+    }
+    if (
+      expr.includes('farm.get_combo_multiplier(') ||
+      expr.includes('farm.getComboMultiplier(') ||
+      expr.includes('farm.get_multiplier(') ||
+      expr.includes('farm.getMultiplier(') ||
+      expr.includes('world.get_combo_multiplier(') ||
+      expr.includes('world.getComboMultiplier(') ||
+      expr.includes('world.get_multiplier(') ||
+      expr.includes('world.getMultiplier(')
+    ) {
+      return this.engine.getComboMultiplier();
     }
 
     if (expr.includes('world.clear()') || expr.includes('farm.clear()') || expr === 'clear()' || expr === 'clear') {

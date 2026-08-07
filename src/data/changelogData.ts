@@ -8,10 +8,42 @@ export interface ChangelogRelease {
 
 export const CHANGELOG_HISTORY: ChangelogRelease[] = [
   {
+    version: 'v2.9.3',
+    date: '2026-08-07',
+    title: 'Aprimoramento do Leitor de Sequências e Combos',
+    isCurrent: true,
+    changes: [
+      'Execução Precisa do Sistema de Combos: Correção na avaliação dos métodos de leitura de índice de combo e multiplicador em Python e JavaScript, garantindo o retorno direto de valores numéricos e comparações de estado precisas em automações de robôs.'
+    ]
+  },
+  {
+    version: 'v2.9.2',
+    date: '2026-08-07',
+    title: 'Refinamento Narrativo de Mudança do Mundo & Ritmo Agrícola',
+    isCurrent: false,
+    changes: [
+      'Descrições Enigmáticas das Mudanças do Mundo: Padronização do menu suspenso de Mudanças do Mundo no topo da interface. Todas as transformações ativas e latentes agora exibem descrições imersivas e enigmáticas alinhadas ao mistério do primeiro fenômeno.',
+      'Ritmo de Regeneração Natural do Solo: A taxa de recuperação de fertilidade em solos parcialmente adubados (>0% e <100%) foi ajustada de 5 para 20 ciclos para cada +5% de ganho natural.'
+    ]
+  },
+  {
+    version: 'v2.9.1',
+    date: '2026-08-07',
+    title: 'Destaques Visuais de Terreno & Limpeza de Interface',
+    isCurrent: false,
+    changes: [
+      'Visual do Topo do Jogo: Remoção do logotipo no topo da interface para um visual mais limpo e focado no TerraScript 3D.',
+      'Destaque Visual para Blocos de Combo (Prestígio Nível 25+): Os blocos alvos de combo ativos exibem anéis dourados, faróis reluzentes e marcadores tridimensionais flutuantes no mapa.',
+      'Indicador de Solo Zerado [z] (Prestígio Nível 50+): Terrenos inativados por falta de adubagem (qualidade do solo em zero) agora são claramente destacados no mapa 3D com alerta e textura estéril.',
+      'Ajuste do Ritmo de Regeneração do Solo: A taxa de regeneração natural do solo parcial (>0% e <100%) passou de 5 ticks para 20 ticks por +5% de fertilidade.',
+      'Aprimoramento Visual da Guia de Documentação: Melhorias de legibilidade e estilo de fonte na seção de maturação de notas agrícolas.'
+    ]
+  },
+  {
     version: 'v2.9.0',
     date: '2026-08-07',
     title: 'Mudança do Mundo: Combos, Maturação Agronômica & Adubagem do Solo',
-    isCurrent: true,
+    isCurrent: false,
     changes: [
       'Nova Mecânica da Cultura Graduada (GRADED_PLANT): Ao atingir 100% de crescimento, a planta continua evoluindo sua nota agronômica. Se mantida com umidade igual ou superior a 75%, ela consome 15% de umidade a cada 5 ticks para subir +1 Nota (até a Nota Máxima 9), permitindo ao jogador/robô cultivar safras de altíssimo rendimento.',
       'Ajuste da API Agrícola: Remoção completa do comando de troca (swap) da API, simplificando o ecossistema de comandos agrícolas para focar em planejamento de irrigação e colheita.',
@@ -21,8 +53,8 @@ export const CHANGELOG_HISTORY: ChangelogRelease[] = [
       'Rastreamento e Reset do Combo: Colheitas fora de ordem, toque adicional no bloco (0,0) ou a conclusão do Upload no Bloco de Prestígio zeram o multiplicador de volta ao valor base de 1,0x.',
       'Novos Métodos de Combo: Disponibilizadas as funções farm.get_combo_index() e farm.get_combo_multiplier() nas linguagens Python e JavaScript.',
       'Mudança de Mundo 2 - Adubagem e Qualidade do Solo (Prestígio Nível 50+): Ao alcançar o Nível 50 de Prestígio, a qualidade do solo afeta o rendimento e o crescimento de todas as safras.',
-      'Qualidade do Solo [z] & Colheita: A qualidade do solo do bloco cai 20% a cada colheita realizada, reduzindo o retorno de recursos colhidos proporcionalmente.',
-      'Restrição de Crescimento & Regeneração: Blocos com qualidade do solo em zero impedem o crescimento de plantas. A cada 5 ticks sem colher, o solo regenera 5% de sua qualidade naturalmente.',
+      'Qualidade do Solo Inicial [z] = ZERO: Todos os blocos iniciam com qualidade do solo em 0 (no início do jogo ou ao executar world.clear()). O solo só atinge 100% ao executar farm.fertilize().',
+      'Restrição de Crescimento & Regeneração: Solo em 0 impede o crescimento de safras e não se regenera sozinho. A regeneração natural de +5% a cada 5 ticks só ocorre em solos previamente adubados (qualidade > 0 e < 100).',
       'Comando de Adubagem e Leitura de Solo: O comando farm.fertilize() permite adubar blocos zerados, restaurando sua qualidade para 100%. A qualidade pode ser lida via farm.soil().',
       'Sincronização da Engine de Jogo: Atualização do motor TerraScript para a versão v2.9.0.'
     ]

@@ -123,6 +123,16 @@ class ThreeAssetCache {
   public static selectionBoxGeo = new THREE.BoxGeometry(1.15, 0.48, 1.15);
   public static selectionEdgesGeo = new THREE.EdgesGeometry(ThreeAssetCache.selectionBoxGeo);
 
+  // Combo Target Geometries
+  public static comboRingGeo = new THREE.TorusGeometry(0.42, 0.035, 8, 20);
+  public static comboStarGeo = new THREE.OctahedronGeometry(0.18, 0);
+  public static comboBeaconGeo = new THREE.BoxGeometry(0.06, 0.16, 0.06);
+
+  // Zero Soil Inactive [z] Geometries
+  public static zeroSoilBoxGeo = new THREE.BoxGeometry(1.02, 0.015, 1.02);
+  public static zeroSoilEdgesGeo = new THREE.EdgesGeometry(ThreeAssetCache.zeroSoilBoxGeo);
+  public static zeroSoilStudGeo = new THREE.BoxGeometry(0.08, 0.08, 0.08);
+
   // Line Materials
   public static lineMat = new THREE.LineBasicMaterial({ color: 0x1e293b, transparent: true, opacity: 0.6 });
   public static selectionLineMat = new THREE.LineBasicMaterial({ color: 0x38bdf8 });
@@ -403,6 +413,16 @@ class ThreeAssetCache {
   public static matGoldPedestal = new THREE.MeshStandardMaterial({ color: 0xd97706, emissive: 0x78350f, emissiveIntensity: 0.35, metalness: 0.9, roughness: 0.15 });
   public static matGoldSparkle = new THREE.MeshStandardMaterial({ color: 0xfffbeb, emissive: 0xfacc15, emissiveIntensity: 1.0, roughness: 0.05, metalness: 0.95 });
 
+  // Combo Target Materials
+  public static matComboRing = new THREE.MeshStandardMaterial({ color: 0xf59e0b, emissive: 0xd97706, emissiveIntensity: 0.9, roughness: 0.2 });
+  public static matComboStar = new THREE.MeshStandardMaterial({ color: 0xfef08a, emissive: 0xeab308, emissiveIntensity: 1.0, roughness: 0.1 });
+  public static matComboBeacon = new THREE.MeshStandardMaterial({ color: 0xfbbf24, emissive: 0xf59e0b, emissiveIntensity: 0.8 });
+
+  // Zero Soil Inactive [z] Materials
+  public static matZeroSoilTop = new THREE.MeshStandardMaterial({ color: 0x221c19, roughness: 0.95, metalness: 0.05 });
+  public static matZeroSoilEdges = new THREE.LineBasicMaterial({ color: 0xef4444, transparent: true, opacity: 0.85 });
+  public static matZeroSoilStud = new THREE.MeshStandardMaterial({ color: 0xef4444, emissive: 0xb91c1c, emissiveIntensity: 0.8 });
+
   // Agent Drone Ship Materials
   private static agentHullMatCache = new Map<string, THREE.MeshStandardMaterial>();
   public static getAgentHullMat(colorHex: string): THREE.MeshStandardMaterial {
@@ -518,6 +538,15 @@ export const World3DCanvas: React.FC<World3DCanvasProps> = ({ engine }) => {
   const [drawCalls, setDrawCalls] = useState<number>(0);
   const [ramMb, setRamMb] = useState<number>(35);
   const [showHud, setShowHud] = useState<boolean>(false);
+  const [engineTick, setEngineTick] = useState<number>(0);
+
+  useEffect(() => {
+    const unsubscribe = engine.subscribe(() => {
+      setEngineTick(prev => prev + 1);
+    });
+    return () => unsubscribe();
+  }, [engine]);
+
   const [zoomLevel, setZoomLevel] = useState<number>(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('terrascript_zoom_level');
@@ -801,6 +830,17 @@ export const World3DCanvas: React.FC<World3DCanvasProps> = ({ engine }) => {
             }
           });
         }
+
+        // Animate floating target diamond inside comboGroup
+        const comboGroup = tileGroup.getObjectByName('comboGroup');
+        if (comboGroup) {
+          comboGroup.traverse((child) => {
+            if (child.userData && child.userData.animType === 'comboTarget') {
+              child.rotation.y += 0.04;
+              child.position.y = 0.45 + Math.sin(elapsedTime * 4.0) * 0.08;
+            }
+          });
+        }
       });
 
       updateCameraPosition();
@@ -909,7 +949,7 @@ export const World3DCanvas: React.FC<World3DCanvasProps> = ({ engine }) => {
       agentMesh.position.z = targetZ;
     });
 
-  }, [engine, engine.getCurrentTick(), engine.getGridWidth(), engine.getGridHeight(), zoomLevel]);
+  }, [engine, engineTick, engine.getCurrentTick(), engine.getGridWidth(), engine.getGridHeight(), zoomLevel]);
 
   // Selection box overlay for inspected tile
   useEffect(() => {
@@ -928,6 +968,68 @@ export const World3DCanvas: React.FC<World3DCanvasProps> = ({ engine }) => {
       selectionMeshRef.current = selectionMesh;
     }
   }, [activeCoords?.x, activeCoords?.y, engine.getGridWidth(), engine.getGridHeight()]);
+
+  // Helper 3D Combo Target Visual Group (Prestígio Nível 25+)
+  const createComboHighlightVisualGroup = (comboIdx: number): THREE.Group => {
+    const group = new THREE.Group();
+
+    // 1. Glowing Amber Ring on tile floor surface
+    const ring = new THREE.Mesh(ThreeAssetCache.comboRingGeo, ThreeAssetCache.matComboRing);
+    ring.rotation.x = Math.PI / 2;
+    ring.position.y = 0.012;
+    group.add(ring);
+
+    // 2. 4 Glowing Amber Corner Beacons
+    const beaconCoords = [
+      [-0.48, -0.48],
+      [0.48, -0.48],
+      [-0.48, 0.48],
+      [0.48, 0.48],
+    ];
+    beaconCoords.forEach(([px, pz]) => {
+      const beacon = new THREE.Mesh(ThreeAssetCache.comboBeaconGeo, ThreeAssetCache.matComboBeacon);
+      beacon.position.set(px, 0.08, pz);
+      group.add(beacon);
+    });
+
+    // 3. Floating Golden Target Diamond / Star with animation
+    const floatingStar = new THREE.Mesh(ThreeAssetCache.comboStarGeo, ThreeAssetCache.matComboStar);
+    floatingStar.position.y = 0.45;
+    floatingStar.userData = { animType: 'comboTarget' };
+    group.add(floatingStar);
+
+    return group;
+  };
+
+  // Helper 3D Zero Soil Inactive Visual Group (Prestígio Nível 50+)
+  const createZeroSoilVisualGroup = (): THREE.Group => {
+    const group = new THREE.Group();
+
+    // 1. Dry Cracked Barren Overlay Box on top of tile
+    const barrenMesh = new THREE.Mesh(ThreeAssetCache.zeroSoilBoxGeo, ThreeAssetCache.matZeroSoilTop);
+    barrenMesh.position.y = 0.008;
+    group.add(barrenMesh);
+
+    // 2. Red Alert Wireframe Edges around tile
+    const alertEdges = new THREE.LineSegments(ThreeAssetCache.zeroSoilEdgesGeo, ThreeAssetCache.matZeroSoilEdges);
+    alertEdges.position.y = 0.008;
+    group.add(alertEdges);
+
+    // 3. 4 Red Corner Warning Studs
+    const studCoords = [
+      [-0.46, -0.46],
+      [0.46, -0.46],
+      [-0.46, 0.46],
+      [0.46, 0.46],
+    ];
+    studCoords.forEach(([px, pz]) => {
+      const stud = new THREE.Mesh(ThreeAssetCache.zeroSoilStudGeo, ThreeAssetCache.matZeroSoilStud);
+      stud.position.set(px, 0.04, pz);
+      group.add(stud);
+    });
+
+    return group;
+  };
 
   // Helper 3D Voxel Tile Creator (Uses Multi-Material Array with Pixel Art Textures)
   const create3DTileGroup = (tile: TileState, x: number, y: number): THREE.Group => {
@@ -962,6 +1064,9 @@ export const World3DCanvas: React.FC<World3DCanvasProps> = ({ engine }) => {
       cropGroup.position.y = 0.01;
       group.add(cropGroup);
     }
+
+    // Apply Overlays (Zero Soil & Combo)
+    update3DTileGroup(group, tile);
 
     return group;
   };
@@ -1032,6 +1137,45 @@ export const World3DCanvas: React.FC<World3DCanvasProps> = ({ engine }) => {
       newDetailGroup.name = 'terrainDetailGroup';
       group.add(newDetailGroup);
       u.lastGround = tile.ground;
+    }
+
+    // Update Zero Soil Inactive Overlay (Prestígio Nível 50+)
+    const isPrestige50 = engine.getPrestige().level >= 50;
+    const soilQuality = typeof tile.soilQuality === 'number' ? tile.soilQuality : 0;
+    const isZeroSoil = isPrestige50 && soilQuality === 0;
+
+    if (u.lastZeroSoil !== isZeroSoil) {
+      let oldZeroSoilGroup = group.getObjectByName('zeroSoilGroup');
+      if (oldZeroSoilGroup) {
+        group.remove(oldZeroSoilGroup);
+        dispose3DObject(oldZeroSoilGroup);
+      }
+      if (isZeroSoil) {
+        const zeroSoilGroup = createZeroSoilVisualGroup();
+        zeroSoilGroup.name = 'zeroSoilGroup';
+        group.add(zeroSoilGroup);
+      }
+      u.lastZeroSoil = isZeroSoil;
+    }
+
+    // Update Combo Target Visual Highlight (Prestígio Nível 25+)
+    const isPrestige25 = engine.getPrestige().level >= 25;
+    const comboIdx = isPrestige25 ? engine.getComboIndex(tile.x, tile.y) : false;
+    // Highlight tiles with COMBO value different from None (false), EXCEPT 0,0
+    const isComboTarget = comboIdx !== false && comboIdx !== 0;
+
+    if (u.lastComboIdx !== comboIdx || (!isComboTarget && group.getObjectByName('comboGroup'))) {
+      let oldComboGroup = group.getObjectByName('comboGroup');
+      if (oldComboGroup) {
+        group.remove(oldComboGroup);
+        dispose3DObject(oldComboGroup);
+      }
+      if (isComboTarget) {
+        const comboGroup = createComboHighlightVisualGroup(comboIdx as number);
+        comboGroup.name = 'comboGroup';
+        group.add(comboGroup);
+      }
+      u.lastComboIdx = comboIdx;
     }
 
     // Update crop mesh if changed or grown
@@ -1513,7 +1657,6 @@ export const World3DCanvas: React.FC<World3DCanvasProps> = ({ engine }) => {
       {/* Canvas Header Bar */}
       <div className="h-9 bg-[#08090a] border-b border-[#23252a] flex items-center justify-between px-3 text-xs text-slate-300 font-mono z-10 gap-2 shrink-0">
         <div className="flex items-center gap-2 shrink-0">
-          <GameLogo className="w-4 h-4" />
           <span className="font-semibold text-white">Visualizador 3D</span>
           <span className="text-[10px] bg-[#161718] border border-[#23252a] px-2 py-0.5 rounded text-slate-400 font-mono">
             {engine.getGridWidth()}x{engine.getGridHeight()}
@@ -1716,14 +1859,14 @@ export const World3DCanvas: React.FC<World3DCanvasProps> = ({ engine }) => {
             <div className="flex justify-between">
               <span className="text-slate-400">Solo:</span>
               <span className={`font-semibold ${inspectedTile.ground === 'SOAKED' ? 'text-blue-400 font-bold' : 'text-amber-300'}`}>
-                {inspectedTile.ground}{engine.prestige.level >= 50 ? ` [${inspectedTile.soilQuality ?? 100}]` : ''}
+                {inspectedTile.ground}{engine.prestige.level >= 50 ? ` [${inspectedTile.soilQuality ?? 0}]` : ''}
               </span>
             </div>
             {engine.prestige.level >= 50 && (
               <div className="flex justify-between">
                 <span className="text-slate-400">Qualidade do Solo:</span>
-                <span className={`font-semibold ${(inspectedTile.soilQuality ?? 100) === 0 ? 'text-red-400 font-bold' : 'text-emerald-400'}`}>
-                  {inspectedTile.soilQuality ?? 100}%
+                <span className={`font-semibold ${(inspectedTile.soilQuality ?? 0) === 0 ? 'text-red-400 font-bold' : 'text-emerald-400'}`}>
+                  {inspectedTile.soilQuality ?? 0}%
                 </span>
               </div>
             )}
